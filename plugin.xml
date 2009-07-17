@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
+            base-type="org.eclipse.core.runtime.properties"
+            file-extensions="jpf"
+            id="com.javapathfinder.vjp.configContentType"
+            name="JPF Config File"
+            priority="normal">
+      </content-type>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="runjpf.jpfConfigLaunch"
+            nameFilter="*.jpf"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.javapathfinder.eclipsejpf.VerifyActionDelegate"
+               enablesFor="1"
+               id="RunJPF.verifyaction"
+               label="Verify..."
+               menubarPath="additions"
+               tooltip="Execute this property file as a JPF configuration">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>
