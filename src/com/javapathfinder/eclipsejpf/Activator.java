@@ -91,7 +91,7 @@ public class Activator extends AbstractUIPlugin {
 	    log(Status.ERROR, message, exception);
 	  }
 	  
-	  
+
 	  /**
 	   * Convenience method to log errors
 	   * @param message the message to display with this error

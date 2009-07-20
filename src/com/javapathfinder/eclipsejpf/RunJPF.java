@@ -54,7 +54,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
  *
  */
 public class RunJPF extends Job {
-  
+  public static final String VM_ARGS = "eclipsejpf.vm_args";
   private static final String JOB_NAME = "Verify...";
   private static final String separator = ",";
   private IFile file;
@@ -122,8 +122,8 @@ public class RunJPF extends Job {
     }
     
     //Get the paths required
-    String vmpath = prop.getProperty("classpath") == null ? getClasspath() : null;
-    String sourcepath = prop.getProperty("sourcepath") == null ? getSourcepath() : null;
+    String vmpath = prop.getProperty("classpath") == null ? getClassPath() : null;
+    String sourcepath = prop.getProperty("sourcepath") == null ? getSourcePath() : null;
     
     //Build the command    
     StringBuffer command = new StringBuffer(jpf_command);
@@ -182,7 +182,7 @@ public class RunJPF extends Job {
     
     if (file.isFile()){
       if (file.getName().equals("jpf.jar") || file.getName().equals("jpf-launch.jar"))
-        return "java -jar " + file.getAbsolutePath();
+        return getJavaCommand() + " -jar " + file.getAbsolutePath();
       else
         return null;
     }
@@ -200,13 +200,21 @@ public class RunJPF extends Job {
     //Now check for the build folder
     File main = new File(file, "build" + File.separator + "main");
     if ( new File(main, "gov" + File.separator + "nasa" + File.separator + "jpf" + File.separator + "Main.class").isFile()){
-      return "java -cp " + main.getAbsolutePath() + " gov.nasa.jpf.Main";
+      return getJavaCommand() + " -cp " + main.getAbsolutePath() + " gov.nasa.jpf.Main";
     }
     
     return null;
   }
   
-  public String getClasspath(){
+  private String getJavaCommand(){
+	  String vm_args = Activator.getDefault().getPluginPreferences().getString(VM_ARGS);
+	  if (vm_args.isEmpty())
+		  return "java";
+	  else
+		  return "java " + vm_args;
+  }
+  
+  public String getClassPath(){
     IJavaProject project = JavaCore.create(file.getProject());
     LinkedHashSet<IPath> paths = new LinkedHashSet<IPath>();
     
@@ -251,7 +259,7 @@ public class RunJPF extends Job {
     return "";
   }
   
-  public String getSourcepath(){
+  public String getSourcePath(){
     IJavaProject project = JavaCore.create(file.getProject());
     StringBuilder sourcepath = new StringBuilder();
     IClasspathEntry[] paths;
@@ -285,6 +293,8 @@ public class RunJPF extends Job {
     path = path.append(relative);
     return path;
   }
+  
+  
   
   private static void displayErrorInConsole(String error){
     MessageConsole io = new MessageConsole("JPF", null);
