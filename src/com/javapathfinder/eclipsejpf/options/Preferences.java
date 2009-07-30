@@ -1,9 +1,8 @@
 package com.javapathfinder.eclipsejpf.options;
 
-import java.io.File;
-
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.RadioGroupFieldEditor;
+import org.eclipse.jface.preference.FileFieldEditor;
+import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -16,30 +15,20 @@ public class Preferences extends FieldEditorPreferencePage implements IWorkbench
 	public Preferences() {
 		super(GRID);
 		setPreferenceStore(EclipseJPF.getDefault().getPreferenceStore());
-		setDescription("Set the properties for Eclipse JPF");
+		setDescription("Set the properties for Eclipse-JPF");
 	}
 
 	@Override
 	protected void createFieldEditors() {
-	  String[][] options = {
-	                          {"Use included JPF binary (Default)",EclipseJPFLauncher.INTERNAL},
-	                          {"Use JPF installation described by " + 
-	                            System.getProperty("user.home") + 
-	                            File.separator + ".jpf" + File.separator + "site.properties", 
-	                            EclipseJPFLauncher.EXTERNAL
-	                           }
-	                       };
-	  RadioGroupFieldEditor runMode = new RadioGroupFieldEditor(
-	      EclipseJPFLauncher.RUN_MODE,"Set JPF's Run Mode", 
-	      1, 
-	      options,
-	      getFieldEditorParent());
+	  IntegerFieldEditor port = new IntegerFieldEditor(EclipseJPFLauncher.PORT,"Shell Port Number:",getFieldEditorParent());
+	  FileFieldEditor sitePropertiesPath = new FileFieldEditor(EclipseJPFLauncher.SITE_PROPERTIES_PATH, "Path to site.properties", getFieldEditorParent());
+	  StringFieldEditor args = new StringFieldEditor(EclipseJPFLauncher.ARGS, "JPF's Arguments", getFieldEditorParent());
+	  StringFieldEditor vm_args = new StringFieldEditor(EclipseJPFLauncher.VM_ARGS, "JPF's Host &VM Arguements",getFieldEditorParent());
 	  
-	  addField(runMode);
-		addField(new StringFieldEditor(
-		    EclipseJPFLauncher.VM_ARGS, 
-		    "JPF's Host &VM Arguements", 
-		    getFieldEditorParent()));
+	  addField(port);
+	  addField(sitePropertiesPath);
+	  addField(args);
+	  addField(vm_args);
 	}
 
 	@Override

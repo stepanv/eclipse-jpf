@@ -3,8 +3,6 @@
  */
 package com.javapathfinder.eclipsejpf;
 
-import java.io.IOException;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -33,13 +31,7 @@ public class RunJPF extends Job {
    */
   protected IStatus run(IProgressMonitor monitor) {
     IPath path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(file.getFullPath());
-        
-    EclipseJPFLauncher launcher = new EclipseJPFLauncher();
-    try {
-      launcher.launch(path.toFile());
-    } catch (IOException e) {
-       EclipseJPF.logError("Selected Config file was not found.");
-    }    
+    new EclipseJPFLauncher().launch(path.toFile());
     return Status.OK_STATUS;
   }
 }

@@ -36,5 +36,8 @@
             name="JPF Preferences">
       </page>
    </extension>
-
+	<extension
+		point="org.eclipse.core.runtime.preferences">
+		<initializer class="com.javapathfinder.eclipsejpf.options.DefaultPreferences" />
+	</extension>
 </plugin>

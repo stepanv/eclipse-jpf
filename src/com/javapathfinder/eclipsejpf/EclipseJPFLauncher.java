@@ -1,14 +1,10 @@
 package com.javapathfinder.eclipsejpf;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -28,41 +24,19 @@ import org.eclipse.ui.texteditor.ITextEditor;
 public class EclipseJPFLauncher extends JPFLauncher {
   
   public static final String VM_ARGS = "jpf.vm_args";
-  public static final String RUN_MODE = "jpf.run_mode";
-  public static final IPath JPF_PATH = new Path("lib/jpf.jar");
-  public static final IPath RUN_JPF_PATH = new Path("lib/RunJPF.jar");
+  public static final String ARGS = "jpf.args";
+  public static final String SITE_PROPERTIES_PATH = "jpf.site_properties_path";
+  public static final String PORT = "jpf.port"; 
   
   private PrintWriter out;
   
-  public void launch(File file) throws IOException{
+  public void launch(File file){
     //Handle JPF's IO
     MessageConsole io = new MessageConsole("JPF", null);
     ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { io });
     MessageConsoleStream stream = io.newMessageStream();
     out = new PrintWriter(stream, true);
     super.launch(file);
-  }
-  
-  @Override
-  protected String getRunJPFJarPath(String def) {
-    return getJarPath(RUN_JPF_PATH, def);
-  }
-
-  @Override
-  protected String getJPFJarPath(String def) {
-    return getJarPath(JPF_PATH, def);
-  }
-
-  private String getJarPath(IPath path, String def){
-    URL url = FileLocator.find(EclipseJPF.getDefault().getBundle(), path, null);
-    if (url == null)
-      return def;
-    try {
-      return FileLocator.toFileURL(url).getFile();
-    } catch (IOException e) {
-      error.println("Jar could not be found with path: " + path);
-      return "";
-    }
   }
   
   @Override
@@ -101,19 +75,23 @@ public class EclipseJPFLauncher extends JPFLauncher {
   }
 
   @Override
-  protected boolean isSourceSupported() {
-    return true;
-  }
-
-  @Override
-  protected String getJPFRunMode(String def) {
-    String s = EclipseJPF.getDefault().getPluginPreferences().getString(RUN_MODE);
-    return s == null || s.isEmpty() ? def : s;
+  protected int getPort() {
+    return new Integer(EclipseJPF.getDefault().getPluginPreferences().getString(PORT));
   }
 
   @Override
   protected String getVMArgs(String def) {
     return EclipseJPF.getDefault().getPluginPreferences().getString(VM_ARGS);
+  }
+
+  @Override
+  protected String getArgs(String def) {
+    return EclipseJPF.getDefault().getPluginPreferences().getString(ARGS);
+  }
+
+  @Override
+  protected String getSitePropertiesPath(String def) {
+    return EclipseJPF.getDefault().getPluginPreferences().getString(SITE_PROPERTIES_PATH);
   }
 
 }

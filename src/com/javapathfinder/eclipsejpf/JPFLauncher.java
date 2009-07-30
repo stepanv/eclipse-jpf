@@ -1,7 +1,9 @@
 package com.javapathfinder.eclipsejpf;
 
+
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,38 +11,78 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Properties;
 
 /*
  * @throws IOException if the property file could not be loaded.
  */
 public abstract class JPFLauncher{
-  public static final String INTERNAL = "INTERNAL";
-  public static final String EXTERNAL = "EXTERNAL";
+  public static final String DEFAULT_SITE_PROPERTIES_PATH = System.getProperty("user.home") + File.separator + ".jpf" + File.separator + "site.properties";
 
   protected PrintWriter error;
 
-  protected void launch(File file) throws IOException{
+  protected void launch(File file){
     PrintWriter errorStream = getErrorStream();
+
+    File siteProperties = new File(getSitePropertiesPath(""));
+    if (!siteProperties.exists()){
+      errorStream.println("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
+      return;
+    }
+    if (!siteProperties.isFile()) {
+      errorStream.println("site.properties file: \"" + siteProperties.getPath() + "\" is a directory.");
+      return;
+    }
+
+    Properties props = new Properties();
+    try {
+      props.load(new FileInputStream(siteProperties));
+    } catch (IOException ex) {
+      //We already checked, this can't happen
+      ex.printStackTrace();
+    }
+    String coreProperty = props.getProperty("jpf.core");
+
+    if (coreProperty == null || coreProperty.isEmpty()){
+      errorStream.println("Property: \"jpf.core\" is not defined in: " + siteProperties.getPath());
+      return;
+    }
+
+    File corePath = new File(coreProperty);
+    File runJPFJar = new File(corePath, "RunJPF.jar");
+    if (!runJPFJar.isFile()){
+      errorStream.println("RunJPF.jar not found at: " + runJPFJar.getPath());
+    }
 
     //Create command
     StringBuffer command = new StringBuffer("java ");
+    
+    //Add the host vm args
     String vm_args = getVMArgs(null);
     if (vm_args != null && !vm_args.isEmpty())
       command.append(vm_args).append(" ");
+    
+    //Point to the RunJPF jar
     command.append("-jar ");
+    command.append(runJPFJar.getAbsolutePath());
+    command.append(" ");
 
-    if (getJPFRunMode(INTERNAL).equals(EXTERNAL)){
-      String jar = getRunJPFJarPath(null);
-      if (jar == null) errorStream.println("ABORTING: jpf.jar was not found.");
-      command.append(jar);
-    }else{
-      if (!getJPFRunMode(INTERNAL).equals(INTERNAL)) errorStream.println("Bad String in Property: RUN_MODE. Defaulting to using internal JPF installation");
-      String jar = getJPFJarPath(null);
-      if (jar == null) errorStream.println("ABORTING: RunJPF.jar was not found.");
-      command.append(jar);
+    //Add the JPF args
+    String args = getArgs(null);
+    if (args != null && !args.isEmpty())
+      command.append(args).append(" ");
+
+    //Define site.properties location if it's not the default path
+    if ( new File(DEFAULT_SITE_PROPERTIES_PATH).equals(siteProperties) == false){
+      command.append("+site=").append(siteProperties.getAbsolutePath()).append(" ");
     }
 
-    command.append(" ");
+    //Define port if its available
+    int port = getPort();
+    if (port > -1)
+      command.append("+shell.port=").append(port).append(" ");
+
+    //Add the property file path
     command.append(file.getAbsolutePath());
 
     //Startup the JPF process
@@ -62,7 +104,7 @@ public abstract class JPFLauncher{
       outputStream.println("------------------------ start JPF with config file: " + file.getName());
       new IORedirector(jpf.getInputStream(), outputStream).start();
       new IORedirector(jpf.getErrorStream(), errorStream).start();
-      if ( isSourceSupported() )
+      if ( port > -1 )
         new ShellListener().start();
       jpf.waitFor();
       outputStream.println("------------------------  exit JPF");
@@ -77,15 +119,15 @@ public abstract class JPFLauncher{
   }
 
   protected abstract String getVMArgs(String def);
-  protected abstract String getJPFRunMode(String def);
-  protected abstract String getJPFJarPath(String def);
-  protected abstract String getRunJPFJarPath(String def);
+  protected abstract String getArgs(String def);
+  protected abstract String getSitePropertiesPath(String def);
+  protected abstract int getPort();
   protected abstract PrintWriter getOutputStream();
   protected abstract PrintWriter getErrorStream();
-  protected abstract boolean isSourceSupported();
   protected abstract void gotoSource(String filepath, int line);
 
   class ShellListener extends Thread{
+
     @Override
     public void run() {
       Socket socket = null;
@@ -93,7 +135,7 @@ public abstract class JPFLauncher{
       //on trying until we get a hit.
       while (socket == null) {
         try {
-          socket = new Socket(InetAddress.getLocalHost(), 8000);
+          socket = new Socket(InetAddress.getLocalHost(), getPort());
         } catch (IOException io) {
           try {
             Thread.sleep(500);
@@ -141,3 +183,4 @@ class IORedirector extends Thread {
     }
   }
 }
+
