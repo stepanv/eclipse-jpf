@@ -6,7 +6,11 @@ import gov.nasa.runjpf.EclipseJPFLauncher;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-
+/**
+ * Simple class that sets the default values of the eclipse-jpf preferences
+ * @author sandro
+ *
+ */
 public class DefaultPreferences extends AbstractPreferenceInitializer {
 
   @Override

@@ -15,7 +15,7 @@
  * A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, ANY WARRANTY THAT
  * THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT
  * DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
-  */
+ */
 package gov.nasa.runjpf;
 
 import java.io.BufferedReader;
@@ -62,17 +62,15 @@ public abstract class JPFLauncher{
    * This method runs jpf in its own process and returns the process immediately.
    * <p>
    * The command launched will contain the following pattern:
-   * <p><i>
-   * java &lt;<a href="#getVMArgs(java.lang.String)">getVMArgs(String def)</a>&gt;
-   * -jar &lt;path to RunJPF.jar defined by
-   * jpf.core property in the <a href="#getSiteProperties(java.lang.String)">
-   * getSiteProperties(String def)</a>&gt; &lt;<a href="#getArgs(java.lang.String)">
-   * getArgs(String def)</a>&gt; &lt;if a non default site.properties is used
-   * then +site=&lt;<a href="#getSiteProperties(java.lang.String)">
-   * getSiteProperties(String def)</a>&gt;&gt;
-   * +shell.port=&lt;<a href="#getPort()">getPort()</a>&gt;
-   * &lt;file.getAbsolutePath()&gt;
-   * </i>
+   * <p><code>
+   * java <i>&lt;{@link #getVMArgs(java.lang.String)}&gt;</i>
+   * -jar <i>&lt;path to RunJPF.jar defined by
+   * jpf.core property in the {@link #getSiteProperties()}</a>&gt;&lt;{@link #getArgs(java.lang.String)}&gt;
+   * &lt;if a non default
+   * site.properties is used then +site=&lt;{@link #getSiteProperties()}&gt;&gt;
+   * </i>+shell.port=<i>&lt;{@link #getPort()}&gt; &lt;file.getAbsolutePath()&gt;
+   * </i></code>
+   *
    * @param file the selected *.jpf configuration file to be used.
    * @return the process running jpf
    */
@@ -239,12 +237,11 @@ public abstract class JPFLauncher{
    */
   protected abstract void gotoSource(String filepath, int line);
 
-  //
-  private class ShellListener extends Thread{
-    
+   private class ShellListener extends Thread{
+
     int port = -1;
     boolean keepTrying = true;
-    
+
     public ShellListener(int port){
       if (port < 0 ){
         throw new IllegalArgumentException("port cannot be a negative value");

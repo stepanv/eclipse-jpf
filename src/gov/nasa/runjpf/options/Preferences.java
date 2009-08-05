@@ -10,7 +10,13 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-
+/**
+ * The <code>Preferences</code> class represents the PreferencePage for this
+ * plugin. All of the keys for the preferences stored can be retrived from the
+ * {@link EclipseJPFLauncher} class.
+ * @author sandro
+ *
+ */
 public class Preferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage{
 	
 	public Preferences() {

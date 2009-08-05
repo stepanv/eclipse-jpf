@@ -7,7 +7,12 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
-
+/**
+ * The <code>VerifyActionDelegate</code> class is called by eclipse-jpf plugin
+ * when the user selects "Verify..." from the menu.
+ * @author sandro
+ *
+ */
 public class VerifyActionDelegate implements IObjectActionDelegate {
 	
 	private IFile file = null;
@@ -15,6 +20,10 @@ public class VerifyActionDelegate implements IObjectActionDelegate {
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart) {}
 
+	/**
+	 * Schedules a RunJPF job to be run
+	 * @see RunJPF
+	 */
 	@Override
 	public void run(IAction action) {
 		if (file == null)

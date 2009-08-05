@@ -9,15 +9,14 @@ import org.osgi.framework.BundleContext;
  */
 public class EclipseJPF extends AbstractUIPlugin {
 
-	// The plug-in ID
+	/**
+	 *  The plug-in ID
+	 */
 	public static final String PLUGIN_ID = "RunJPF";
 
 	// The shared instance
 	private static EclipseJPF plugin;
 	
-	/**
-	 * The constructor
-	 */
 	public EclipseJPF() {
 	}
 
@@ -66,8 +65,8 @@ public class EclipseJPF extends AbstractUIPlugin {
 
 	  /**
 	   * Convenience method to log Warnings without an exception This call is
-	   * exactly equivalent to logWarning(message, null) @param message the message
-	   * to include with the warning
+	   * exactly equivalent to logWarning(message, null)
+	   * @param message - the message to include with the warning
 	   */
 	  public static void logWarning(String message) {
 	    logWarning(message, null);
@@ -75,8 +74,8 @@ public class EclipseJPF extends AbstractUIPlugin {
 
 	  /**
 	   * Convenience method to log Warnings along with an exception @param message
-	   * the message to include with the warning @param exception the exception to
-	   * include with the warning
+	   * the message to include with the warning
+	   * @param exception - the exception to include with the warning
 	   */
 	  public static void logWarning(String message, Exception exception) {
 	    log(Status.WARNING, message, exception);
@@ -85,7 +84,7 @@ public class EclipseJPF extends AbstractUIPlugin {
 	  /**
 	   * Convenience method to log errors
 	   * @param message the message to display with this error
-	   * @param exception the exception to associate with ths error.
+	   * @param exception the exception to associate with this error.
 	   */
 	  public static void logError(String message, Throwable exception) {
 	    log(Status.ERROR, message, exception);
