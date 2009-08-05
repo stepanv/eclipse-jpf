@@ -1,4 +1,4 @@
-package com.javapathfinder.eclipsejpf;
+package gov.nasa.runjpf;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -30,13 +30,14 @@ public class EclipseJPFLauncher extends JPFLauncher {
   
   private PrintWriter out;
   
-  public void launch(File file){
+  @Override
+  public Process launch(File file){
     //Handle JPF's IO
     MessageConsole io = new MessageConsole("JPF", null);
     ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { io });
     MessageConsoleStream stream = io.newMessageStream();
     out = new PrintWriter(stream, true);
-    super.launch(file);
+    return super.launch(file);
   }
   
   @Override
@@ -62,8 +63,7 @@ public class EclipseJPFLauncher extends JPFLauncher {
             IDocument doc = editor.getDocumentProvider().getDocument(editor.getEditorInput());      
             IRegion fileLine = doc.getLineInformation(line);
             editor.selectAndReveal(fileLine.getOffset(), fileLine.getLength());
-          }
-          
+          }        
         }catch(PartInitException e){
           EclipseJPF.logError("PartInitException", e);
         } catch (BadLocationException e) {
@@ -76,7 +76,8 @@ public class EclipseJPFLauncher extends JPFLauncher {
 
   @Override
   protected int getPort() {
-    return new Integer(EclipseJPF.getDefault().getPluginPreferences().getString(PORT));
+    Integer port = EclipseJPF.getDefault().getPreferenceStore().getInt(PORT);
+    return (int) (port != null ? port : DEFAULT_PORT);
   }
 
   @Override
@@ -90,7 +91,7 @@ public class EclipseJPFLauncher extends JPFLauncher {
   }
 
   @Override
-  protected String getSitePropertiesPath(String def) {
+  protected String getSiteProperties() {
     return EclipseJPF.getDefault().getPluginPreferences().getString(SITE_PROPERTIES_PATH);
   }
 

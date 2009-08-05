@@ -19,7 +19,7 @@
             nameFilter="*.jpf"
             objectClass="org.eclipse.core.resources.IFile">
          <action
-               class="com.javapathfinder.eclipsejpf.VerifyActionDelegate"
+               class="gov.nasa.runjpf.VerifyActionDelegate"
                enablesFor="1"
                id="RunJPF.verifyaction"
                label="Verify..."
@@ -31,13 +31,13 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="com.javapathfinder.eclipsejpf.options.Preferences"
+            class="gov.nasa.runjpf.options.Preferences"
             id="eclipse-jpf.preferences"
             name="JPF Preferences">
       </page>
    </extension>
 	<extension
 		point="org.eclipse.core.runtime.preferences">
-		<initializer class="com.javapathfinder.eclipsejpf.options.DefaultPreferences" />
+		<initializer class="gov.nasa.runjpf.options.DefaultPreferences" />
 	</extension>
 </plugin>

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.javapathfinder.eclipsejpf;
+package gov.nasa.runjpf;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;

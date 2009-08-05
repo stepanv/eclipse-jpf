@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: eclipse-jpf
 Bundle-SymbolicName: eclipse-jpf;singleton:=true
 Bundle-Version: 1.0.0
-Bundle-Activator: com.javapathfinder.eclipsejpf.EclipseJPF
+Bundle-Activator: gov.nasa.runjpf.EclipseJPF
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core;bundle-version="3.4.4"

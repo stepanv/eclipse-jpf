@@ -1,4 +1,4 @@
-package com.javapathfinder.eclipsejpf;
+package gov.nasa.runjpf;
 
 import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.plugin.AbstractUIPlugin;

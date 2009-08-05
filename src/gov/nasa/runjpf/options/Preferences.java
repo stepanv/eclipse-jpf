@@ -1,4 +1,7 @@
-package com.javapathfinder.eclipsejpf.options;
+package gov.nasa.runjpf.options;
+
+import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.EclipseJPFLauncher;
 
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
@@ -7,8 +10,6 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import com.javapathfinder.eclipsejpf.EclipseJPF;
-import com.javapathfinder.eclipsejpf.EclipseJPFLauncher;
 
 public class Preferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage{
 	
