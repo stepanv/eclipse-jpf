@@ -269,8 +269,12 @@ public abstract class JPFLauncher{
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String input = null;
         while ((input = reader.readLine()) != null) {
-          final String[] location = input.split(":");
-          gotoSource(location[0], new Integer(location[1]));
+          System.out.println(input);
+          if (input.startsWith("[LINK]")){
+            input = input.substring(6);
+            final String[] location = input.split(":");
+            gotoSource(location[0], new Integer(location[1]));
+          }
         }
       } catch (SocketException se){
         //Probably nothing to worry about. Just the socket closing.

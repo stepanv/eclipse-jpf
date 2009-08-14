@@ -136,10 +136,13 @@ public class EclipseJPFLauncher extends JPFLauncher {
         try{
           IFileStore file = EFS.getLocalFileSystem().getStore(new Path(filepath));
           IEditorPart part = IDE.openEditorOnFileStore(page, file);
-          if ( line > 0 && part instanceof ITextEditor){
+          int num = line -1;
+          if (num < 0)
+            return;
+          if (part instanceof ITextEditor){
             ITextEditor editor = (ITextEditor) part;
             IDocument doc = editor.getDocumentProvider().getDocument(editor.getEditorInput());      
-            IRegion fileLine = doc.getLineInformation(line);
+            IRegion fileLine = doc.getLineInformation(num);
             editor.selectAndReveal(fileLine.getOffset(), fileLine.getLength());
           }        
         }catch(PartInitException e){
@@ -222,8 +225,12 @@ public class EclipseJPFLauncher extends JPFLauncher {
       if (jpf != null)
         jpf.destroy();
 
+      try{
       if (killer != null)
         Runtime.getRuntime().removeShutdownHook(this);
+      }catch(IllegalStateException e){
+        //Incase we are already shutting down
+      }
       killer = null;
     }
   }
