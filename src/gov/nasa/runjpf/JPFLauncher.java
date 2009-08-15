@@ -21,6 +21,8 @@ package gov.nasa.runjpf;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +31,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The <code>JPFLauncher</code> class is used by both the netbeans-jpf and
@@ -94,6 +98,8 @@ public abstract class JPFLauncher{
       return null;
     }
 
+
+
     Properties props = new Properties();
     try {
       props.load(new FileInputStream(siteProperties));
@@ -108,7 +114,7 @@ public abstract class JPFLauncher{
       return null;
     }
 
-    File corePath = new File(coreProperty);
+    File corePath = new File(getSiteCoreDir());
     File runJPFJar = new File(corePath, "build" + File.separator + "RunJPF.jar");
     if (!runJPFJar.isFile()){
       printError("RunJPF.jar not found at: " + runJPFJar.getPath());
@@ -162,6 +168,70 @@ public abstract class JPFLauncher{
       e.printStackTrace();
     }
     return null;
+  }
+
+  /**
+   * Warning stolen from JPFSite! Blame that author for any bugs :)
+   *
+   * this should be more efficient than using Properties.load(), and it's
+   * restricted parsing anyways (we only do system property expansion)
+   */
+  public String getSiteCoreDir (){
+      char sc = File.separatorChar;
+      File userHome = new File(System.getProperty("user.home"));
+      String siteProps = userHome.getAbsolutePath() + sc + ".jpf" + sc + "site.properties";
+
+      Pattern corePattern = Pattern.compile("^ *jpf.core *= *(.+?) *$");
+      String coreDirPath = null;
+
+      try {
+        FileReader fr = new FileReader(siteProps);
+        BufferedReader br = new BufferedReader(fr);
+
+        for (String line = br.readLine(); line != null; line = br.readLine()) {
+          Matcher m = corePattern.matcher(line);
+          if (m.matches()) {
+            coreDirPath = expand(m.group(1));
+            break;
+          }
+        }
+        br.close();
+
+      } catch (FileNotFoundException fnfx) {
+        return null;
+      } catch (IOException iox) {
+        return null;
+      }
+      
+      return coreDirPath;
+    }
+
+  /**
+   * simple non-recursive global system property expander
+   */
+  protected String expand (String s) {
+    int i, j = 0;
+    if (s == null || s.length() == 0) {
+      return s;
+    }
+
+    while ((i = s.indexOf("${", j)) >= 0) {
+      if ((j = s.indexOf('}', i)) > 0) {
+        String k = s.substring(i + 2, j);
+        String v = System.getProperty(k);
+
+        if (v != null) {
+          s = s.substring(0, i) + v + s.substring(j + 1, s.length());
+          j = i + v.length();
+        } else {
+          s = s.substring(0, i) + s.substring(j + 1, s.length());
+          j = i;
+        }
+      }
+    }
+
+    return s;
+
   }
 
   //Safe way to print output...
@@ -269,9 +339,10 @@ public abstract class JPFLauncher{
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String input = null;
         while ((input = reader.readLine()) != null) {
-          System.out.println(input);
           if (input.startsWith("[LINK]")){
+            //remove "[LINK]"
             input = input.substring(6);
+            System.out.println(input);
             final String[] location = input.split(":");
             gotoSource(location[0], new Integer(location[1]));
           }
