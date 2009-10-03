@@ -30,10 +30,10 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 /**
  * The <code>JPFLauncher</code> class is used by both the netbeans-jpf and
  * eclipse-jpf projects to launch a jpf process from a *.jpf file. This class
@@ -78,7 +78,8 @@ public abstract class JPFLauncher{
    * @param file the selected *.jpf configuration file to be used.
    * @return the process running jpf
    */
-  protected Process launch(File file){
+  protected Process launch(File file, File workingDir){
+
     errorStream = getErrorStream();
 
     String path = getSiteProperties();
@@ -110,7 +111,7 @@ public abstract class JPFLauncher{
     String coreProperty = props.getProperty("jpf-core");
 
     if (coreProperty == null || coreProperty.isEmpty()){
-      printError("Property: \"jpf.core\" is not defined in: " + siteProperties.getPath());
+      printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
       return null;
     }
 
@@ -120,43 +121,55 @@ public abstract class JPFLauncher{
       printError("RunJPF.jar not found at: " + runJPFJar.getPath());
     }
 
+    ArrayList<String> commandList = new ArrayList<String>();
+
     //Create command
-    StringBuffer command = new StringBuffer("java ");
+    commandList.add("java");
     
     //Add the host vm args
     String vm_args = getVMArgs(null);
-    if (vm_args != null && !vm_args.isEmpty())
-      command.append(vm_args).append(" ");
+    if (vm_args != null && !vm_args.isEmpty()){
+      commandList.add(vm_args);
+    }
     
     //Point to the RunJPF jar
-    command.append("-jar ");
-    command.append(runJPFJar.getAbsolutePath());
-    command.append(" ");
+    commandList.add("-jar");
+    commandList.add(runJPFJar.getAbsolutePath());
 
     //Add the JPF args
     String args = getArgs(null);
-    if (args != null && !args.isEmpty())
-      command.append(args).append(" ");
+    if (args != null && !args.isEmpty()){
+        for (String string : args.split(" ")) {
+            commandList.add(string);
+        }
+    }
 
     //Define site.properties location if it's not the default path
     if ( new File(DEFAULT_SITE_PROPERTIES_PATH).equals(siteProperties) == false){
-      command.append("+site=").append(siteProperties.getAbsolutePath()).append(" ");
+      commandList.add("+site="+siteProperties.getAbsolutePath());
     }
 
     //Define port if its available
     int port = getPort();
-    if (port > -1)
-      command.append("+shell.port=").append(port).append(" ");
+    if (port > -1){
+      commandList.add("+shell.port="+port);
+    }
 
     //Add the property file path
-    command.append(file.getAbsolutePath());
+    commandList.add(file.getAbsolutePath());
 
     //Startup the JPF process
     try {
-      Process jpf = Runtime.getRuntime().exec(command.toString());
+      String[] cmdArgs = commandList.toArray(new String[commandList.size()]);
+      // we inherit the parent proc environment
+      Process jpf = Runtime.getRuntime().exec(cmdArgs, null, workingDir);
       PrintWriter outputStream = getOutputStream();
       if (outputStream != null){
-        outputStream.println("Executing command: " + command.toString());
+        StringBuffer buff = new StringBuffer();
+        for (String string : commandList) {
+          buff.append(string).append(" ");
+        }
+        outputStream.println("Executing command: " + buff.toString());
         new IORedirector(jpf.getInputStream(), outputStream).start();
         new IORedirector(jpf.getErrorStream(), errorStream).start();
       }
@@ -181,7 +194,7 @@ public abstract class JPFLauncher{
       File userHome = new File(System.getProperty("user.home"));
       String siteProps = userHome.getAbsolutePath() + sc + ".jpf" + sc + "site.properties";
 
-      Pattern corePattern = Pattern.compile("^ *jpf.core *= *(.+?) *$");
+      Pattern corePattern = Pattern.compile("^ *jpf-core *= *(.+?) *$");
       String coreDirPath = null;
 
       try {
@@ -342,7 +355,6 @@ public abstract class JPFLauncher{
           if (input.startsWith("[LINK]")){
             //remove "[LINK]"
             input = input.substring(6);
-            System.out.println(input);
             final String[] location = input.split(":");
             gotoSource(location[0], new Integer(location[1]));
           }
@@ -379,4 +391,3 @@ class IORedirector extends Thread {
     }
   }
 }
-

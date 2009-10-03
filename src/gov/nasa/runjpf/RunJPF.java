@@ -6,8 +6,6 @@ package gov.nasa.runjpf;
 import gov.nasa.runjpf.EclipseJPFLauncher.JPFKiller;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -38,9 +36,9 @@ public class RunJPF extends Job {
    * 
    */
   protected IStatus run(IProgressMonitor monitor) {
-    IPath path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(file.getFullPath());
+    
     EclipseJPFLauncher launcher = new EclipseJPFLauncher();
-    final Process p =  launcher.launch(path.toFile());
+    final Process p =  launcher.launch(file);
     JPFKiller killer = launcher.getKiller();
     
     //This is going to get beyond messy. But since there is no easy way to poll

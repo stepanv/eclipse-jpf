@@ -18,26 +18,16 @@
  */
  package gov.nasa.runjpf;
 
-import java.io.File;
 import java.io.PrintWriter;
 
-import org.eclipse.core.filesystem.EFS;
-import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
-import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
  * The <code>EclipseJPFLauncher</code> class is used by the eclipse-jpf plugin
@@ -84,15 +74,20 @@ public class EclipseJPFLauncher extends JPFLauncher {
    * @param file - the *.jpf configuration file to run by JPF
    * @return the JPF process
    */
-  @Override
-  public Process launch(File file){
+  public Process launch(IFile file){
     //Handle JPF's IO
     MessageConsole io = new MessageConsole(file.getName() + "(run)", null);
+    io.addPatternMatchListener(new PatternMatchListener());
     ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { io });
     MessageConsoleStream stream = io.newMessageStream();
     out = new PrintWriter(stream, true);
     killer = new JPFKiller();
-    jpf =  super.launch(file);
+    
+    IPath path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(file.getFullPath());
+    IPath workingDir = file.getProject().getLocation();
+    if (workingDir == null)
+        workingDir = new Path(System.getProperty("user.dir"));
+    jpf =  super.launch(path.toFile(), workingDir.toFile());
     return jpf;
   }
   
@@ -129,31 +124,11 @@ public class EclipseJPFLauncher extends JPFLauncher {
    * @param line - the line number in the file to be shown
    */
   @Override
-  protected void gotoSource(final String filepath, final int line) {
-    Display.getDefault().syncExec(new Runnable() {
-      public void run() {
-        IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-        try{
-          IFileStore file = EFS.getLocalFileSystem().getStore(new Path(filepath));
-          IEditorPart part = IDE.openEditorOnFileStore(page, file);
-          int num = line -1;
-          if (num < 0)
-            return;
-          if (part instanceof ITextEditor){
-            ITextEditor editor = (ITextEditor) part;
-            IDocument doc = editor.getDocumentProvider().getDocument(editor.getEditorInput());      
-            IRegion fileLine = doc.getLineInformation(num);
-            editor.selectAndReveal(fileLine.getOffset(), fileLine.getLength());
-          }        
-        }catch(PartInitException e){
-          EclipseJPF.logError("PartInitException", e);
-        } catch (BadLocationException e) {
-          EclipseJPF.logError("BadLocationException", e);
-        }
-      }
-    });
-    
+  public void gotoSource(final String filepath, final int line) {
+    EclipseJPF.openExternalLink(filepath, line);
   }
+  
+ 
 
   /**
    * Return the port number to be used by the shell to allow for Shell<->IDE
@@ -236,3 +211,5 @@ public class EclipseJPFLauncher extends JPFLauncher {
   }
 
 }
+
+
