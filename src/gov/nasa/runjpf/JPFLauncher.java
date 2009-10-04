@@ -55,7 +55,11 @@ public abstract class JPFLauncher{
    */
   public static final int DEFAULT_PORT = 4242;
 
-
+  /**
+   * Saved Site Core directory
+   */
+  private File siteCoreDir; 
+  
   PrintWriter errorStream = null;
 
   /**
@@ -115,7 +119,7 @@ public abstract class JPFLauncher{
       return null;
     }
 
-    File corePath = new File(getSiteCoreDir());
+    File corePath = getSiteCoreDir();
     File runJPFJar = new File(corePath, "build" + File.separator + "RunJPF.jar");
     if (!runJPFJar.isFile()){
       printError("RunJPF.jar not found at: " + runJPFJar.getPath());
@@ -189,12 +193,14 @@ public abstract class JPFLauncher{
    * this should be more efficient than using Properties.load(), and it's
    * restricted parsing anyways (we only do system property expansion)
    */
-  public String getSiteCoreDir (){
+  public File getSiteCoreDir (){
+
+    if (siteCoreDir == null){
       char sc = File.separatorChar;
       File userHome = new File(System.getProperty("user.home"));
       String siteProps = userHome.getAbsolutePath() + sc + ".jpf" + sc + "site.properties";
 
-      Pattern corePattern = Pattern.compile("^ *jpf-core *= *(.+?) *$");
+      Pattern corePattern = Pattern.compile("^ *jpf.core *= *(.+?) *$");
       String coreDirPath = null;
 
       try {
@@ -215,9 +221,13 @@ public abstract class JPFLauncher{
       } catch (IOException iox) {
         return null;
       }
-      
-      return coreDirPath;
+
+      siteCoreDir = new File(coreDirPath);
     }
+
+    return siteCoreDir;
+  }
+
 
   /**
    * simple non-recursive global system property expander
