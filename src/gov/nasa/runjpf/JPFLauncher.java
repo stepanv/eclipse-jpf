@@ -31,6 +31,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -189,9 +190,6 @@ public abstract class JPFLauncher{
 
   /**
    * Warning stolen from JPFSite! Blame that author for any bugs :)
-   *
-   * this should be more efficient than using Properties.load(), and it's
-   * restricted parsing anyways (we only do system property expansion)
    */
   public File getSiteCoreDir (){
 
@@ -200,8 +198,10 @@ public abstract class JPFLauncher{
       File userHome = new File(System.getProperty("user.home"));
       String siteProps = userHome.getAbsolutePath() + sc + ".jpf" + sc + "site.properties";
 
-      Pattern corePattern = Pattern.compile("^ *jpf.core *= *(.+?) *$");
+      Pattern corePattern = Pattern.compile("^[ \t]*([^# \t][^ \t]*)[ \t]*=[ \t]*(.+?)[ \t]*$");
       String coreDirPath = null;
+
+      HashMap<String,String> map = new HashMap<String,String>();
 
       try {
         FileReader fr = new FileReader(siteProps);
@@ -210,8 +210,45 @@ public abstract class JPFLauncher{
         for (String line = br.readLine(); line != null; line = br.readLine()) {
           Matcher m = corePattern.matcher(line);
           if (m.matches()) {
-            coreDirPath = expand(m.group(1));
-            break;
+            String key = m.group(1);
+            String val = m.group(2);
+
+            val = expand(val, map);
+
+            // check for continuation lines
+            if (val.charAt(val.length()-1) == '\\'){
+              val = val.substring(0, val.length()-1).trim();
+              for (line = br.readLine(); line != null; line = br.readLine()){
+                line = line.trim();
+                if (line.charAt(line.length()-1) == '\\'){
+                  line = line.substring(0, line.length()-1).trim();
+                  val += expand(line,map);
+                } else {
+                  val += expand(line,map);
+                  break;
+                }
+              }
+            }
+
+            if ("jpf-core".equals(key)){
+              coreDirPath = val;
+              break;
+            } else {
+              if (key.charAt(key.length()-1) == '+'){
+                key = key.substring(0, key.length()-1);
+                String v = map.get(key);
+                if (v != null){
+                  val = v + val;
+                }
+              } else if (key.charAt(0) == '+'){
+                key = key.substring(1);
+                String v = map.get(key);
+                if (v != null){
+                  val = val + v;
+                }
+              }
+              map.put(key, val);
+            }
           }
         }
         br.close();
@@ -232,7 +269,7 @@ public abstract class JPFLauncher{
   /**
    * simple non-recursive global system property expander
    */
-  protected String expand (String s) {
+  protected String expand (String s, HashMap<String,String> map) {
     int i, j = 0;
     if (s == null || s.length() == 0) {
       return s;
@@ -241,7 +278,11 @@ public abstract class JPFLauncher{
     while ((i = s.indexOf("${", j)) >= 0) {
       if ((j = s.indexOf('}', i)) > 0) {
         String k = s.substring(i + 2, j);
-        String v = System.getProperty(k);
+
+        String v = map.get(k);
+        if (v == null){
+          v = System.getProperty(k);
+        }
 
         if (v != null) {
           s = s.substring(0, i) + v + s.substring(j + 1, s.length());
@@ -254,7 +295,6 @@ public abstract class JPFLauncher{
     }
 
     return s;
-
   }
 
   //Safe way to print output...
