@@ -83,7 +83,7 @@ public class EclipseJPFLauncher extends JPFLauncher {
     out = new PrintWriter(stream, true);
     killer = new JPFKiller();
     
-    IPath path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(file.getFullPath());
+    IPath path = file.getLocation(); // we need the absolute path here (IFile.getFullPath() isn't - it's relative to the project)
     IPath workingDir = file.getProject().getLocation();
     if (workingDir == null)
         workingDir = new Path(System.getProperty("user.dir"));
