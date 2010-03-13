@@ -42,13 +42,13 @@ import java.util.regex.Pattern;
  * @see #launch(java.io.File) 
  * @author Sandro Badame
  */
-public abstract class JPFLauncher{
+public abstract class JPFLauncher {
 
   /**
    * The system dependent default location to find the site.properties file. The
    * value is defined as &lt;home directory&gt;/.jpf/site.properties
    */
-  public static final String DEFAULT_SITE_PROPERTIES_PATH = System.getProperty("user.home") + File.separator + ".jpf" + File.separator + "site.properties";
+  public static final String DEFAULT_SITE_PROPERTIES_PATH = getSitePropertiesPath();
 
   /**
    * The default port that is used to open communication with the Shell.<br>
@@ -63,6 +63,22 @@ public abstract class JPFLauncher{
   
   PrintWriter errorStream = null;
 
+  static String getSitePropertiesPath() {
+    File userHome = new File(System.getProperty("user.home"));
+    
+    File siteDir = new File(userHome, ".jpf");
+    if (!siteDir.isDirectory()){
+      File alternateSiteDir = new File(userHome,"jpf");
+      if (alternateSiteDir.isDirectory()){
+        siteDir = alternateSiteDir;
+      }
+    }
+
+    File siteProperties = new File(siteDir, "site.properties");
+    
+    return siteProperties.getAbsolutePath(); 
+  }
+  
   /**
    * Launch a new process to run jpf with specified *.jpf file. This method
    * will report all errors to the stream returned by getErrorStream(), no
