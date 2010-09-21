@@ -68,7 +68,7 @@ public abstract class JPFLauncher {
     
     File siteDir = new File(userHome, ".jpf");
     if (!siteDir.isDirectory()){
-      File alternateSiteDir = new File(userHome,"jpf");
+      File alternateSiteDir = new File(userHome,".jpf");
       if (alternateSiteDir.isDirectory()){
         siteDir = alternateSiteDir;
       }
