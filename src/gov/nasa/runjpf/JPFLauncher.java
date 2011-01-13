@@ -68,7 +68,8 @@ public abstract class JPFLauncher {
     
     File siteDir = new File(userHome, ".jpf");
     if (!siteDir.isDirectory()){
-      File alternateSiteDir = new File(userHome,".jpf");
+      // Windows doesn't easily allow dot names
+      File alternateSiteDir = new File(userHome,"jpf");
       if (alternateSiteDir.isDirectory()){
         siteDir = alternateSiteDir;
       }
