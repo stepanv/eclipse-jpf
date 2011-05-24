@@ -59,6 +59,8 @@ public abstract class JPFLauncher {
   /**
    * Saved Site Core directory
    */
+  private File lastSiteProperties;
+  private long lastSitePropMod;
   private File siteCoreDir; 
   
   PrintWriter errorStream = null;
@@ -115,20 +117,27 @@ public abstract class JPFLauncher {
       printError("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
       return null;
     }
+    
+    // check if preferences were changed or the file was modified
+    if (!siteProperties.equals(lastSiteProperties) || siteProperties.lastModified() > lastSitePropMod){
+      String coreProperty = JPFSiteUtils.getMatchFromFile(path, "jpf-core");
+      if (coreProperty == null || coreProperty.isEmpty()) {
+        printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
+        return null;
+      }
 
-    String coreProperty = JPFSiteUtils.getMatchFromFile(path, "jpf-core");
-    if (coreProperty == null || coreProperty.isEmpty()){
-      printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
-      return null;
+      siteCoreDir = new File(coreProperty);
+      if (!siteCoreDir.isDirectory()) {
+        printError("jpf-core specification in " + path + " not a valid directory: " + siteCoreDir);
+        return null;
+      }
+
+      lastSiteProperties = siteProperties;
+      lastSitePropMod = siteProperties.lastModified();
     }
+    
 
-    File coreDir = new File(coreProperty);
-    if (!coreDir.isDirectory()){
-      printError("jpf-core specification in " + path + " not a valid directory: " + coreDir);
-      return null;
-    }
-
-    File runJPFJar = new File(coreDir, "build" + File.separatorChar + "RunJPF.jar");
+    File runJPFJar = new File(siteCoreDir, "build" + File.separatorChar + "RunJPF.jar");
     if (!runJPFJar.isFile()){
       printError("RunJPF.jar not found at: " + runJPFJar.getPath());
     }
@@ -193,115 +202,6 @@ public abstract class JPFLauncher {
       e.printStackTrace();
     }
     return null;
-  }
-
-  /**
-   * Warning stolen from JPFSite! Blame that author for any bugs :)
-   */
-  public File getSiteCoreDir (){
-
-    if (siteCoreDir == null){
-      char sc = File.separatorChar;
-      File userHome = new File(System.getProperty("user.home"));
-      String siteProps = userHome.getAbsolutePath() + sc + ".jpf" + sc + "site.properties";
-
-      Pattern corePattern = Pattern.compile("^[ \t]*([^# \t][^ \t]*)[ \t]*=[ \t]*(.+?)[ \t]*$");
-      String coreDirPath = null;
-
-      HashMap<String,String> map = new HashMap<String,String>();
-
-      try {
-        FileReader fr = new FileReader(siteProps);
-        BufferedReader br = new BufferedReader(fr);
-
-        for (String line = br.readLine(); line != null; line = br.readLine()) {
-          Matcher m = corePattern.matcher(line);
-          if (m.matches()) {
-            String key = m.group(1);
-            String val = m.group(2);
-
-            val = expand(val, map);
-
-            // check for continuation lines
-            if (val.charAt(val.length()-1) == '\\'){
-              val = val.substring(0, val.length()-1).trim();
-              for (line = br.readLine(); line != null; line = br.readLine()){
-                line = line.trim();
-                if (line.charAt(line.length()-1) == '\\'){
-                  line = line.substring(0, line.length()-1).trim();
-                  val += expand(line,map);
-                } else {
-                  val += expand(line,map);
-                  break;
-                }
-              }
-            }
-
-            if ("jpf-core".equals(key)){
-              coreDirPath = val;
-              break;
-            } else {
-              if (key.charAt(key.length()-1) == '+'){
-                key = key.substring(0, key.length()-1);
-                String v = map.get(key);
-                if (v != null){
-                  val = v + val;
-                }
-              } else if (key.charAt(0) == '+'){
-                key = key.substring(1);
-                String v = map.get(key);
-                if (v != null){
-                  val = val + v;
-                }
-              }
-              map.put(key, val);
-            }
-          }
-        }
-        br.close();
-
-      } catch (FileNotFoundException fnfx) {
-        return null;
-      } catch (IOException iox) {
-        return null;
-      }
-
-      siteCoreDir = new File(coreDirPath);
-    }
-
-    return siteCoreDir;
-  }
-
-
-  /**
-   * simple non-recursive global system property expander
-   */
-  protected String expand (String s, HashMap<String,String> map) {
-    int i, j = 0;
-    if (s == null || s.length() == 0) {
-      return s;
-    }
-
-    while ((i = s.indexOf("${", j)) >= 0) {
-      if ((j = s.indexOf('}', i)) > 0) {
-        String k = s.substring(i + 2, j);
-
-        String v = map.get(k);
-        if (v == null){
-          v = System.getProperty(k);
-        }
-
-        if (v != null) {
-          s = s.substring(0, i) + v + s.substring(j + 1, s.length());
-          j = i + v.length();
-        } else {
-          s = s.substring(0, i) + s.substring(j + 1, s.length());
-          j = i;
-        }
-      }
-    }
-
-    return s;
   }
 
   //Safe way to print output...
