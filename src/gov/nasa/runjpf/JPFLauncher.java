@@ -107,38 +107,28 @@ public abstract class JPFLauncher {
     String path = getSiteProperties();
     if (path == null || path.isEmpty()){
       printError("getSiteProperties() is null or empty, using default path: " + DEFAULT_SITE_PROPERTIES_PATH);
+      path = DEFAULT_SITE_PROPERTIES_PATH;
     }
 
     File siteProperties = new File(path);
-
-    if (!siteProperties.exists()){
+    if (!siteProperties.isFile()){
       printError("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
       return null;
     }
 
-    if (!siteProperties.isFile()) {
-      printError("site.properties file: \"" + siteProperties.getPath() + "\" is a directory.");
-      return null;
-    }
-
-
-
-    Properties props = new Properties();
-    try {
-      props.load(new FileInputStream(siteProperties));
-    } catch (IOException ex) {
-      //We already checked, this can't happen
-      ex.printStackTrace();
-    }
-    String coreProperty = props.getProperty("jpf-core");
-
+    String coreProperty = JPFSiteUtils.getMatchFromFile(path, "jpf-core");
     if (coreProperty == null || coreProperty.isEmpty()){
       printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
       return null;
     }
 
-    File corePath = getSiteCoreDir();
-    File runJPFJar = new File(corePath, "build" + File.separator + "RunJPF.jar");
+    File coreDir = new File(coreProperty);
+    if (!coreDir.isDirectory()){
+      printError("jpf-core specification in " + path + " not a valid directory: " + coreDir);
+      return null;
+    }
+
+    File runJPFJar = new File(coreDir, "build" + File.separatorChar + "RunJPF.jar");
     if (!runJPFJar.isFile()){
       printError("RunJPF.jar not found at: " + runJPFJar.getPath());
     }
