@@ -40,4 +40,19 @@
 		point="org.eclipse.core.runtime.preferences">
 		<initializer class="gov.nasa.runjpf.options.DefaultPreferences" />
 	</extension>
+ <extension
+       point="org.eclipse.ui.newWizards">
+    <category
+          id="eclipse-jpf.category.wizards"
+          name="JPF">
+    </category>
+    <wizard
+          category="eclipse-jpf.category.wizards"
+          class="gov.nasa.runjpf.wizard.NewJPFProjectWizard"
+          hasPages="true"
+          id="eclipse-jpf.wizard.new.jpfproject"
+          name="JPF Project"
+          project="true">
+    </wizard>
+ </extension>
 </plugin>
