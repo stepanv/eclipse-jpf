@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: eclipse-jpf
 Bundle-SymbolicName: eclipse-jpf;singleton:=true
-Bundle-Version: 1.0.5
+Bundle-Version: 1.0.6
 Bundle-Activator: gov.nasa.runjpf.EclipseJPF
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: The Java Pathfinder Team
@@ -36,7 +36,8 @@ Import-Package: org.eclipse.core.filesystem,
  org.eclipse.ui.plugin,
  org.eclipse.ui.texteditor,
  org.osgi.framework;version="1.6.0"
-Bundle-ClassPath: lib/antlr-3.4-complete-no-antlrv2.jar,
+Bundle-ClassPath: lib/antlr-runtime-3.4.jar,
+ lib/ST-4.0.4.jar,
  lib/jpf-template.jar,
  lib/RunJPF.jar,
  .

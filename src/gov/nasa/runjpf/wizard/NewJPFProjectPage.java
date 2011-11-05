@@ -101,7 +101,7 @@ public class NewJPFProjectPage extends WizardPage {
     fd.right = new FormAttachment( 100, -margin);
     projectNameField.setLayoutData( fd);
     
-    projectNameField.setText("jpf-");
+    //projectNameField.setText("jpf-");
     projectNameField.addListener( SWT.Modify, new Listener(){
       public void handleEvent(Event e) {
         setPageComplete(validatePage());
@@ -331,9 +331,7 @@ public class NewJPFProjectPage extends WizardPage {
     String dirName = projectPathField.getText();
 
     if (!dirName.isEmpty()) {
-      IFileInfo info;
-      info = IDEResourceInfoUtils.getFileInfo(dirName);
-      if (info == null || !(info.exists())) {
+      if (!new File(dirName).isDirectory()){
         dirName = "";
       }
     }
@@ -470,4 +468,33 @@ public class NewJPFProjectPage extends WizardPage {
     return null;
   }
   
+  //--- data getters
+  
+  public String getProjectName() {
+    if (projectNameField != null){
+      return projectNameField.getText();
+    }
+    return null;
+  }
+  
+  public String getProjectLocation(){
+    if (projectPathField != null){
+      return projectPathField.getText();
+    }
+    return null;
+  }
+  
+  public String[] getDependencyProjects(){
+    if (depProjectsList != null){
+      return depProjectsList.getItems();
+    }
+    return null;
+  }
+  
+  public String[] getDependencyJars(){
+    if (depJarsList != null){
+      return depJarsList.getItems();
+    }
+    return null;
+  }    
 }
