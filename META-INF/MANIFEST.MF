@@ -9,8 +9,7 @@ Bundle-ClassPath: lib/antlr-runtime-3.4.jar,
  lib/RunJPF.jar,
  .
 Bundle-Activator: gov.nasa.runjpf.EclipseJPF
-Export-Package: eclipse_jpf,
- gov.nasa.runjpf,
+Export-Package: gov.nasa.runjpf,
  gov.nasa.runjpf.options,
  gov.nasa.runjpf.util,
  gov.nasa.runjpf.wizard
