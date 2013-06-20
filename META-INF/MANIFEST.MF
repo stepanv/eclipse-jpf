@@ -1,12 +1,22 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: eclipse-jpf
+Bundle-Name: Eclipse-jpf
 Bundle-SymbolicName: eclipse-jpf;singleton:=true
-Bundle-Version: 1.0.6
+Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: lib/antlr-runtime-3.4.jar,
+ lib/ST-4.0.4.jar,
+ lib/jpf-template.jar,
+ lib/RunJPF.jar,
+ .
 Bundle-Activator: gov.nasa.runjpf.EclipseJPF
-Bundle-ActivationPolicy: lazy
-Bundle-Vendor: The Java Pathfinder Team
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Export-Package: eclipse_jpf,
+ gov.nasa.runjpf,
+ gov.nasa.runjpf.options,
+ gov.nasa.runjpf.util,
+ gov.nasa.runjpf.wizard
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: org.eclipse.core.filesystem,
  org.eclipse.core.resources,
  org.eclipse.core.runtime;version="3.4.0",
@@ -36,8 +46,4 @@ Import-Package: org.eclipse.core.filesystem,
  org.eclipse.ui.plugin,
  org.eclipse.ui.texteditor,
  org.osgi.framework;version="1.6.0"
-Bundle-ClassPath: lib/antlr-runtime-3.4.jar,
- lib/ST-4.0.4.jar,
- lib/jpf-template.jar,
- lib/RunJPF.jar,
- .
+Bundle-ActivationPolicy: lazy
