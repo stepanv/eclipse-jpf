@@ -14,8 +14,11 @@ Export-Package: gov.nasa.runjpf,
  gov.nasa.runjpf.util,
  gov.nasa.runjpf.wizard
 Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui,
  org.eclipse.core.runtime
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.core.filesystem,
  org.eclipse.core.resources,
  org.eclipse.core.runtime;version="3.4.0",
@@ -45,4 +48,3 @@ Import-Package: org.eclipse.core.filesystem,
  org.eclipse.ui.plugin,
  org.eclipse.ui.texteditor,
  org.osgi.framework;version="1.6.0"
-Bundle-ActivationPolicy: lazy

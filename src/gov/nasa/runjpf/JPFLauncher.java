@@ -296,7 +296,7 @@ public abstract class JPFLauncher {
       //on trying until we get a hit.
       while (keepTrying && socket == null) {
         try {
-          socket = new Socket(InetAddress.getLocalHost(), port);
+          socket = new Socket((String)null, port);
         } catch (IOException io) {
           try {
             Thread.sleep(500);
