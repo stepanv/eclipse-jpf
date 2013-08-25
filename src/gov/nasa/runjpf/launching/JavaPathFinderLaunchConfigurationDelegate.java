@@ -1,5 +1,7 @@
 package gov.nasa.runjpf.launching;
 
+import gov.nasa.runjpf.EclipseJPF;
+
 import java.text.MessageFormat;
 
 import org.eclipse.core.runtime.CoreException;
@@ -63,7 +65,7 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 
 			
 			VMRunnerConfiguration runConfig = new VMRunnerConfiguration(
-					"gov.nasa.jpf.tool.RunJPF",
+					EclipseJPF.JPF_MAIN_CLASS,
 					new String[] {"C:/Users/jd39686/../../apps/SVN_WorkingCopy/devel/gov.nasa.jpf.core/build/RunJPF.jar"});
 
 //			runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
@@ -126,9 +128,6 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 		} finally {
 			monitor.done();
 		}
-		
-		
-		
 	}
 
 }

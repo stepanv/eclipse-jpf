@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -14,9 +15,11 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
@@ -35,6 +38,7 @@ public class JPFRunTab extends JavaLaunchTab {
 	}
 	
 	private UpdateModfiyListener updatedListener = new UpdateModfiyListener();
+	private Group basicConfiguraionGroup;
 
 	/**
 	 * @wbp.parser.entryPoint
@@ -48,26 +52,45 @@ public class JPFRunTab extends JavaLaunchTab {
 		gd.horizontalSpan = GridData.FILL_BOTH;
 		comp.setLayoutData(gd);
 
-		// setup bold font
-				Font boldFont = JFaceResources.getFontRegistry().getBold(
-						JFaceResources.DEFAULT_FONT);
-				
-		Label l = new Label(comp, SWT.WRAP);
-		l.setText("JPF File to execute:");
-		l.setFont(boldFont);
- 
+		GridLayout layout = new GridLayout(1, false);
+		layout.verticalSpacing = 0;
+		comp.setLayout(layout);
+		
+		createBasicConfigurationGroup(comp);
+		
 		setControl(comp);
+		    
+		return;
 		
-		jpfFileLocationText = new Text(comp, SWT.BORDER);
-		jpfFileLocationText.addModifyListener(updatedListener);
-		jpfFileLocationText.setBounds(10, 35, 524, 21);
-		
-		Link link_1 = new Link(comp, 0);
+	}
+	
+	
+	private void createBasicConfigurationGroup(Composite parent){
+		Font font = parent.getFont();
+
+		/*
+		 * ---------------------------------------------------------------------
+		 */
+
+		basicConfiguraionGroup = new Group(parent, SWT.NONE);
+		basicConfiguraionGroup.setText("JPF Verification basic configuration");
+		basicConfiguraionGroup.setLayout(new GridLayout(3, false));
+		basicConfiguraionGroup.setLayoutData(createHFillGridData());
+		basicConfiguraionGroup.setFont(font);
+ 
+		Link link_1 = new Link(basicConfiguraionGroup, 0);
 		link_1.setToolTipText("Open editor for user settings");
 		link_1.setText("JPF &File to execute (*.jpf):");
 		link_1.setBounds(10, 14, 370, 15);
+		new Label(basicConfiguraionGroup, SWT.NONE);
+		new Label(basicConfiguraionGroup, SWT.NONE);
 		
-		Button button = new Button(comp, SWT.NONE);
+		jpfFileLocationText = new Text(basicConfiguraionGroup, SWT.BORDER);
+		jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
+		jpfFileLocationText.addModifyListener(updatedListener);
+		jpfFileLocationText.setBounds(10, 35, 524, 21);
+		
+		Button button = new Button(basicConfiguraionGroup, SWT.NONE);
 		button.setText("&Browse...");
 		button.setBounds(540, 33, 71, 25);
 		
@@ -88,11 +111,26 @@ public class JPFRunTab extends JavaLaunchTab {
 		        }
 		      }
 		    });
+	}
+	
+	private GridData createHFillGridData() {
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		return gd;
+	}
+
+	
+	public static void initDefaultConfiguration(
+			ILaunchConfigurationWorkingCopy configuration, String projectName,
+			String launchConfigName) {
+
+		configuration.setAttribute(
+				IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,
+				EclipseJPF.JPF_MAIN_CLASS);
 		
-		
-		    
-		return;
-		
+		configuration.setAttribute(
+				JPF_FILE_LOCATION, "");
 	}
 
 	public void initializeFrom(ILaunchConfiguration configuration) {

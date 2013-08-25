@@ -82,6 +82,87 @@
             id="eclipse-jpf.launching.jpf-logo">
       </launchConfigurationTypeImage>
    </extension>
+   
+   <extension
+          point="org.eclipse.debug.ui.launchShortcuts">
+       <shortcut
+             class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut"
+             icon="images/jpf-logo.png"
+             id="eclipse-jpf.launching.shortcut"
+             label="Verify in Java Pathfinder"
+             modes="run, debug">
+             
+               <contextLabel label="Run the verification in JPF" mode="run"/>
+         <contextLabel label="Debug the verification in JPF" mode="debug"/>
+
+			<contextualLaunch>
+		   		<enablement>
+		   			<count value="1"/>
+              <iterate>
+                 <or>
+                    <adapt type="org.eclipse.core.resources.IFile">
+                       <test property="org.eclipse.core.resources.name" value="*.jpf"/>
+                    </adapt>
+                 </or>
+              </iterate>
+		   		</enablement>
+	   		</contextualLaunch>
+       
+         <configurationType
+               id="eclipse-jpf.launching.runJpf">
+         </configurationType>
+       
+           
+         <description
+               description="Run JPF"
+               mode="run">
+         </description>
+         <description
+               description="Debug JPF"
+               mode="debug">
+         </description>
+       </shortcut>
+    </extension>
+     <extension
+          point="org.eclipse.debug.ui.launchShortcuts">
+       <shortcut
+             class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut:WITH_DIALOG"
+             icon="images/jpf-logo.png"
+             id="eclipse-jpf.launching.shortcutWithDialog"
+             label="Verify in Java Pathfinder (dialog)"
+             modes="run, debug">
+             
+               <contextLabel label="Run the verification in JPF ..." mode="run"/>
+         <contextLabel label="Debug the verification in JPF ..." mode="debug"/>
+
+			<contextualLaunch>
+		   		<enablement>
+		   			<count value="1"/>
+              <iterate>
+                 <or>
+                    <adapt type="org.eclipse.core.resources.IFile">
+                       <test property="org.eclipse.core.resources.name" value="*.jpf"/>
+                    </adapt>
+                 </or>
+              </iterate>
+		   		</enablement>
+	   		</contextualLaunch>
+       
+         <configurationType
+               id="eclipse-jpf.launching.runJpf">
+         </configurationType>
+       
+           
+         <description
+               description="Run JPF"
+               mode="run">
+         </description>
+         <description
+               description="Debug JPF"
+               mode="debug">
+         </description>
+       </shortcut>
+    </extension>
 
 
    <extension

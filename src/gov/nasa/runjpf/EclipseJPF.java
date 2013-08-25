@@ -229,6 +229,7 @@ public class EclipseJPF extends AbstractUIPlugin {
 	    });
 	  }
 	  
+	  final public static String JPF_MAIN_CLASS = "gov.nasa.jpf.tool.RunJPF";
 	  
 
 }
