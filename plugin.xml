@@ -27,7 +27,63 @@
                tooltip="Execute this property file as a JPF configuration">
          </action>
       </objectContribution>
+      <objectContribution
+            id="eclipse-jpf.contribution1"
+            objectClass="org.eclipse.core.resources.IFile">
+         <menu
+               id="eclipse-jpf.menu1"
+               label="Java PathFinder"
+               path="additions">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               class="gov.nasa.runjpf.VerifyActionDelegate"
+               enablesFor="1"
+               id="eclipse-jpf.newAction"
+               label="Verify..."
+               menubarPath="eclipse-jpf.menu1/group1"
+               tooltip="Execute this property file as a JPF configuration">
+         </action>
+         <action
+               class="gov.nasa.runjpf.DebugVerificationActionDelegate"
+               enablesFor="1"
+               id="eclipse-jpf.newAction2"
+               label="Debug the Verification..."
+               menubarPath="eclipse-jpf.menu1/group1"
+               tooltip="Execute this property file with enabled debugging as a JPF configuration">
+         </action>
+      </objectContribution>
    </extension>
+   
+   <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
+   <launchConfigurationType
+   	   id="eclipse-jpf.launching.runJpf"
+	   name="Java PathFinder"
+	   delegate="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationDelegate"
+	   modes= "run, debug"
+	   sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+       sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+   </launchConfigurationType>
+</extension>
+<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+  <launchConfigurationTabGroup
+      id="eclipse-jpf.launching.runJpfTabGroup"
+      type="eclipse-jpf.launching.runJpf"
+      class="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationTabGroup">
+  </launchConfigurationTabGroup>
+ </extension>
+  <extension
+         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+      <launchConfigurationTypeImage
+            configTypeID="eclipse-jpf.launching.runJpf"
+            icon="images/jpf-logo.png"
+            id="eclipse-jpf.launching.jpf-logo">
+      </launchConfigurationTypeImage>
+   </extension>
+
+
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
