@@ -82,6 +82,43 @@ public abstract class JPFLauncher {
     return siteProperties.getAbsolutePath(); 
   }
   
+  private File lookupSiteProperties() {
+	  String path = getSiteProperties();
+	    if (path == null || path.isEmpty()){
+	      printError("getSiteProperties() is null or empty, using default path: " + DEFAULT_SITE_PROPERTIES_PATH);
+	      path = DEFAULT_SITE_PROPERTIES_PATH;
+	    }
+
+	    return new File(path);
+	    
+  }
+  
+  private File lookupRunJpfJar(File siteProperties) {
+	  
+	    
+	    // check if preferences were changed or the file was modified
+	    if (!siteProperties.equals(lastSiteProperties) || siteProperties.lastModified() > lastSitePropMod){
+	      String coreProperty = JPFSiteUtils.getMatchFromFile(siteProperties, "jpf-core");
+	      if (coreProperty == null || coreProperty.isEmpty()) {
+	        printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
+	        return null;
+	      }
+
+	      siteCoreDir = new File(coreProperty);
+	      if (!siteCoreDir.isDirectory()) {
+	        printError("jpf-core specification in " + siteProperties.getAbsolutePath() + " not a valid directory: " + siteCoreDir);
+	        return null;
+	      }
+
+	      lastSiteProperties = siteProperties;
+	      lastSitePropMod = siteProperties.lastModified();
+	    }
+	    
+
+	    return new File(siteCoreDir, "build" + File.separatorChar + "RunJPF.jar");
+	    
+  }
+  
   /**
    * Launch a new process to run jpf with specified *.jpf file. This method
    * will report all errors to the stream returned by getErrorStream(), no
@@ -106,41 +143,15 @@ public abstract class JPFLauncher {
 
     errorStream = getErrorStream();
 
-    String path = getSiteProperties();
-    if (path == null || path.isEmpty()){
-      printError("getSiteProperties() is null or empty, using default path: " + DEFAULT_SITE_PROPERTIES_PATH);
-      path = DEFAULT_SITE_PROPERTIES_PATH;
-    }
-
-    File siteProperties = new File(path);
-    if (!siteProperties.isFile()){
-      printError("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
-      return null;
-    }
-    
-    // check if preferences were changed or the file was modified
-    if (!siteProperties.equals(lastSiteProperties) || siteProperties.lastModified() > lastSitePropMod){
-      String coreProperty = JPFSiteUtils.getMatchFromFile(path, "jpf-core");
-      if (coreProperty == null || coreProperty.isEmpty()) {
-        printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
-        return null;
-      }
-
-      siteCoreDir = new File(coreProperty);
-      if (!siteCoreDir.isDirectory()) {
-        printError("jpf-core specification in " + path + " not a valid directory: " + siteCoreDir);
-        return null;
-      }
-
-      lastSiteProperties = siteProperties;
-      lastSitePropMod = siteProperties.lastModified();
-    }
-    
-
-    File runJPFJar = new File(siteCoreDir, "build" + File.separatorChar + "RunJPF.jar");
-    if (!runJPFJar.isFile()){
-      printError("RunJPF.jar not found at: " + runJPFJar.getPath());
-    }
+    File siteProperties = lookupSiteProperties();
+    if (siteProperties == null || !siteProperties.isFile()){
+	      printError("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
+	      return null;
+	    }
+    File runJPFJar = lookupRunJpfJar(siteProperties);
+    if (runJPFJar == null || !runJPFJar.isFile()){
+    	      printError("RunJPF.jar not found at: " + runJPFJar.getPath());
+    	    }
 
     ArrayList<String> commandList = new ArrayList<String>();
 

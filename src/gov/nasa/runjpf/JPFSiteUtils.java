@@ -41,11 +41,10 @@ public class JPFSiteUtils {
    * minimal parsing - only local key, system property and and config_path expansion
    * NOTE this stops after finding the key, and it doesn't add the file to the 'sources'
    */
-  public static String getMatchFromFile (String pathName, String lookupKey){
+  public static String getMatchFromFile (File propFile, String lookupKey){
     String value = null;
     Pattern lookupPattern = Pattern.compile(lookupKey);
 
-    File propFile = new File(pathName);
     if (!propFile.isFile()){
       return null;
     }
@@ -167,7 +166,7 @@ public class JPFSiteUtils {
       }
     }
 
-    String path = getMatchFromFile(f.getAbsolutePath(), "jpf-core");
+    String path = getMatchFromFile(f, "jpf-core");
     if (path != null){
       File coreDir = new File(path);
       if (coreDir.isDirectory()){
