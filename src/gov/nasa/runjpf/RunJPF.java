@@ -55,8 +55,9 @@ public class RunJPF extends Job {
         } catch (InterruptedException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
+        } finally {
+        	isJPFRunning = false;
         }
-        isJPFRunning = false;
       }
     }.start();
     
