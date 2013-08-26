@@ -82,7 +82,7 @@ public abstract class JPFLauncher {
     return siteProperties.getAbsolutePath(); 
   }
   
-  private File lookupSiteProperties() {
+  public File lookupSiteProperties() {
 	  String path = getSiteProperties();
 	    if (path == null || path.isEmpty()){
 	      printError("getSiteProperties() is null or empty, using default path: " + DEFAULT_SITE_PROPERTIES_PATH);
@@ -93,7 +93,7 @@ public abstract class JPFLauncher {
 	    
   }
   
-  private File lookupRunJpfJar(File siteProperties) {
+  public File lookupRunJpfJar(File siteProperties) {
 	  
 	    
 	    // check if preferences were changed or the file was modified

@@ -1,6 +1,10 @@
 package gov.nasa.runjpf;
 
+import gov.nasa.runjpf.launching.RunJPFLaunchShortcut;
+
 import org.eclipse.core.resources.IFile;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -28,7 +32,13 @@ public class VerifyActionDelegate implements IObjectActionDelegate {
 	public void run(IAction action) {
 		if (file == null)
 			return;
-		new RunJPF(file).schedule();
+		RunJPFLaunchShortcut shortcut = new RunJPFLaunchShortcut();
+		ILaunchConfiguration configuration = shortcut.findLaunchConfiguration(file);
+		if (configuration == null) {
+			shortcut.setShowDialog(true);
+			configuration = shortcut.createConfiguration(file);
+		}
+		shortcut.launch(configuration, ILaunchManager.RUN_MODE);
 	}
 
 	@Override

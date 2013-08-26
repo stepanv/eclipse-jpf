@@ -1,7 +1,9 @@
 package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.EclipseJPFLauncher;
 
+import java.io.File;
 import java.text.MessageFormat;
 
 import org.eclipse.core.runtime.CoreException;
@@ -62,11 +64,21 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 			ExecutionArguments execArgs = new ExecutionArguments(
 					getVMArguments(configuration),
 					getProgramArguments(configuration));
-
+			
+			String jpfRunPath;
+			try {
+				EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
+				File siteProperties = eclipseJpfLauncher.lookupSiteProperties();
+				File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
+				jpfRunPath = jpfRunJar.getAbsolutePath();
+			} catch (NullPointerException npe) {
+				EclipseJPF.logError("JPF was not sucessfully found.", npe);
+				return;
+			}
 			
 			VMRunnerConfiguration runConfig = new VMRunnerConfiguration(
 					EclipseJPF.JPF_MAIN_CLASS,
-					new String[] {"C:/Users/jd39686/../../apps/SVN_WorkingCopy/devel/gov.nasa.jpf.core/build/RunJPF.jar"});
+					new String[] {jpfRunPath});
 
 //			runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
 			
@@ -75,9 +87,7 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 			// Environment variables
 			runConfig.setEnvironment(getEnvironment(configuration));
 
-//			boolean debug = ILaunchManager.DEBUG_MODE.equals(mode);
-//			runConfig.setVMArguments(getRuntimeArguments(configuration,
-//					execArgs.getVMArgumentsArray(),debug));
+			runConfig.setVMArguments(execArgs.getVMArgumentsArray());
 
 //			runConfig
 //					.setWorkingDirectory(getWorkingDirectoryAbsolutePath(configuration));

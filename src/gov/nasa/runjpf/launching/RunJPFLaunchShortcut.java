@@ -31,6 +31,13 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 	private static final String JPF_CONFIGURATION_TYPE_STRING = "eclipse-jpf.launching.runJpf";
 	private boolean showDialog = false;
 
+	/**
+	 * @param showDialog the showDialog to set
+	 */
+	public void setShowDialog(boolean showDialog) {
+		this.showDialog = showDialog;
+	}
+
 	@Override
 	public void setInitializationData(IConfigurationElement config, String propertyName, Object data) {
 	    if("WITH_DIALOG".equals(data)) { //$NON-NLS-1$
@@ -38,17 +45,26 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 	    }
 	  }
 	
+	private ILaunchConfiguration findOrCreateLaunchConfiguration(IResource ir) {
+		ILaunchConfiguration launchConfiguration = findLaunchConfiguration(ir);
+		if (launchConfiguration == null) {
+			launchConfiguration = createConfiguration(ir);
+		}
+		return launchConfiguration;
+	}
+	
 	@Override
 	public void launch(ISelection selection, String mode) {
 		IResource ir = getLaunchableResource(selection);
-		launch(ir,mode);
+		launch(findOrCreateLaunchConfiguration(ir), mode);
 	}
 
 	@Override
 	public void launch(IEditorPart editor, String mode) {
-		launch(getLaunchableResource(editor),mode);
+		launch(findOrCreateLaunchConfiguration(getLaunchableResource(editor)), mode);
 	}
-	protected ILaunchConfiguration findLaunchConfiguration(IResource type) {
+	
+	public ILaunchConfiguration findLaunchConfiguration(IResource type) {
 		if(type == null ) return null;
 		
 		if (type instanceof IFile) {
@@ -130,15 +146,9 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 	}
 	
 
-	public void launch(IResource ir,String mode){
-		ILaunchConfiguration launchConfiguration = findLaunchConfiguration(ir);
-		if (launchConfiguration == null) {
-			launchConfiguration = createConfiguration(ir);
-		}
-		
+	public void launch(ILaunchConfiguration launchConfiguration, String mode){
 		if (launchConfiguration == null) {
 			return;
-		
 		}
 		
 		if(showDialog) {

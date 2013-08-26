@@ -165,10 +165,6 @@ public class JPFDebugger extends StandardVMDebugger {
 				connector.startListening(map);
 				
 				File workingDir = getWorkingDir(config);
-				String[] newCmdLine = validateCommandLine(launch.getLaunchConfiguration(), cmdLine);
-				if(newCmdLine != null) {
-					cmdLine = newCmdLine;
-				}
 				p = exec(cmdLine, workingDir, envp);				
 				if (p == null) {
 					return;
@@ -179,26 +175,9 @@ public class JPFDebugger extends StandardVMDebugger {
 					p.destroy();
 					return;
 				}				
-				String timestamp = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(new Date(System.currentTimeMillis()));
-				IProcess process= newProcess(launch, p, renderProcessLabel(cmdLine, timestamp), getDefaultProcessMap());
-				process.setAttribute(DebugPlugin.ATTR_PATH, cmdLine[0]);
+				
+				IProcess process= newProcess(launch, p, renderProcessLabel(cmdLine), getDefaultProcessMap());
 				process.setAttribute(IProcess.ATTR_CMDLINE, renderCommandLine(cmdLine));
-				String ltime = launch.getAttribute(DebugPlugin.ATTR_LAUNCH_TIMESTAMP);
-				process.setAttribute(DebugPlugin.ATTR_LAUNCH_TIMESTAMP, ltime != null ? ltime : timestamp);
-				if(workingDir != null) {
-					process.setAttribute(DebugPlugin.ATTR_WORKING_DIRECTORY, workingDir.getAbsolutePath());
-				}
-				if(envp != null) {
-					Arrays.sort(envp);
-					StringBuffer buff = new StringBuffer();
-					for (int i = 0; i < envp.length; i++) {
-						buff.append(envp[i]);
-						if(i < envp.length-1) {
-							buff.append('\n');
-						}
-					}
-					process.setAttribute(DebugPlugin.ATTR_ENVIRONMENT, buff.toString());
-				}
 				subMonitor.worked(1);
 				subMonitor.subTask(LaunchingMessages.StandardVMDebugger_Establishing_debug_connection____5); 
 				boolean retry= false;
