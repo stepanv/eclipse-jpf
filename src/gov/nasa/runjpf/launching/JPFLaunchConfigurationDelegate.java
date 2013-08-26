@@ -2,46 +2,31 @@ package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
+import gov.nasa.runjpf.internal.launching.JPFDebugger;
+import gov.nasa.runjpf.tab.JPFRunTab;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
-import org.eclipse.debug.core.sourcelookup.ISourceContainer;
-import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
-import org.eclipse.debug.core.sourcelookup.containers.DefaultSourceContainer;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.ExecutionArguments;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
-import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
-import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 
-public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
+public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
     ILaunchConfigurationDelegate {
 
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    System.out.println("here");
-
     String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
-
-    System.out.println("JPF File: " + jpfFile);
 
     // /*
     // * for those terminate by our self .

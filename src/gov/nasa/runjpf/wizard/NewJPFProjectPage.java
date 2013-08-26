@@ -10,7 +10,6 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.util.ListDialog;
 
-import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;

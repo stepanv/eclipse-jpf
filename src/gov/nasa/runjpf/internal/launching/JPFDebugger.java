@@ -1,4 +1,4 @@
-package gov.nasa.runjpf.launching;
+package gov.nasa.runjpf.internal.launching;
 
 import java.io.File;
 import java.io.IOException;

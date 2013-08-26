@@ -1,6 +1,7 @@
 package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.util.ProjectUtil;
 
 import java.io.File;
