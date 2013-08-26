@@ -23,6 +23,7 @@
                enablesFor="1"
                id="RunJPF.verifyaction"
                label="Verify..."
+               icon="icons/jpf-logo.png"
                menubarPath="additions"
                tooltip="Execute this property file as a JPF configuration">
          </action>
@@ -60,7 +61,7 @@
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
    <launchConfigurationType
    	   id="eclipse-jpf.launching.runJpf"
-	   name="Java PathFinder"
+	   name="Java PathFinder Verification"
 	   delegate="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationDelegate"
 	   modes= "run, debug"
 	   sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
@@ -78,7 +79,7 @@
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
             configTypeID="eclipse-jpf.launching.runJpf"
-            icon="images/jpf-logo.png"
+            icon="icons/jpf-logo.png"
             id="eclipse-jpf.launching.jpf-logo">
       </launchConfigurationTypeImage>
    </extension>
@@ -87,7 +88,7 @@
           point="org.eclipse.debug.ui.launchShortcuts">
        <shortcut
              class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut"
-             icon="images/jpf-logo.png"
+             icon="icons/jpf-logo.png"
              id="eclipse-jpf.launching.shortcut"
              label="Verify in Java Pathfinder"
              modes="run, debug">
@@ -127,7 +128,7 @@
           point="org.eclipse.debug.ui.launchShortcuts">
        <shortcut
              class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut:WITH_DIALOG"
-             icon="images/jpf-logo.png"
+             icon="icons/jpf-logo.png"
              id="eclipse-jpf.launching.shortcutWithDialog"
              label="Verify in Java Pathfinder (dialog)"
              modes="run, debug">
