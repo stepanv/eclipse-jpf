@@ -5,53 +5,65 @@ import gov.nasa.runjpf.EclipseJPFLauncher;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
+import org.eclipse.debug.core.sourcelookup.ISourceContainer;
+import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
+import org.eclipse.debug.core.sourcelookup.containers.DefaultSourceContainer;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.ExecutionArguments;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
+import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 
 public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
 
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
 		System.out.println("here");
-		
-		String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
-		
-		System.out.println("JPF File: " + jpfFile);
-		
-//		/*
-//		 * for those terminate by our self .
-//		 *
-//		 * @see #terminateOldRJRLauncher
-//		 */
-//		if (/* run the validation */) {
-//			throw new CoreException(
-//					new Status(
-//							IStatus.ERROR,
-//							Plugin.PLUGIN_ID,
-//							01,
-//							" Invalid run configuration , please check the configuration ",
-//							null));
-//		}
 
-//		addSourcesLookupProjectsFromMavenIfExist(configuration);
+		String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
+
+		System.out.println("JPF File: " + jpfFile);
+
+		// /*
+		// * for those terminate by our self .
+		// *
+		// * @see #terminateOldRJRLauncher
+		// */
+		// if (/* run the validation */) {
+		// throw new CoreException(
+		// new Status(
+		// IStatus.ERROR,
+		// Plugin.PLUGIN_ID,
+		// 01,
+		// " Invalid run configuration , please check the configuration ",
+		// null));
+		// }
+
+		// addSourcesLookupProjectsFromMavenIfExist(configuration);
 
 		if (monitor == null) {
 			monitor = new NullProgressMonitor();
 		}
 
-		monitor.beginTask(
-				MessageFormat.format("{0}...", configuration.getName()), 3); //$NON-NLS-1$
+		monitor.beginTask(MessageFormat.format("{0}...", configuration.getName()), 3); //$NON-NLS-1$
 
 		// check for cancellation
 		if (monitor.isCanceled())
@@ -61,10 +73,8 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 			monitor.subTask("verifying installation");
 
 			// Program & VM arguments
-			ExecutionArguments execArgs = new ExecutionArguments(
-					getVMArguments(configuration),
-					getProgramArguments(configuration));
-			
+			ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
+
 			String jpfRunPath;
 			try {
 				EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
@@ -75,24 +85,21 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 				EclipseJPF.logError("JPF was not sucessfully found.", npe);
 				return;
 			}
-			
-			VMRunnerConfiguration runConfig = new VMRunnerConfiguration(
-					EclipseJPF.JPF_MAIN_CLASS,
-					new String[] {jpfRunPath});
 
-//			runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
-			
-			runConfig.setProgramArguments(new String[] {"+shell.port=4242", jpfFile});
+			VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
+
+			// runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
+
+			runConfig.setProgramArguments(new String[] { "+shell.port=4242", jpfFile });
 
 			// Environment variables
 			runConfig.setEnvironment(getEnvironment(configuration));
 
 			runConfig.setVMArguments(execArgs.getVMArgumentsArray());
 
-//			runConfig
-//					.setWorkingDirectory(getWorkingDirectoryAbsolutePath(configuration));
-			runConfig
-					.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
+			// runConfig
+			// .setWorkingDirectory(getWorkingDirectoryAbsolutePath(configuration));
+			runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
 
 			// Boot path
 			runConfig.setBootClassPath(getBootpath(configuration));
@@ -114,21 +121,21 @@ public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunc
 			monitor.worked(1);
 
 			synchronized (configuration) {
-//				terminateOldRJRLauncher(configuration, launch);
+				// terminateOldRJRLauncher(configuration, launch);
 				// Launch the configuration - 1 unit of work
-//				getVMRunner(configuration, mode)
-//						.run(runConfig, launch, monitor);
+				// getVMRunner(configuration, mode)
+				// .run(runConfig, launch, monitor);
 				IVMRunner runner;
 				if (ILaunchManager.DEBUG_MODE.equals(mode)) {
 					IVMInstall vm = verifyVMInstall(configuration);
 					runner = new JPFDebugger(vm);
-					
+
 				} else {
 					runner = getVMRunner(configuration, mode);
 				}
 				runner.run(runConfig, launch, monitor);
-				
-//				registerRJRLauncher(configuration, launch);
+
+				// registerRJRLauncher(configuration, launch);
 			}
 
 			// check for cancellation

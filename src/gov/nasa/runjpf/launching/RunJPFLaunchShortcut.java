@@ -1,11 +1,13 @@
 package gov.nasa.runjpf.launching;
 
-import java.io.File;
-
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.util.ProjectUtil;
 
+import java.io.File;
+import java.util.Arrays;
+
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -15,16 +17,21 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.core.sourcelookup.ISourceContainer;
+import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
+import org.eclipse.debug.core.sourcelookup.containers.DefaultSourceContainer;
 import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.debug.ui.ILaunchGroup;
 import org.eclipse.debug.ui.ILaunchShortcut;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
-
 
 public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtension {
 
@@ -32,7 +39,8 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 	private boolean showDialog = false;
 
 	/**
-	 * @param showDialog the showDialog to set
+	 * @param showDialog
+	 *            the showDialog to set
 	 */
 	public void setShowDialog(boolean showDialog) {
 		this.showDialog = showDialog;
@@ -40,11 +48,11 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
 	@Override
 	public void setInitializationData(IConfigurationElement config, String propertyName, Object data) {
-	    if("WITH_DIALOG".equals(data)) { //$NON-NLS-1$
-	      this.showDialog  = true;
-	    }
-	  }
-	
+		if ("WITH_DIALOG".equals(data)) { //$NON-NLS-1$
+			this.showDialog = true;
+		}
+	}
+
 	private ILaunchConfiguration findOrCreateLaunchConfiguration(IResource ir) {
 		ILaunchConfiguration launchConfiguration = findLaunchConfiguration(ir);
 		if (launchConfiguration == null) {
@@ -52,7 +60,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 		}
 		return launchConfiguration;
 	}
-	
+
 	@Override
 	public void launch(ISelection selection, String mode) {
 		IResource ir = getLaunchableResource(selection);
@@ -63,19 +71,19 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 	public void launch(IEditorPart editor, String mode) {
 		launch(findOrCreateLaunchConfiguration(getLaunchableResource(editor)), mode);
 	}
-	
+
 	public ILaunchConfiguration findLaunchConfiguration(IResource type) {
-		if(type == null ) return null;
-		
+		if (type == null)
+			return null;
+
 		if (type instanceof IFile) {
-			File selectedFile = ((IFile)type).getLocation().toFile();
-			
+			File selectedFile = ((IFile) type).getLocation().toFile();
+
 			try {
-				ILaunchConfiguration[] configs = DebugPlugin.getDefault().
-					getLaunchManager().getLaunchConfigurations();
+				ILaunchConfiguration[] configs = DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurations();
 				for (ILaunchConfiguration config : configs) {
-	
-					if(isJpfRunConfiguration(config)){
+
+					if (isJpfRunConfiguration(config)) {
 						String currentProejctName = config.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
 						File foundFile = new File(currentProejctName);
 						if (foundFile.equals(selectedFile)) {
@@ -89,88 +97,158 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 		return null;
 	}
 
-	private boolean isJpfRunConfiguration(ILaunchConfiguration config) throws CoreException{
-		String mainType = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,"");
-		return	EclipseJPF.JPF_MAIN_CLASS.equals(mainType);
+	private boolean isJpfRunConfiguration(ILaunchConfiguration config) throws CoreException {
+		String mainType = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "");
+		return EclipseJPF.JPF_MAIN_CLASS.equals(mainType);
 	}
 
 	private ILaunchManager getLaunchManager() {
 		return DebugPlugin.getDefault().getLaunchManager();
 	}
 
-	public ILaunchConfigurationType getConfigurationType(){
+	public ILaunchConfigurationType getConfigurationType() {
 		return getLaunchManager().getLaunchConfigurationType(JPF_CONFIGURATION_TYPE_STRING);
 	}
-	public ILaunchConfiguration createConfiguration(IResource type){
-		if( type == null ) return null;
-		
-		if (type instanceof IFile) {
-			String typeName = ((IFile)type).getName();
 
-		ILaunchConfiguration config = null;
-		ILaunchConfigurationWorkingCopy wc = null;
+	/**
+	 * Conditionally adds the given project to the working copy.
+	 * 
+	 * @param project
+	 *            The project to add.
+	 * @param workingCopy
+	 *            Where to add the given project.
+	 */
+	private void addProjectAsSourceLookup(IProject project, ILaunchConfigurationWorkingCopy workingCopy) {
 		try {
-			ILaunchConfigurationType configType = getConfigurationType();
+			ISourceLookupDirector sourceLookupDirector = new JavaSourceLookupDirector();
+			String initMemento = workingCopy.getAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_MEMENTO, "");
+			if (initMemento != null && !initMemento.trim().equals("")) {
+				sourceLookupDirector.initializeFromMemento(initMemento);
+			}
 
-				String launchConfigName = getLaunchManager().
-					generateLaunchConfigurationName(typeName);
+			// check default source container
+			ISourceContainer[] existingContainers = conditionallyAddIfNotPresent(new DefaultSourceContainer(), sourceLookupDirector.getSourceContainers());
+
+			// handle projects in current workspace
+			existingContainers = conditionallyAddIfNotPresent(new JavaProjectSourceContainer(JavaCore.create(project)), existingContainers);
+
+			sourceLookupDirector.setSourceContainers(existingContainers);
+			workingCopy.setAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_MEMENTO, sourceLookupDirector.getMemento());
+
+		} catch (Exception e) {
+			EclipseJPF.logError("Cannot add resources", e);
+		}
+	}
+
+	private ISourceContainer[] conditionallyAddIfNotPresent(ISourceContainer container, ISourceContainer[] containers) {
+		if (!isPresent(container, containers)) {
+			ISourceContainer[] enlargedContainers = Arrays.copyOf(containers, containers.length + 1);
+			enlargedContainers[containers.length] = container;
+			return enlargedContainers;
+		}
+		return containers;
+	}
+
+	/**
+	 * if containers contains target source container
+	 * 
+	 * @param testedContainer
+	 *            The Container to be tested
+	 * @param containers
+	 *            The set of containers where tested container is looked for
+	 * 
+	 * @return True if the tested container is present in the given ones
+	 */
+	private boolean isPresent(ISourceContainer testedContainer, ISourceContainer[] containers) {
+		if (testedContainer == null) {
+			return false;
+		}
+
+		String testedName = testedContainer.getName();
+		String testedTypeId = testedContainer.getType().getId();
+		for (ISourceContainer currentContainer : containers) {
+			String name = currentContainer.getName();
+			String typeId = currentContainer.getType().getId();
+			if (name.equals(testedName) && typeId.equals(testedTypeId)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public ILaunchConfiguration createConfiguration(IResource type) {
+		if (type == null)
+			return null;
+
+		if (type instanceof IFile) {
+			String typeName = ((IFile) type).getName();
+
+			ILaunchConfiguration config = null;
+			ILaunchConfigurationWorkingCopy wc = null;
+			try {
+				ILaunchConfigurationType configType = getConfigurationType();
+
+				String launchConfigName = getLaunchManager().generateLaunchConfigurationName(typeName);
 
 				wc = configType.newInstance(null, launchConfigName);
 
 				JPFRunTab.initDefaultConfiguration(wc, null, launchConfigName);
-				
-				wc.setAttribute(
-						JPFRunTab.JPF_FILE_LOCATION, ((IFile)type).getLocation().toFile().getAbsolutePath());
 
-				//set mapped resource , let next time we could execute this directly from menuitem.
-				wc.setMappedResources(new IResource[] {type});
+				wc.setAttribute(JPFRunTab.JPF_FILE_LOCATION, ((IFile) type).getLocation().toFile().getAbsolutePath());
+
+				addProjectAsSourceLookup(type.getProject(), wc);
+
+				// set mapped resource , let next time we could execute this
+				// directly from menuitem.
+				wc.setMappedResources(new IResource[] { type });
 				config = wc.doSave();
-		} catch (CoreException exception) {
-			showError( exception.getStatus().getMessage());
-		}
-		return config;
+			} catch (CoreException exception) {
+				showError(exception.getStatus().getMessage());
+			}
+			return config;
 		}
 		return null;
 	}
 
-	private void showError(String message){
-		MessageDialog.openError(getActiveShell(),"Error when startup JPF Verification",
-				message);
+	private void showError(String message) {
+		MessageDialog.openError(getActiveShell(), "Error when startup JPF Verification", message);
 	}
-	private Shell getActiveShell(){
+
+	private Shell getActiveShell() {
 		IWorkbenchWindow win = EclipseJPF.getDefault().getWorkbench().getActiveWorkbenchWindow();
 
-		if(win ==null) return null;
+		if (win == null)
+			return null;
 
 		return win.getShell();
 	}
-	
 
-	public void launch(ILaunchConfiguration launchConfiguration, String mode){
+	public void launch(ILaunchConfiguration launchConfiguration, String mode) {
 		if (launchConfiguration == null) {
 			return;
 		}
-		
-		if(showDialog) {
-	      DebugUITools.saveBeforeLaunch();
-	      ILaunchGroup group = DebugUITools.getLaunchGroup(launchConfiguration, mode);
-	      DebugUITools.openLaunchConfigurationDialog(getActiveShell(), launchConfiguration,
-	    		  group.getIdentifier(), null);
-	    } else {
-	      DebugUITools.launch(launchConfiguration, mode);
-	    }
+
+		if (showDialog) {
+			DebugUITools.saveBeforeLaunch();
+			ILaunchGroup group = DebugUITools.getLaunchGroup(launchConfiguration, mode);
+			DebugUITools.openLaunchConfigurationDialog(getActiveShell(), launchConfiguration, group.getIdentifier(), null);
+		} else {
+			DebugUITools.launch(launchConfiguration, mode);
+		}
 	}
 
 	public ILaunchConfiguration[] getLaunchConfigurations(ISelection selection) {
 		ILaunchConfiguration launchconf = findLaunchConfiguration(getLaunchableResource(selection));
-		if(launchconf == null) return null;
-		return new ILaunchConfiguration[]{launchconf};
+		if (launchconf == null)
+			return null;
+		return new ILaunchConfiguration[] { launchconf };
 	}
 
 	public ILaunchConfiguration[] getLaunchConfigurations(IEditorPart editorpart) {
 		ILaunchConfiguration launchconf = findLaunchConfiguration(getLaunchableResource(editorpart));
-		if(launchconf == null) return null;
-		return new ILaunchConfiguration[]{launchconf};
+		if (launchconf == null)
+			return null;
+		return new ILaunchConfiguration[] { launchconf };
 	}
 
 	public IResource getLaunchableResource(ISelection selection) {
@@ -178,17 +256,14 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 	}
 
 	public IResource getLaunchableResource(IEditorPart editorpart) {
-		return getLaunchableResource(ProjectUtil.getFile(editorpart
-				.getEditorInput()));
+		return getLaunchableResource(ProjectUtil.getFile(editorpart.getEditorInput()));
 	}
 
 	private IResource getLaunchableResource(IResource ir) {
-		if (ir == null )
+		if (ir == null)
 			return null;
 
 		return ir;
 	}
-
-
 
 }
