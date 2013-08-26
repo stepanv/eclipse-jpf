@@ -14,17 +14,18 @@ import org.eclipse.core.runtime.jobs.Job;
 /**
  * The <code>RunJPF</code> class represents that Job that is executed to launch
  * JPF.
+ * 
  * @author sandro
  * @see VerifyActionDelegate
  * @see EclipseJPFLauncher
  */
 public class RunJPF extends Job {
-   
+
   private static final String JOB_NAME = "Verify...";
   private IFile file;
   private volatile boolean isJPFRunning = false;
-  
-  public RunJPF(IFile file){
+
+  public RunJPF(IFile file) {
     super(JOB_NAME);
     this.file = file;
   }
@@ -36,33 +37,33 @@ public class RunJPF extends Job {
    * 
    */
   protected IStatus run(IProgressMonitor monitor) {
-    
+
     EclipseJPFLauncher launcher = new EclipseJPFLauncher();
-    final Process p =  launcher.launch(file);
+    final Process p = launcher.launch(file);
     JPFKiller killer = launcher.getKiller();
-    
-    //This is going to get beyond messy. But since there is no easy way to poll
-    //if a process is running here we go
-    
-    //Runs until the jpf process terminates, then 
-    //sets isJPFRunning to false
+
+    // This is going to get beyond messy. But since there is no easy way to poll
+    // if a process is running here we go
+
+    // Runs until the jpf process terminates, then
+    // sets isJPFRunning to false
     isJPFRunning = true;
-    new Thread(){
+    new Thread() {
       @Override
-      public void run(){
+      public void run() {
         try {
           p.waitFor();
         } catch (InterruptedException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
         } finally {
-        	isJPFRunning = false;
+          isJPFRunning = false;
         }
       }
     }.start();
-    
-    while(isJPFRunning){
-      if (monitor.isCanceled()){
+
+    while (isJPFRunning) {
+      if (monitor.isCanceled()) {
         killer.run();
         isJPFRunning = false;
         return Status.CANCEL_STATUS;
@@ -76,7 +77,3 @@ public class RunJPF extends Job {
     return Status.OK_STATUS;
   }
 }
-
-
-
-

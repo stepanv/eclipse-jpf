@@ -14,33 +14,35 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
  * The <code>Preferences</code> class represents the PreferencePage for this
  * plugin. All of the keys for the preferences stored can be retrived from the
  * {@link EclipseJPFLauncher} class.
+ * 
  * @author sandro
- *
+ * 
  */
-public class Preferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage{
-	
-	public Preferences() {
-		super(GRID);
-		setPreferenceStore(EclipseJPF.getDefault().getPreferenceStore());
-		setDescription("Set the properties for Eclipse-JPF");
-	}
+public class Preferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
-	@Override
-	protected void createFieldEditors() {
-	  IntegerFieldEditor port = new IntegerFieldEditor(EclipseJPFLauncher.PORT,"Shell Port Number:",getFieldEditorParent());
-	  FileFieldEditor sitePropertiesPath = new FileFieldEditor(EclipseJPFLauncher.SITE_PROPERTIES_PATH, "Path to site.properties", getFieldEditorParent());
-	  StringFieldEditor args = new StringFieldEditor(EclipseJPFLauncher.ARGS, "JPF's Arguments", getFieldEditorParent());
-	  StringFieldEditor vm_args = new StringFieldEditor(EclipseJPFLauncher.VM_ARGS, "JPF's Host &VM Arguements",getFieldEditorParent());
-	  
-	  addField(port);
-	  addField(sitePropertiesPath);
-	  addField(args);
-	  addField(vm_args);
-	}
+  public Preferences() {
+    super(GRID);
+    setPreferenceStore(EclipseJPF.getDefault().getPreferenceStore());
+    setDescription("Set the properties for Eclipse-JPF");
+  }
 
-	@Override
-	public void init(IWorkbench workbench) {
-		
-	}
+  @Override
+  protected void createFieldEditors() {
+    IntegerFieldEditor port = new IntegerFieldEditor(EclipseJPFLauncher.PORT, "Shell Port Number:", getFieldEditorParent());
+    FileFieldEditor sitePropertiesPath = new FileFieldEditor(EclipseJPFLauncher.SITE_PROPERTIES_PATH, "Path to site.properties",
+        getFieldEditorParent());
+    StringFieldEditor args = new StringFieldEditor(EclipseJPFLauncher.ARGS, "JPF's Arguments", getFieldEditorParent());
+    StringFieldEditor vm_args = new StringFieldEditor(EclipseJPFLauncher.VM_ARGS, "JPF's Host &VM Arguements", getFieldEditorParent());
+
+    addField(port);
+    addField(sitePropertiesPath);
+    addField(args);
+    addField(vm_args);
+  }
+
+  @Override
+  public void init(IWorkbench workbench) {
+
+  }
 
 }

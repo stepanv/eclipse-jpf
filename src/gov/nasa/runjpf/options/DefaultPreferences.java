@@ -8,13 +8,14 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * Simple class that sets the default values of the eclipse-jpf preferences
+ * 
  * @author sandro
- *
+ * 
  */
 public class DefaultPreferences extends AbstractPreferenceInitializer {
 
   @Override
-  public void initializeDefaultPreferences(){
+  public void initializeDefaultPreferences() {
     IPreferenceStore store = EclipseJPF.getDefault().getPreferenceStore();
     store.setDefault(EclipseJPFLauncher.SITE_PROPERTIES_PATH, EclipseJPFLauncher.DEFAULT_SITE_PROPERTIES_PATH);
     store.setDefault(EclipseJPFLauncher.PORT, EclipseJPFLauncher.DEFAULT_PORT);

@@ -32,119 +32,120 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 
-public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
+public class JavaPathFinderLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
+    ILaunchConfigurationDelegate {
 
-	@Override
-	public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-		System.out.println("here");
+  @Override
+  public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
+    System.out.println("here");
 
-		String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
+    String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
 
-		System.out.println("JPF File: " + jpfFile);
+    System.out.println("JPF File: " + jpfFile);
 
-		// /*
-		// * for those terminate by our self .
-		// *
-		// * @see #terminateOldRJRLauncher
-		// */
-		// if (/* run the validation */) {
-		// throw new CoreException(
-		// new Status(
-		// IStatus.ERROR,
-		// Plugin.PLUGIN_ID,
-		// 01,
-		// " Invalid run configuration , please check the configuration ",
-		// null));
-		// }
+    // /*
+    // * for those terminate by our self .
+    // *
+    // * @see #terminateOldRJRLauncher
+    // */
+    // if (/* run the validation */) {
+    // throw new CoreException(
+    // new Status(
+    // IStatus.ERROR,
+    // Plugin.PLUGIN_ID,
+    // 01,
+    // " Invalid run configuration , please check the configuration ",
+    // null));
+    // }
 
-		// addSourcesLookupProjectsFromMavenIfExist(configuration);
+    // addSourcesLookupProjectsFromMavenIfExist(configuration);
 
-		if (monitor == null) {
-			monitor = new NullProgressMonitor();
-		}
+    if (monitor == null) {
+      monitor = new NullProgressMonitor();
+    }
 
-		monitor.beginTask(MessageFormat.format("{0}...", configuration.getName()), 3); //$NON-NLS-1$
+    monitor.beginTask(MessageFormat.format("{0}...", configuration.getName()), 3); //$NON-NLS-1$
 
-		// check for cancellation
-		if (monitor.isCanceled())
-			return;
+    // check for cancellation
+    if (monitor.isCanceled())
+      return;
 
-		try {
-			monitor.subTask("verifying installation");
+    try {
+      monitor.subTask("verifying installation");
 
-			// Program & VM arguments
-			ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
+      // Program & VM arguments
+      ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
 
-			String jpfRunPath;
-			try {
-				EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
-				File siteProperties = eclipseJpfLauncher.lookupSiteProperties();
-				File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
-				jpfRunPath = jpfRunJar.getAbsolutePath();
-			} catch (NullPointerException npe) {
-				EclipseJPF.logError("JPF was not sucessfully found.", npe);
-				return;
-			}
+      String jpfRunPath;
+      try {
+        EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
+        File siteProperties = eclipseJpfLauncher.lookupSiteProperties();
+        File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
+        jpfRunPath = jpfRunJar.getAbsolutePath();
+      } catch (NullPointerException npe) {
+        EclipseJPF.logError("JPF was not sucessfully found.", npe);
+        return;
+      }
 
-			VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
+      VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
 
-			// runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
+      // runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
 
-			runConfig.setProgramArguments(new String[] { "+shell.port=4242", jpfFile });
+      runConfig.setProgramArguments(new String[] { "+shell.port=4242", jpfFile });
 
-			// Environment variables
-			runConfig.setEnvironment(getEnvironment(configuration));
+      // Environment variables
+      runConfig.setEnvironment(getEnvironment(configuration));
 
-			runConfig.setVMArguments(execArgs.getVMArgumentsArray());
+      runConfig.setVMArguments(execArgs.getVMArgumentsArray());
 
-			// runConfig
-			// .setWorkingDirectory(getWorkingDirectoryAbsolutePath(configuration));
-			runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
+      // runConfig
+      // .setWorkingDirectory(getWorkingDirectoryAbsolutePath(configuration));
+      runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
 
-			// Boot path
-			runConfig.setBootClassPath(getBootpath(configuration));
+      // Boot path
+      runConfig.setBootClassPath(getBootpath(configuration));
 
-			// check for cancellation
-			if (monitor.isCanceled())
-				return;
+      // check for cancellation
+      if (monitor.isCanceled())
+        return;
 
-			// stop in main
-			prepareStopInMain(configuration);
+      // stop in main
+      prepareStopInMain(configuration);
 
-			// done the verification phase
-			monitor.worked(1);
-			monitor.subTask("Creating source locator");
-			// set the default source locator if required
-			setDefaultSourceLocator(launch, configuration);
+      // done the verification phase
+      monitor.worked(1);
+      monitor.subTask("Creating source locator");
+      // set the default source locator if required
+      setDefaultSourceLocator(launch, configuration);
 
-			launch.getSourceLocator();
-			monitor.worked(1);
+      launch.getSourceLocator();
+      monitor.worked(1);
 
-			synchronized (configuration) {
-				// terminateOldRJRLauncher(configuration, launch);
-				// Launch the configuration - 1 unit of work
-				// getVMRunner(configuration, mode)
-				// .run(runConfig, launch, monitor);
-				IVMRunner runner;
-				if (ILaunchManager.DEBUG_MODE.equals(mode)) {
-					IVMInstall vm = verifyVMInstall(configuration);
-					runner = new JPFDebugger(vm);
+      synchronized (configuration) {
+        // terminateOldRJRLauncher(configuration, launch);
+        // Launch the configuration - 1 unit of work
+        // getVMRunner(configuration, mode)
+        // .run(runConfig, launch, monitor);
+        IVMRunner runner;
+        if (ILaunchManager.DEBUG_MODE.equals(mode)) {
+          IVMInstall vm = verifyVMInstall(configuration);
+          runner = new JPFDebugger(vm);
 
-				} else {
-					runner = getVMRunner(configuration, mode);
-				}
-				runner.run(runConfig, launch, monitor);
+        } else {
+          runner = getVMRunner(configuration, mode);
+        }
+        runner.run(runConfig, launch, monitor);
 
-				// registerRJRLauncher(configuration, launch);
-			}
+        // registerRJRLauncher(configuration, launch);
+      }
 
-			// check for cancellation
-			if (monitor.isCanceled())
-				return;
+      // check for cancellation
+      if (monitor.isCanceled())
+        return;
 
-		} finally {
-			monitor.done();
-		}
-	}
+    } finally {
+      monitor.done();
+    }
+  }
 
 }

@@ -1,196 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.eclipse.core.contenttype.contentTypes">
-      <content-type
-            base-type="org.eclipse.core.runtime.properties"
-            file-extensions="jpf"
-            id="com.javapathfinder.vjp.configContentType"
-            name="JPF Config File"
-            priority="normal">
-      </content-type>
-   </extension>
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="false"
-            id="runjpf.jpfConfigLaunch"
-            nameFilter="*.jpf"
-            objectClass="org.eclipse.core.resources.IFile">
-         <action
-               class="gov.nasa.runjpf.VerifyActionDelegate"
-               enablesFor="1"
-               id="RunJPF.verifyaction"
-               label="Verify..."
-               icon="icons/jpf-logo.png"
-               menubarPath="additions"
-               tooltip="Execute this property file as a JPF configuration">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="eclipse-jpf.contribution1"
-            objectClass="org.eclipse.core.resources.IFile">
-         <menu
-               id="eclipse-jpf.menu1"
-               label="Java PathFinder"
-               path="additions">
-            <separator
-                  name="group1">
-            </separator>
-         </menu>
-         <action
-               class="gov.nasa.runjpf.VerifyActionDelegate"
-               enablesFor="1"
-               id="eclipse-jpf.newAction"
-               label="Verify..."
-               menubarPath="eclipse-jpf.menu1/group1"
-               tooltip="Execute this property file as a JPF configuration">
-         </action>
-         <action
-               class="gov.nasa.runjpf.DebugVerificationActionDelegate"
-               enablesFor="1"
-               id="eclipse-jpf.newAction2"
-               label="Debug the Verification..."
-               menubarPath="eclipse-jpf.menu1/group1"
-               tooltip="Execute this property file with enabled debugging as a JPF configuration">
-         </action>
-      </objectContribution>
-   </extension>
-   
-   <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
-   <launchConfigurationType
-   	   id="eclipse-jpf.launching.runJpf"
-	   name="Java PathFinder Verification"
-	   delegate="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationDelegate"
-	   modes= "run, debug"
-	   sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
-       sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
-   </launchConfigurationType>
-</extension>
-<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
-  <launchConfigurationTabGroup
-      id="eclipse-jpf.launching.runJpfTabGroup"
+  <extension point="org.eclipse.core.contenttype.contentTypes">
+    <content-type base-type="org.eclipse.core.runtime.properties"
+      file-extensions="jpf" id="com.javapathfinder.vjp.configContentType"
+      name="JPF Config File" priority="normal">
+    </content-type>
+  </extension>
+  <extension point="org.eclipse.ui.popupMenus">
+    <objectContribution adaptable="false"
+      id="runjpf.jpfConfigLaunch" nameFilter="*.jpf"
+      objectClass="org.eclipse.core.resources.IFile">
+      <action class="gov.nasa.runjpf.VerifyActionDelegate"
+        enablesFor="1" id="RunJPF.verifyaction" label="Verify..."
+        icon="icons/jpf-logo.png" menubarPath="additions"
+        tooltip="Execute this property file as a JPF configuration">
+      </action>
+    </objectContribution>
+    <objectContribution id="eclipse-jpf.contribution1"
+      objectClass="org.eclipse.core.resources.IFile">
+      <menu id="eclipse-jpf.menu1" label="Java PathFinder" path="additions">
+        <separator name="group1">
+        </separator>
+      </menu>
+      <action class="gov.nasa.runjpf.VerifyActionDelegate"
+        enablesFor="1" id="eclipse-jpf.newAction" label="Verify..."
+        menubarPath="eclipse-jpf.menu1/group1" tooltip="Execute this property file as a JPF configuration">
+      </action>
+      <action class="gov.nasa.runjpf.DebugVerificationActionDelegate"
+        enablesFor="1" id="eclipse-jpf.newAction2" label="Debug the Verification..."
+        menubarPath="eclipse-jpf.menu1/group1"
+        tooltip="Execute this property file with enabled debugging as a JPF configuration">
+      </action>
+    </objectContribution>
+  </extension>
+
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+    <launchConfigurationType id="eclipse-jpf.launching.runJpf"
+      name="Java PathFinder Verification"
+      delegate="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationDelegate"
+      modes="run, debug"
+      sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+      sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+    </launchConfigurationType>
+  </extension>
+  <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup id="eclipse-jpf.launching.runJpfTabGroup"
       type="eclipse-jpf.launching.runJpf"
       class="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationTabGroup">
-  </launchConfigurationTabGroup>
- </extension>
-  <extension
-         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
-      <launchConfigurationTypeImage
-            configTypeID="eclipse-jpf.launching.runJpf"
-            icon="icons/jpf-logo.png"
-            id="eclipse-jpf.launching.jpf-logo">
-      </launchConfigurationTypeImage>
-   </extension>
-   
-   <extension
-          point="org.eclipse.debug.ui.launchShortcuts">
-       <shortcut
-             class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut"
-             icon="icons/jpf-logo.png"
-             id="eclipse-jpf.launching.shortcut"
-             label="Verify in Java Pathfinder"
-             modes="run, debug">
-             
-               <contextLabel label="Run the verification in JPF" mode="run"/>
-         <contextLabel label="Debug the verification in JPF" mode="debug"/>
+    </launchConfigurationTabGroup>
+  </extension>
+  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+    <launchConfigurationTypeImage
+      configTypeID="eclipse-jpf.launching.runJpf" icon="icons/jpf-logo.png"
+      id="eclipse-jpf.launching.jpf-logo">
+    </launchConfigurationTypeImage>
+  </extension>
 
-			<contextualLaunch>
-		   		<enablement>
-		   			<count value="1"/>
-              <iterate>
-                 <or>
-                    <adapt type="org.eclipse.core.resources.IFile">
-                       <test property="org.eclipse.core.resources.name" value="*.jpf"/>
-                    </adapt>
-                 </or>
-              </iterate>
-		   		</enablement>
-	   		</contextualLaunch>
-       
-         <configurationType
-               id="eclipse-jpf.launching.runJpf">
-         </configurationType>
-       
-           
-         <description
-               description="Run JPF"
-               mode="run">
-         </description>
-         <description
-               description="Debug JPF"
-               mode="debug">
-         </description>
-       </shortcut>
-    </extension>
-     <extension
-          point="org.eclipse.debug.ui.launchShortcuts">
-       <shortcut
-             class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut:WITH_DIALOG"
-             icon="icons/jpf-logo.png"
-             id="eclipse-jpf.launching.shortcutWithDialog"
-             label="Verify in Java Pathfinder (dialog)"
-             modes="run, debug">
-             
-               <contextLabel label="Run the verification in JPF ..." mode="run"/>
-         <contextLabel label="Debug the verification in JPF ..." mode="debug"/>
+  <extension point="org.eclipse.debug.ui.launchShortcuts">
+    <shortcut class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut"
+      icon="icons/jpf-logo.png" id="eclipse-jpf.launching.shortcut"
+      label="Verify in Java Pathfinder" modes="run, debug">
 
-			<contextualLaunch>
-		   		<enablement>
-		   			<count value="1"/>
-              <iterate>
-                 <or>
-                    <adapt type="org.eclipse.core.resources.IFile">
-                       <test property="org.eclipse.core.resources.name" value="*.jpf"/>
-                    </adapt>
-                 </or>
-              </iterate>
-		   		</enablement>
-	   		</contextualLaunch>
-       
-         <configurationType
-               id="eclipse-jpf.launching.runJpf">
-         </configurationType>
-       
-           
-         <description
-               description="Run JPF"
-               mode="run">
-         </description>
-         <description
-               description="Debug JPF"
-               mode="debug">
-         </description>
-       </shortcut>
-    </extension>
+      <contextLabel label="Run the verification in JPF"
+        mode="run" />
+      <contextLabel label="Debug the verification in JPF"
+        mode="debug" />
+
+      <contextualLaunch>
+        <enablement>
+          <count value="1" />
+          <iterate>
+            <or>
+              <adapt type="org.eclipse.core.resources.IFile">
+                <test property="org.eclipse.core.resources.name"
+                  value="*.jpf" />
+              </adapt>
+            </or>
+          </iterate>
+        </enablement>
+      </contextualLaunch>
+
+      <configurationType id="eclipse-jpf.launching.runJpf">
+      </configurationType>
 
 
-   <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            class="gov.nasa.runjpf.options.Preferences"
-            id="eclipse-jpf.preferences"
-            name="JPF Preferences">
-      </page>
-   </extension>
-	<extension
-		point="org.eclipse.core.runtime.preferences">
-		<initializer class="gov.nasa.runjpf.options.DefaultPreferences" />
-	</extension>
- <extension
-       point="org.eclipse.ui.newWizards">
-    <category
-          id="eclipse-jpf.category.wizards"
-          name="JPF">
+      <description description="Run JPF" mode="run">
+      </description>
+      <description description="Debug JPF" mode="debug">
+      </description>
+    </shortcut>
+  </extension>
+  <extension point="org.eclipse.debug.ui.launchShortcuts">
+    <shortcut
+      class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut:WITH_DIALOG"
+      icon="icons/jpf-logo.png" id="eclipse-jpf.launching.shortcutWithDialog"
+      label="Verify in Java Pathfinder (dialog)" modes="run, debug">
+
+      <contextLabel label="Run the verification in JPF ..."
+        mode="run" />
+      <contextLabel label="Debug the verification in JPF ..."
+        mode="debug" />
+
+      <contextualLaunch>
+        <enablement>
+          <count value="1" />
+          <iterate>
+            <or>
+              <adapt type="org.eclipse.core.resources.IFile">
+                <test property="org.eclipse.core.resources.name"
+                  value="*.jpf" />
+              </adapt>
+            </or>
+          </iterate>
+        </enablement>
+      </contextualLaunch>
+
+      <configurationType id="eclipse-jpf.launching.runJpf">
+      </configurationType>
+
+
+      <description description="Run JPF" mode="run">
+      </description>
+      <description description="Debug JPF" mode="debug">
+      </description>
+    </shortcut>
+  </extension>
+
+
+  <extension point="org.eclipse.ui.preferencePages">
+    <page class="gov.nasa.runjpf.options.Preferences" id="eclipse-jpf.preferences"
+      name="JPF Preferences">
+    </page>
+  </extension>
+  <extension point="org.eclipse.core.runtime.preferences">
+    <initializer class="gov.nasa.runjpf.options.DefaultPreferences" />
+  </extension>
+  <extension point="org.eclipse.ui.newWizards">
+    <category id="eclipse-jpf.category.wizards" name="JPF">
     </category>
-    <wizard
-          category="eclipse-jpf.category.wizards"
-          class="gov.nasa.runjpf.wizard.NewJPFProjectWizard"
-          hasPages="true"
-          id="eclipse-jpf.wizard.new.jpfproject"
-          name="JPF Project"
-          project="true">
+    <wizard category="eclipse-jpf.category.wizards" class="gov.nasa.runjpf.wizard.NewJPFProjectWizard"
+      hasPages="true" id="eclipse-jpf.wizard.new.jpfproject" name="JPF Project"
+      project="true">
     </wizard>
- </extension>
+  </extension>
 </plugin>

@@ -35,11 +35,13 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 /**
  * The <code>JPFLauncher</code> class is used by both the netbeans-jpf and
- * eclipse-jpf projects to launch a jpf process from a *.jpf file. This class
- * is meant to be subclassed by applications that launch a jpf process.
- * @see #launch(java.io.File) 
+ * eclipse-jpf projects to launch a jpf process from a *.jpf file. This class is
+ * meant to be subclassed by applications that launch a jpf process.
+ * 
+ * @see #launch(java.io.File)
  * @author Sandro Badame
  */
 public abstract class JPFLauncher {
@@ -61,73 +63,73 @@ public abstract class JPFLauncher {
    */
   private File lastSiteProperties;
   private long lastSitePropMod;
-  private File siteCoreDir; 
-  
+  private File siteCoreDir;
+
   PrintWriter errorStream = null;
 
   static String getSitePropertiesPath() {
     File userHome = new File(System.getProperty("user.home"));
-    
+
     File siteDir = new File(userHome, ".jpf");
-    if (!siteDir.isDirectory()){
+    if (!siteDir.isDirectory()) {
       // Windows doesn't easily allow dot names
-      File alternateSiteDir = new File(userHome,"jpf");
-      if (alternateSiteDir.isDirectory()){
+      File alternateSiteDir = new File(userHome, "jpf");
+      if (alternateSiteDir.isDirectory()) {
         siteDir = alternateSiteDir;
       }
     }
 
     File siteProperties = new File(siteDir, "site.properties");
-    
-    return siteProperties.getAbsolutePath(); 
+
+    return siteProperties.getAbsolutePath();
   }
-  
+
   public File lookupSiteProperties() {
-	  String path = getSiteProperties();
-	    if (path == null || path.isEmpty()){
-	      printError("getSiteProperties() is null or empty, using default path: " + DEFAULT_SITE_PROPERTIES_PATH);
-	      path = DEFAULT_SITE_PROPERTIES_PATH;
-	    }
+    String path = getSiteProperties();
+    if (path == null || path.isEmpty()) {
+      printError("getSiteProperties() is null or empty, using default path: " + DEFAULT_SITE_PROPERTIES_PATH);
+      path = DEFAULT_SITE_PROPERTIES_PATH;
+    }
 
-	    return new File(path);
-	    
+    return new File(path);
+
   }
-  
+
   public File lookupRunJpfJar(File siteProperties) {
-	  
-	    
-	    // check if preferences were changed or the file was modified
-	    if (!siteProperties.equals(lastSiteProperties) || siteProperties.lastModified() > lastSitePropMod){
-	      String coreProperty = JPFSiteUtils.getMatchFromFile(siteProperties, "jpf-core");
-	      if (coreProperty == null || coreProperty.isEmpty()) {
-	        printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
-	        return null;
-	      }
 
-	      siteCoreDir = new File(coreProperty);
-	      if (!siteCoreDir.isDirectory()) {
-	        printError("jpf-core specification in " + siteProperties.getAbsolutePath() + " not a valid directory: " + siteCoreDir);
-	        return null;
-	      }
+    // check if preferences were changed or the file was modified
+    if (!siteProperties.equals(lastSiteProperties) || siteProperties.lastModified() > lastSitePropMod) {
+      String coreProperty = JPFSiteUtils.getMatchFromFile(siteProperties, "jpf-core");
+      if (coreProperty == null || coreProperty.isEmpty()) {
+        printError("Property: \"jpf-core\" is not defined in: " + siteProperties.getPath());
+        return null;
+      }
 
-	      lastSiteProperties = siteProperties;
-	      lastSitePropMod = siteProperties.lastModified();
-	    }
-	    
+      siteCoreDir = new File(coreProperty);
+      if (!siteCoreDir.isDirectory()) {
+        printError("jpf-core specification in " + siteProperties.getAbsolutePath() + " not a valid directory: " + siteCoreDir);
+        return null;
+      }
 
-	    return new File(siteCoreDir, "build" + File.separatorChar + "RunJPF.jar");
-	    
+      lastSiteProperties = siteProperties;
+      lastSitePropMod = siteProperties.lastModified();
+    }
+
+    return new File(siteCoreDir, "build" + File.separatorChar + "RunJPF.jar");
+
   }
-  
+
   /**
-   * Launch a new process to run jpf with specified *.jpf file. This method
-   * will report all errors to the stream returned by getErrorStream(), no
-   * exceptions should be thrown by this method.
+   * Launch a new process to run jpf with specified *.jpf file. This method will
+   * report all errors to the stream returned by getErrorStream(), no exceptions
+   * should be thrown by this method.
    * <p>
-   * This method runs jpf in its own process and returns the process immediately.
+   * This method runs jpf in its own process and returns the process
+   * immediately.
    * <p>
    * The command launched will contain the following pattern:
-   * <p><code>
+   * <p>
+   * <code>
    * java <i>&lt;{@link #getVMArgs(java.lang.String)}&gt;</i>
    * -jar <i>&lt;path to RunJPF.jar defined by
    * jpf.core property in the {@link #getSiteProperties()}</a>&gt;&lt;{@link #getArgs(java.lang.String)}&gt;
@@ -135,68 +137,69 @@ public abstract class JPFLauncher {
    * site.properties is used then +site=&lt;{@link #getSiteProperties()}&gt;&gt;
    * </i>+shell.port=<i>&lt;{@link #getPort()}&gt; &lt;file.getAbsolutePath()&gt;
    * </i></code>
-   *
-   * @param file the selected *.jpf configuration file to be used.
+   * 
+   * @param file
+   *          the selected *.jpf configuration file to be used.
    * @return the process running jpf
    */
-  protected Process launch(File file, File workingDir){
+  protected Process launch(File file, File workingDir) {
 
     errorStream = getErrorStream();
 
     File siteProperties = lookupSiteProperties();
-    if (siteProperties == null || !siteProperties.isFile()){
-	      printError("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
-	      return null;
-	    }
+    if (siteProperties == null || !siteProperties.isFile()) {
+      printError("site.properties file: \"" + siteProperties.getPath() + "\" does not exist.");
+      return null;
+    }
     File runJPFJar = lookupRunJpfJar(siteProperties);
-    if (runJPFJar == null || !runJPFJar.isFile()){
-    	      printError("RunJPF.jar not found at: " + runJPFJar.getPath());
-    	    }
+    if (runJPFJar == null || !runJPFJar.isFile()) {
+      printError("RunJPF.jar not found at: " + runJPFJar.getPath());
+    }
 
     ArrayList<String> commandList = new ArrayList<String>();
 
-    //Create command
+    // Create command
     commandList.add("java");
-    
-    //Add the host vm args
+
+    // Add the host vm args
     String vm_args = getVMArgs(null);
-    if (vm_args != null && !vm_args.isEmpty()){
+    if (vm_args != null && !vm_args.isEmpty()) {
       commandList.add(vm_args);
     }
-    
-    //Point to the RunJPF jar
+
+    // Point to the RunJPF jar
     commandList.add("-jar");
     commandList.add(runJPFJar.getAbsolutePath());
 
-    //Add the JPF args
+    // Add the JPF args
     String args = getArgs(null);
-    if (args != null && !args.isEmpty()){
-        for (String string : args.split(" ")) {
-            commandList.add(string);
-        }
+    if (args != null && !args.isEmpty()) {
+      for (String string : args.split(" ")) {
+        commandList.add(string);
+      }
     }
 
-    //Define site.properties location if it's not the default path
-    if ( new File(DEFAULT_SITE_PROPERTIES_PATH).equals(siteProperties) == false){
-      commandList.add("+site="+siteProperties.getAbsolutePath());
+    // Define site.properties location if it's not the default path
+    if (new File(DEFAULT_SITE_PROPERTIES_PATH).equals(siteProperties) == false) {
+      commandList.add("+site=" + siteProperties.getAbsolutePath());
     }
 
-    //Define port if its available
+    // Define port if its available
     int port = getPort();
-    if (port > -1){
-      commandList.add("+shell.port="+port);
+    if (port > -1) {
+      commandList.add("+shell.port=" + port);
     }
 
-    //Add the property file path
+    // Add the property file path
     commandList.add(file.getAbsolutePath());
 
-    //Startup the JPF process
+    // Startup the JPF process
     try {
       String[] cmdArgs = commandList.toArray(new String[commandList.size()]);
       // we inherit the parent proc environment
       Process jpf = Runtime.getRuntime().exec(cmdArgs, null, workingDir);
       PrintWriter outputStream = getOutputStream();
-      if (outputStream != null){
+      if (outputStream != null) {
         StringBuffer buff = new StringBuffer();
         for (String string : commandList) {
           buff.append(string).append(" ");
@@ -205,7 +208,7 @@ public abstract class JPFLauncher {
         new IORedirector(jpf.getInputStream(), outputStream).start();
         new IORedirector(jpf.getErrorStream(), errorStream).start();
       }
-      if ( port > -1 )
+      if (port > -1)
         new ShellListener(port).start();
 
       return jpf;
@@ -215,28 +218,33 @@ public abstract class JPFLauncher {
     return null;
   }
 
-  //Safe way to print output...
-  private void printError(String msg){
-    if (errorStream != null) 
+  // Safe way to print output...
+  private void printError(String msg) {
+    if (errorStream != null)
       errorStream.println(msg);
   }
 
   /**
    * Returns the arguments for the host VM.
-   * @param def the default return value if no VMArgs exist.
-   * @return the text that will be placed in the command to launch JPF
-   *         ex.) "java &lt;text placed here&gt; -jar ...<br>
+   * 
+   * @param def
+   *          the default return value if no VMArgs exist.
+   * @return the text that will be placed in the command to launch JPF ex.)
+   *         "java &lt;text placed here&gt; -jar ...<br>
    *         or def if non exist.
-   * @see #launch(java.io.File) 
+   * @see #launch(java.io.File)
    */
   protected abstract String getVMArgs(String def);
 
-   /**
-   * Returns the arguments for JPF. These should not include port or site properties
-   * @param def the default return value if no JPF arguments exist.
-   * @return the text that will be placed in the command to launch JPF
-   *         ex.) "java &lt;vm args&gt; -jar &lt;path to RunJPF.jar&gt; &lt;placed
-             here&gt;...<br>
+  /**
+   * Returns the arguments for JPF. These should not include port or site
+   * properties
+   * 
+   * @param def
+   *          the default return value if no JPF arguments exist.
+   * @return the text that will be placed in the command to launch JPF ex.)
+   *         "java &lt;vm args&gt; -jar &lt;path to RunJPF.jar&gt; &lt;placed
+   *         here&gt;...<br>
    *         or def if non exist.
    * @see #launch(java.io.File)
    */
@@ -244,8 +252,10 @@ public abstract class JPFLauncher {
 
   /**
    * Returns a system dependent absolute path to the site properties file.
-   * @return Returns a system dependent absolute path to the site properties file.
-   * @see #launch(java.io.File) 
+   * 
+   * @return Returns a system dependent absolute path to the site properties
+   *         file.
+   * @see #launch(java.io.File)
    */
   protected abstract String getSiteProperties();
 
@@ -253,48 +263,52 @@ public abstract class JPFLauncher {
    * Returns the port that should be opened by the shell (If one were to be
    * created by JPF) for Shell<->JPFLauncher implementor (Typically IDEs like
    * Eclipse and NetBeans) communication.
-   *
+   * 
    * @return the port that should be opened or a negative number if no port
    *         communication is requested. Returns DEFAULT_PORT
    * @see #launch(java.io.File)
    */
-   protected int getPort(){
+  protected int getPort() {
     return DEFAULT_PORT;
-   }
+  }
 
   /**
    * Returns an PrintWriter to print JPFLauncher and JPF process output.
-   *
+   * 
    * @return the PrintWriter that will be used to print output from JPFLauncher
-   * and the JPF process started. Can be null if no such output is needed.
+   *         and the JPF process started. Can be null if no such output is
+   *         needed.
    */
   protected abstract PrintWriter getOutputStream();
 
   /**
    * Returns the PrintWriter to print JPFLauncher and JPF process error output.
-   *
-   * @return the PrintWriter that will be used to print error output from JPFLauncher
-   * and the JPF process started. Can be null if no such output is needed.
+   * 
+   * @return the PrintWriter that will be used to print error output from
+   *         JPFLauncher and the JPF process started. Can be null if no such
+   *         output is needed.
    */
   protected abstract PrintWriter getErrorStream();
 
   /**
    * If a shell has been created by JPF, this method is called when the shell
-   * requests that a source file and line be shown.
-   * if getPort() returns a negative value, it is safe to say that this
-   * method will never be called.
-   * @param filepath the absolute path to the pertinent file.
-   * @param line the 0 indexed pertinent line in the file.
+   * requests that a source file and line be shown. if getPort() returns a
+   * negative value, it is safe to say that this method will never be called.
+   * 
+   * @param filepath
+   *          the absolute path to the pertinent file.
+   * @param line
+   *          the 0 indexed pertinent line in the file.
    */
   protected abstract void gotoSource(String filepath, int line);
 
-   private class ShellListener extends Thread{
+  private class ShellListener extends Thread {
 
     int port = -1;
     boolean keepTrying = true;
 
-    public ShellListener(int port){
-      if (port < 0 ){
+    public ShellListener(int port) {
+      if (port < 0) {
         throw new IllegalArgumentException("port cannot be a negative value");
       }
       this.port = port;
@@ -303,11 +317,11 @@ public abstract class JPFLauncher {
     @Override
     public void run() {
       Socket socket = null;
-      //We aren't sure when the port is going to open (if it ever does) so keep
-      //on trying until we get a hit.
+      // We aren't sure when the port is going to open (if it ever does) so keep
+      // on trying until we get a hit.
       while (keepTrying && socket == null) {
         try {
-          socket = new Socket((String)null, port);
+          socket = new Socket((String) null, port);
         } catch (IOException io) {
           try {
             Thread.sleep(500);
@@ -320,23 +334,23 @@ public abstract class JPFLauncher {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String input = null;
         while ((input = reader.readLine()) != null) {
-          if (input.startsWith("[LINK]")){
-            //remove "[LINK]"
+          if (input.startsWith("[LINK]")) {
+            // remove "[LINK]"
             input = input.substring(6);
             final String[] location = input.split(":");
             gotoSource(location[0], new Integer(location[1]));
           }
         }
-      } catch (SocketException se){
-        //Probably nothing to worry about. Just the socket closing.
+      } catch (SocketException se) {
+        // Probably nothing to worry about. Just the socket closing.
       } catch (IOException ex) {
         ex.printStackTrace();
       }
     }
-}
+  }
 }
 
-//Funnels the output from the process into the console
+// Funnels the output from the process into the console
 class IORedirector extends Thread {
 
   private PrintWriter out;

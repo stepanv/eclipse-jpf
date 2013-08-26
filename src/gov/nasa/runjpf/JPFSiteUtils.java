@@ -33,19 +33,21 @@ import java.util.regex.Pattern;
  */
 public class JPFSiteUtils {
 
-  //--- preparse support - we need this if we use app properties to locat lower level property files
+  // --- preparse support - we need this if we use app properties to locat lower
+  // level property files
 
   static Pattern keyValPattern = Pattern.compile("^[ \t]*([^# \t][^ \t]*)[ \t]*=[ \t]*(.+?)[ \t]*$");
 
   /**
-   * minimal parsing - only local key, system property and and config_path expansion
-   * NOTE this stops after finding the key, and it doesn't add the file to the 'sources'
+   * minimal parsing - only local key, system property and and config_path
+   * expansion NOTE this stops after finding the key, and it doesn't add the
+   * file to the 'sources'
    */
-  public static String getMatchFromFile (File propFile, String lookupKey){
+  public static String getMatchFromFile(File propFile, String lookupKey) {
     String value = null;
     Pattern lookupPattern = Pattern.compile(lookupKey);
 
-    if (!propFile.isFile()){
+    if (!propFile.isFile()) {
       return null;
     }
 
@@ -120,7 +122,7 @@ public class JPFSiteUtils {
   }
 
   // simple non-recursive, local key and system property expander
-  private static String expandLocal (String s, HashMap<String,String> map) {
+  private static String expandLocal(String s, HashMap<String, String> map) {
     int i, j = 0;
     if (s == null || s.length() == 0) {
       return s;
@@ -131,10 +133,10 @@ public class JPFSiteUtils {
         String k = s.substring(i + 2, j);
         String v = null;
 
-        if (map != null){
+        if (map != null) {
           v = map.get(k);
         }
-        if (v == null){
+        if (v == null) {
           v = System.getProperty(k);
         }
 
@@ -151,25 +153,25 @@ public class JPFSiteUtils {
     return s;
   }
 
-
   /**
    * get location of jpf-core from site.properties
+   * 
    * @return null if it doesn't exist
    */
   public static File getSiteCoreDir() {
     String userHome = System.getProperty("user.home");
-    File f = new File( userHome, "jpf/site.properties");
-    if (!f.isFile()){
-      f = new File( userHome, ".jpf/site.properties");
-      if (!f.isFile()){
+    File f = new File(userHome, "jpf/site.properties");
+    if (!f.isFile()) {
+      f = new File(userHome, ".jpf/site.properties");
+      if (!f.isFile()) {
         return null;
       }
     }
 
     String path = getMatchFromFile(f, "jpf-core");
-    if (path != null){
+    if (path != null) {
       File coreDir = new File(path);
-      if (coreDir.isDirectory()){
+      if (coreDir.isDirectory()) {
         return coreDir;
       }
     }
@@ -185,7 +187,7 @@ public class JPFSiteUtils {
 
     do {
       File f = new File(d, "jpf.properties");
-      if (f.isFile()){
+      if (f.isFile()) {
         return f;
       }
       d = d.getParentFile();
@@ -194,17 +196,17 @@ public class JPFSiteUtils {
     return null;
   }
 
-
   static Pattern idPattern = Pattern.compile("^[ \t]*([^# \t][^ \t]*)[ \t]*=[ \t]*\\$\\{config_path\\}");
 
   static String projectId;
 
   /**
-   * look for a "<id> = ${config_path}" entry in current dir/jpf.properties
-   * this looks recursively upwards
+   * look for a "<id> = ${config_path}" entry in current dir/jpf.properties this
+   * looks recursively upwards
+   * 
    * @return null if no jpf.properties found
    */
-  public static String getCurrentProjectId (){
+  public static String getCurrentProjectId() {
     if (projectId == null) {
       File propFile = getCurrentProjectProperties();
 

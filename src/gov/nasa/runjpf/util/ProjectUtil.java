@@ -29,142 +29,137 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.osgi.framework.Bundle;
 
 public class ProjectUtil {
-	public static String MAVEN_NATURE_ID = "org.maven.ide.eclipse.maven2Nature";
+  public static String MAVEN_NATURE_ID = "org.maven.ide.eclipse.maven2Nature";
 
-	public static IResource getSelectedResource(ISelection selection) {
+  public static IResource getSelectedResource(ISelection selection) {
 
-		if (selection instanceof TreeSelection) {// could be project explorer
-			Object first = ((TreeSelection) selection).getFirstElement();
+    if (selection instanceof TreeSelection) {// could be project explorer
+      Object first = ((TreeSelection) selection).getFirstElement();
 
-			if (first instanceof IJavaElement){
-				return ((IJavaElement) first).getResource();
-			}else if (first instanceof IResource)
-				return (IResource) first;
-			else if (first instanceof IJavaProject)
-				return ((IJavaProject) first).getResource();
-			else if (first instanceof IProject) {
-				try {
-					return ((IProject) first).members()[0];
-				} catch (CoreException e) {
-					e.printStackTrace();
-					return null;
-				}
-			}
-		}
+      if (first instanceof IJavaElement) {
+        return ((IJavaElement) first).getResource();
+      } else if (first instanceof IResource)
+        return (IResource) first;
+      else if (first instanceof IJavaProject)
+        return ((IJavaProject) first).getResource();
+      else if (first instanceof IProject) {
+        try {
+          return ((IProject) first).members()[0];
+        } catch (CoreException e) {
+          e.printStackTrace();
+          return null;
+        }
+      }
+    }
 
-		return null;
-	}
+    return null;
+  }
 
-	public static IResource getSelectedResource(IWorkbenchWindow window) {
+  public static IResource getSelectedResource(IWorkbenchWindow window) {
 
-		ISelection selection = window.getSelectionService().getSelection();
+    ISelection selection = window.getSelectionService().getSelection();
 
-		IResource ir = getSelectedResource(selection);
-		if (ir != null)
-			return ir;
+    IResource ir = getSelectedResource(selection);
+    if (ir != null)
+      return ir;
 
-		try{
-			IEditorInput editorinput = window.getActivePage().getActiveEditor()
-					.getEditorInput();
-			FileEditorInput fileEditorInput = (FileEditorInput) editorinput
-					.getAdapter(FileEditorInput.class);
-			if (fileEditorInput == null || fileEditorInput.getFile() == null) {
-				return null;
-			}
-			return fileEditorInput.getFile();
-		}catch(NullPointerException ex){
-			return null;
-		}
-	}
+    try {
+      IEditorInput editorinput = window.getActivePage().getActiveEditor().getEditorInput();
+      FileEditorInput fileEditorInput = (FileEditorInput) editorinput.getAdapter(FileEditorInput.class);
+      if (fileEditorInput == null || fileEditorInput.getFile() == null) {
+        return null;
+      }
+      return fileEditorInput.getFile();
+    } catch (NullPointerException ex) {
+      return null;
+    }
+  }
 
-	/**
-	 *
-	 * @param editorinput
-	 * @return null if not found
-	 */
-	public static IFile getFile(IEditorInput editorinput) {
-		FileEditorInput fileEditorInput = (FileEditorInput) editorinput
-				.getAdapter(FileEditorInput.class);
+  /**
+   * 
+   * @param editorinput
+   * @return null if not found
+   */
+  public static IFile getFile(IEditorInput editorinput) {
+    FileEditorInput fileEditorInput = (FileEditorInput) editorinput.getAdapter(FileEditorInput.class);
 
-		if (fileEditorInput == null || fileEditorInput.getFile() == null) {
-			return null;
-		}
-		return fileEditorInput.getFile();
-	}
+    if (fileEditorInput == null || fileEditorInput.getFile() == null) {
+      return null;
+    }
+    return fileEditorInput.getFile();
+  }
 
-	public static IProject getProject(IWorkbenchWindow window) {
-		IEditorInput editorinput = window.getActivePage().getActiveEditor()
-				.getEditorInput();
-		FileEditorInput fileEditorInput = (FileEditorInput) editorinput
-				.getAdapter(FileEditorInput.class);
+  public static IProject getProject(IWorkbenchWindow window) {
+    IEditorInput editorinput = window.getActivePage().getActiveEditor().getEditorInput();
+    FileEditorInput fileEditorInput = (FileEditorInput) editorinput.getAdapter(FileEditorInput.class);
 
-		if (fileEditorInput == null || fileEditorInput.getFile() == null) {
-			return null;
-		}
-		return fileEditorInput.getFile().getProject();
-	}
+    if (fileEditorInput == null || fileEditorInput.getFile() == null) {
+      return null;
+    }
+    return fileEditorInput.getFile().getProject();
+  }
 
-	public static IProject getProject(IEditorInput editorinput) {
-		FileEditorInput fileEditorInput = (FileEditorInput) editorinput
-				.getAdapter(FileEditorInput.class);
+  public static IProject getProject(IEditorInput editorinput) {
+    FileEditorInput fileEditorInput = (FileEditorInput) editorinput.getAdapter(FileEditorInput.class);
 
-		if (fileEditorInput == null || fileEditorInput.getFile() == null) {
-			return null;
-		}
-		return fileEditorInput.getFile().getProject();
-	}
+    if (fileEditorInput == null || fileEditorInput.getFile() == null) {
+      return null;
+    }
+    return fileEditorInput.getFile().getProject();
+  }
 
-	public static IContainer getWebappFolder(IProject project, String webappdir) {
+  public static IContainer getWebappFolder(IProject project, String webappdir) {
 
-		IContainer folder = null;
-		if ("/".equals(webappdir))
-			folder = project;
-		else
-			folder = project.getFolder(webappdir);
+    IContainer folder = null;
+    if ("/".equals(webappdir))
+      folder = project;
+    else
+      folder = project.getFolder(webappdir);
 
-		return folder;
-	}
+    return folder;
+  }
 
-	public static boolean isMavenProject(IProject project) {
-		try {
-			return project != null && project.hasNature(MAVEN_NATURE_ID);
-		} catch (CoreException e) {
-			return false;
-		}
-	}
+  public static boolean isMavenProject(IProject project) {
+    try {
+      return project != null && project.hasNature(MAVEN_NATURE_ID);
+    } catch (CoreException e) {
+      return false;
+    }
+  }
 
-	public static IRuntimeClasspathEntry[] getLibs(Bundle bundle, String[] filelist)
-			throws MalformedURLException, URISyntaxException {
+  public static IRuntimeClasspathEntry[] getLibs(Bundle bundle, String[] filelist) throws MalformedURLException, URISyntaxException {
 
-		List<IRuntimeClasspathEntry> entries = new ArrayList<IRuntimeClasspathEntry>();
-		URL installUrl = bundle.getEntry("/");
+    List<IRuntimeClasspathEntry> entries = new ArrayList<IRuntimeClasspathEntry>();
+    URL installUrl = bundle.getEntry("/");
 
-		try {
-			for(String filepath:filelist){
-				//Note the FileLocator will generate a file for us when we use FileLocator.toFileURL ,
-				//it's very important.
-				URL fileUrl = FileLocator.toFileURL(new URL(installUrl,filepath));
-				entries.add(JavaRuntime.newArchiveRuntimeClasspathEntry(new Path(fileUrl.getPath())));
-			}
-			if(entries.size() == 0 ){
-				throw new IllegalStateException("RJR finding jar failed");
-			}
+    try {
+      for (String filepath : filelist) {
+        // Note the FileLocator will generate a file for us when we use
+        // FileLocator.toFileURL ,
+        // it's very important.
+        URL fileUrl = FileLocator.toFileURL(new URL(installUrl, filepath));
+        entries.add(JavaRuntime.newArchiveRuntimeClasspathEntry(new Path(fileUrl.getPath())));
+      }
+      if (entries.size() == 0) {
+        throw new IllegalStateException("RJR finding jar failed");
+      }
 
-		} catch (IOException e) {
-			EclipseJPF.logError("Error while retrieving libraries.", e);
-		}
-		return entries.toArray(new IRuntimeClasspathEntry[0]);
-	}
+    } catch (IOException e) {
+      EclipseJPF.logError("Error while retrieving libraries.", e);
+    }
+    return entries.toArray(new IRuntimeClasspathEntry[0]);
+  }
 
-	public static String[] getJarFilesIn(Bundle bundle, String rootPath) {
-		Enumeration<String> entries = bundle.getEntryPaths(rootPath);
-		List<String> jarFiles = new ArrayList<String>();
-		if (entries != null) {
-			for (; entries.hasMoreElements();) {
-				String file = entries.nextElement();
-				if(file.toLowerCase().endsWith(".jar"))jarFiles.add(file);
-			}
-		}
-		return jarFiles.toArray(new String[0]);
-	}
+  public static String[] getJarFilesIn(Bundle bundle, String rootPath) {
+    Enumeration<String> entries = bundle.getEntryPaths(rootPath);
+    List<String> jarFiles = new ArrayList<String>();
+    if (entries != null) {
+      for (; entries.hasMoreElements();) {
+        String file = entries.nextElement();
+        if (file.toLowerCase().endsWith(".jar"))
+          jarFiles.add(file);
+      }
+    }
+    return jarFiles.toArray(new String[0]);
+  }
 }
