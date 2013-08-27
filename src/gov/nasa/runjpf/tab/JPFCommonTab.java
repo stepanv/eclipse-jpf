@@ -68,6 +68,8 @@ public class JPFCommonTab extends JavaLaunchTab {
     comp2.setFont(parent.getFont());
 
     GridData gd = new GridData(1);
+    gd.horizontalAlignment = SWT.FILL;
+    gd.grabExcessHorizontalSpace = true;
     gd.horizontalSpan = GridData.FILL_BOTH;
     comp2.setLayoutData(gd);
 
@@ -185,7 +187,7 @@ public class JPFCommonTab extends JavaLaunchTab {
     });
 
     Group grpInteraction = new Group(grpOverrideCommonJpf, SWT.NONE);
-    GridData gd_grpInteraction = new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1);
+    GridData gd_grpInteraction = new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1);
     gd_grpInteraction.widthHint = 283;
     grpInteraction.setLayoutData(gd_grpInteraction);
     grpInteraction.setText("Interaction with settings from *.jpf file");
@@ -196,45 +198,6 @@ public class JPFCommonTab extends JavaLaunchTab {
 
     Button btnOverride = new Button(grpInteraction, SWT.RADIO);
     btnOverride.setText("Override");
-
-    GridData gd2 = new GridData(1);
-    gd2.horizontalSpan = GridData.FILL_BOTH;
-    comp2.setLayoutData(gd2);
-
-    return;
-
-  }
-
-  private void createBasicConfigurationGroup(Composite parent) {
-    // Font font = parent.getFont();
-    //
-    // /*
-    // * ---------------------------------------------------------------------
-    // */
-    //
-    //
-    //
-    //
-    // listenerText = SWTFactory.createSingleText(basicConfiguraionGroup, 1);
-    // listenerText.addModifyListener(new ModifyListener() {
-    // public void modifyText(ModifyEvent e) {
-    // updateLaunchConfigurationDialog();
-    // }
-    // });
-    // ControlAccessibleListener.addListener(listenerText,
-    // basicConfiguraionGroup.getText());
-    //
-    // listenerSearchButton = createPushButton(basicConfiguraionGroup,
-    // "Search...", null);
-    // new Label(basicConfiguraionGroup, SWT.NONE);
-    // new Label(basicConfiguraionGroup, SWT.NONE);
-    // listenerSearchButton.addSelectionListener(new SelectionListener() {
-    // public void widgetDefaultSelected(SelectionEvent e) {
-    // }
-    // public void widgetSelected(SelectionEvent e) {
-    // handleSearchButtonSelected("gov.nasa.jpf.Search");
-    // }
-    // });
 
   }
 

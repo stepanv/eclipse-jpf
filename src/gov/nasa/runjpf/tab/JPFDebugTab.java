@@ -2,43 +2,17 @@ package gov.nasa.runjpf.tab;
 
 import gov.nasa.runjpf.EclipseJPF;
 
-import java.lang.reflect.InvocationTargetException;
-
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.internal.ui.SWTFactory;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModel;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
-import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
-import org.eclipse.jdt.internal.debug.ui.actions.ControlAccessibleListener;
-import org.eclipse.jdt.internal.debug.ui.launcher.DebugTypeSelectionDialog;
-import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.Text;
 
 public class JPFDebugTab extends JPFCommonTab {
 
@@ -56,6 +30,8 @@ public class JPFDebugTab extends JPFCommonTab {
     comp2.setFont(parent.getFont());
 
     GridData gd = new GridData(1);
+    gd.horizontalAlignment = SWT.FILL;
+    gd.grabExcessHorizontalSpace = true;
     gd.horizontalSpan = GridData.FILL_BOTH;
     comp2.setLayoutData(gd);
 
@@ -64,40 +40,11 @@ public class JPFDebugTab extends JPFCommonTab {
     layout.horizontalSpacing = 0;
     comp2.setLayout(layout);
 
-    foo(comp2);
-    //super.createControl(comp2);
+    super.createControl(comp2);
 
     postCreateControl(comp2);
 
     setControl(comp2);
-  }
-
-  private void foo(Composite parent) {
-    Composite comp2 = new Composite(parent, SWT.NONE);
-    comp2.setFont(parent.getFont());
-
-    GridData gd = new GridData(1);
-    gd.horizontalSpan = GridData.FILL_BOTH;
-    comp2.setLayoutData(gd);
-
-    setControl(comp2);
-
-    Composite comp = comp2;
-    GridLayout gl_comp2 = new GridLayout(1, false);
-    gl_comp2.marginHeight = 0;
-    gl_comp2.marginWidth = 0;
-    comp2.setLayout(gl_comp2);
-
-    Group basicConfiguraionGroup = new Group(comp, SWT.NONE);
-    basicConfiguraionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    basicConfiguraionGroup.setText("JPF &File to execute (*.jpf):");
-    basicConfiguraionGroup.setLayout(new GridLayout(3, false));
-    basicConfiguraionGroup.setFont(comp.getFont());
-
-    Text jpfFileLocationText = new Text(basicConfiguraionGroup, SWT.BORDER);
-    jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
-    jpfFileLocationText.setBounds(10, 35, 524, 21);
-    
   }
 
   public void postCreateControl(Composite comp3) {
