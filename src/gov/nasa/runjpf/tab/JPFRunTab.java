@@ -98,28 +98,29 @@ public class JPFRunTab extends JavaLaunchTab {
     txtListener.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     
     Button searchListenerButton = new Button(grpOverrideCommonJpf, SWT.NONE);
-    searchListenerButton.setText("Search");
+    searchListenerButton.setText("Search...");
     
     Label lblSearch = new Label(grpOverrideCommonJpf, SWT.NONE);
-    lblSearch.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
     lblSearch.setText("Search:");
     
     text = new Text(grpOverrideCommonJpf, SWT.BORDER);
     text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     
     Button searchSearchButton = new Button(grpOverrideCommonJpf, SWT.NONE);
-    searchSearchButton.setText("Search");
+    searchSearchButton.setText("Search...");
     
     Group grpInteraction = new Group(grpOverrideCommonJpf, SWT.NONE);
-    grpInteraction.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-    grpInteraction.setText("Interaction");
+    GridData gd_grpInteraction = new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1);
+    gd_grpInteraction.widthHint = 283;
+    grpInteraction.setLayoutData(gd_grpInteraction);
+    grpInteraction.setText("Interaction with settings from *.jpf file");
     grpInteraction.setLayout(new GridLayout(2, false));
     
     Button btnOverride = new Button(grpInteraction, SWT.RADIO);
     btnOverride.setText("Override");
     
     Button btnAppend = new Button(grpInteraction, SWT.RADIO);
-    btnAppend.setText("Append");
+    btnAppend.setText("Add");
     
     Group grpExperimentalSetting = new Group(comp, SWT.NONE);
     grpExperimentalSetting.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
@@ -169,17 +170,10 @@ public class JPFRunTab extends JavaLaunchTab {
      */
 
     basicConfiguraionGroup = new Group(parent, SWT.NONE);
-    basicConfiguraionGroup.setText("JPF Verification basic configuration");
+    basicConfiguraionGroup.setText("JPF &File to execute (*.jpf):");
     basicConfiguraionGroup.setLayout(new GridLayout(3, false));
     basicConfiguraionGroup.setLayoutData(createHFillGridData());
     basicConfiguraionGroup.setFont(font);
-
-    Link link_1 = new Link(basicConfiguraionGroup, 0);
-    link_1.setToolTipText("Open editor for user settings");
-    link_1.setText("JPF &File to execute (*.jpf):");
-    link_1.setBounds(10, 14, 370, 15);
-    new Label(basicConfiguraionGroup, SWT.NONE);
-    new Label(basicConfiguraionGroup, SWT.NONE);
 
     jpfFileLocationText = new Text(basicConfiguraionGroup, SWT.BORDER);
     jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
