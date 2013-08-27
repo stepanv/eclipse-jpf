@@ -31,7 +31,7 @@ import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.dialogs.TypeFilteringDialog;
 
-public class ListenerSearchEngine {
+public class ClassSearchEngine {
     
     private class MethodCollector extends SearchRequestor {
       private List<IType> fResult;
@@ -82,15 +82,16 @@ public class ListenerSearchEngine {
      * @param pm progress monitor
      * @param scope search scope
      * @param includeSubtypes whether to consider types that inherit a main method
+     * @param supertype 
      */ 
-    public IType[] searchMainMethods(IProgressMonitor pm, IJavaSearchScope scope, boolean includeSubtypes) {
+    public IType[] searchMainMethods(IProgressMonitor pm, IJavaSearchScope scope, boolean includeSubtypes, String supertype) {
       pm.beginTask(LauncherMessages.MainMethodSearchEngine_1, 100); 
       int searchTicks = 100;
       if (includeSubtypes) {
         searchTicks = 25;
       }
       
-      SearchPattern pattern = SearchPattern.createPattern("gov.nasa.jpf.JPFListener", IJavaSearchConstants.TYPE, IJavaSearchConstants.IMPLEMENTORS, 1); 
+      SearchPattern pattern = SearchPattern.createPattern(supertype, IJavaSearchConstants.TYPE, IJavaSearchConstants.IMPLEMENTORS, 1); 
       SearchParticipant[] participants = new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()};
       MethodCollector collector = new MethodCollector();
       IProgressMonitor searchMonitor = new SubProgressMonitor(pm, searchTicks);
@@ -163,13 +164,14 @@ public class ListenerSearchEngine {
      * IJavaElementSearchConstants.CONSIDER_EXTERNAL_JARS
      * 
      * @param includeSubtypes whether to consider types that inherit a main method
+     * @param supertype 
      */
-    public IType[] searchMainMethods(IRunnableContext context, final IJavaSearchScope scope, final boolean includeSubtypes) throws InvocationTargetException, InterruptedException  {   
+    public IType[] searchClasses(IRunnableContext context, final IJavaSearchScope scope, final boolean includeSubtypes, final String supertype) throws InvocationTargetException, InterruptedException  {   
       final IType[][] res= new IType[1][];
       
       IRunnableWithProgress runnable= new IRunnableWithProgress() {
         public void run(IProgressMonitor pm) throws InvocationTargetException {
-          res[0]= searchMainMethods(pm, scope, includeSubtypes);
+          res[0]= searchMainMethods(pm, scope, includeSubtypes, supertype);
         }
       };
       context.run(true, true, runnable);

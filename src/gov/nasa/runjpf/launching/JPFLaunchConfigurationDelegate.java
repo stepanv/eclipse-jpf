@@ -3,14 +3,12 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
-import gov.nasa.runjpf.tab.JPFRunTab;
+import gov.nasa.runjpf.tab.JPFCommonTab;
 
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -30,9 +28,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
-    boolean debugBothVMs = configuration.getAttribute(JPFRunTab.JPF_DEBUG_BOTHVMS, false);
-    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
+    String jpfFile = configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "");
+    boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_BOTHVMS, false);
+    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
 
     // /*
     // * for those terminate by our self .
