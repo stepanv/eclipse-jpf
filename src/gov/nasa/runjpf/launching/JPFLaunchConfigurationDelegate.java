@@ -7,6 +7,10 @@ import gov.nasa.runjpf.tab.JPFRunTab;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -27,6 +31,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
     String jpfFile = configuration.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
+    boolean debugBothVMs = configuration.getAttribute(JPFRunTab.JPF_DEBUG_BOTHVMS, false);
+    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
 
     // /*
     // * for those terminate by our self .
@@ -74,9 +80,10 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
 
-      // runConfig.setProgramArguments(execArgs.getProgramArgumentsArray());
-
-      runConfig.setProgramArguments(new String[] { "+shell.port=4242", jpfFile });
+      ArrayList<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
+      programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
+      
+      runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
 
       // Environment variables
       runConfig.setEnvironment(getEnvironment(configuration));
@@ -112,10 +119,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         // getVMRunner(configuration, mode)
         // .run(runConfig, launch, monitor);
         IVMRunner runner;
-        if (ILaunchManager.DEBUG_MODE.equals(mode)) {
+        if (ILaunchManager.DEBUG_MODE.equals(mode) && (debugBothVMs || !debugJPFInsteadOfTheProgram)) {
           IVMInstall vm = verifyVMInstall(configuration);
-          runner = new JPFDebugger(vm);
-
+          runner = new JPFDebugger(vm, debugBothVMs);
         } else {
           runner = getVMRunner(configuration, mode);
         }

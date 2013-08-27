@@ -38,7 +38,7 @@
   <extension point="org.eclipse.debug.core.launchConfigurationTypes">
     <launchConfigurationType id="eclipse-jpf.launching.runJpf"
       name="Java PathFinder Verification"
-      delegate="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationDelegate"
+      delegate="gov.nasa.runjpf.launching.JPFLaunchConfigurationDelegate"
       modes="run, debug"
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
       sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
@@ -47,7 +47,7 @@
   <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
     <launchConfigurationTabGroup id="eclipse-jpf.launching.runJpfTabGroup"
       type="eclipse-jpf.launching.runJpf"
-      class="gov.nasa.runjpf.launching.JavaPathFinderLaunchConfigurationTabGroup">
+      class="gov.nasa.runjpf.launching.JPFLaunchConfigurationTabGroup">
     </launchConfigurationTabGroup>
   </extension>
   <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">

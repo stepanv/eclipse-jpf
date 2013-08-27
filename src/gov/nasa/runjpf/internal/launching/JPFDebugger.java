@@ -42,8 +42,11 @@ import com.sun.jdi.connect.ListeningConnector;
 
 public class JPFDebugger extends StandardVMDebugger {
 
-  public JPFDebugger(IVMInstall vmInstance) {
+  private boolean debugVM;
+
+  public JPFDebugger(IVMInstall vmInstance, boolean debugVM) {
     super(vmInstance);
+    this.debugVM = debugVM;
   }
 
   /*
@@ -69,6 +72,14 @@ public class JPFDebugger extends StandardVMDebugger {
       abort(LaunchingMessages.StandardVMDebugger_Could_not_find_a_free_socket_for_the_debugger_1, null,
             IJavaLaunchConfigurationConstants.ERR_NO_SOCKET_AVAILABLE);
     }
+    int portDebugVM = 0;
+    if (debugVM) {
+      portDebugVM = SocketUtil.findFreePort();
+      if (portDebugVM == -1) {
+        abort(LaunchingMessages.StandardVMDebugger_Could_not_find_a_free_socket_for_the_debugger_1, null,
+          IJavaLaunchConfigurationConstants.ERR_NO_SOCKET_AVAILABLE);
+      }
+    }
 
     subMonitor.worked(1);
 
@@ -85,35 +96,37 @@ public class JPFDebugger extends StandardVMDebugger {
 
     arguments.add(program);
 
-    // if (fVMInstance instanceof StandardVM &&
-    // ((StandardVM)fVMInstance).getDebugArgs() != null){
-    //			String debugArgString = ((StandardVM)fVMInstance).getDebugArgs().replaceAll("\\Q" + StandardVM.VAR_PORT + "\\E", Integer.toString(port));  //$NON-NLS-1$ //$NON-NLS-2$
-    // String[] debugArgs = DebugPlugin.parseArguments(debugArgString);
-    // for (int i = 0; i < debugArgs.length; i++) {
-    // arguments.add(debugArgs[i]);
-    // }
-    // } else {
-    // // VM arguments are the first thing after the java program so that users
-    // can specify
-    // // options like '-client' & '-server' which are required to be the first
-    // options
-    // double version = getJavaVersion();
-    // if (version < 1.5) {
-    //				arguments.add("-Xdebug"); //$NON-NLS-1$
-    //				arguments.add("-Xnoagent"); //$NON-NLS-1$
-    // }
-    //
-    // //check if java 1.4 or greater
-    // if (version < 1.4) {
-    //				arguments.add("-Djava.compiler=NONE"); //$NON-NLS-1$
-    // }
-    // if (version < 1.5) {
-    //				arguments.add("-Xrunjdwp:transport=dt_socket,suspend=y,address=localhost:" + port); //$NON-NLS-1$
-    // } else {
-    //				arguments.add("-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:" + port); //$NON-NLS-1$
-    // }
-    //
-    // }
+    if (debugVM) {
+      if (fVMInstance instanceof StandardVM && ((StandardVM) fVMInstance).getDebugArgs() != null) {
+        String debugArgString = ((StandardVM) fVMInstance).getDebugArgs()
+            .replaceAll("\\Q" + StandardVM.VAR_PORT + "\\E", Integer.toString(portDebugVM)); //$NON-NLS-1$ //$NON-NLS-2$
+        String[] debugArgs = DebugPlugin.parseArguments(debugArgString);
+        for (int i = 0; i < debugArgs.length; i++) {
+          arguments.add(debugArgs[i]);
+        }
+      } else {
+        // VM arguments are the first thing after the java program so that users
+        // can specify
+        // options like '-client' & '-server' which are required to be the first
+        // options
+        double version = getJavaVersion();
+        if (version < 1.5) {
+          arguments.add("-Xdebug"); //$NON-NLS-1$
+          arguments.add("-Xnoagent"); //$NON-NLS-1$
+        }
+  
+        // check if java 1.4 or greater
+        if (version < 1.4) {
+          arguments.add("-Djava.compiler=NONE"); //$NON-NLS-1$
+        }
+        if (version < 1.5) {
+          arguments.add("-Xrunjdwp:transport=dt_socket,suspend=y,address=localhost:" + portDebugVM); //$NON-NLS-1$
+        } else {
+          arguments.add("-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:" + portDebugVM); //$NON-NLS-1$
+        }
+  
+      }
+    }
 
     String[] allVMArgs = combineVmArgs(config, fVMInstance);
     addArguments(ensureEncoding(launch, allVMArgs), arguments);
@@ -166,6 +179,19 @@ public class JPFDebugger extends StandardVMDebugger {
     Map<String, Connector.Argument> map = connector.defaultArguments();
 
     specifyArguments(map, port);
+    
+    ListeningConnector connectorDebugVM = null;
+    Map<String, Connector.Argument> mapDebugVM = null;
+    if (debugVM) {
+      connectorDebugVM = getConnector();
+      if (connectorDebugVM == null) {
+        abort(LaunchingMessages.StandardVMDebugger_Couldn__t_find_an_appropriate_debug_connector_2, null,
+              IJavaLaunchConfigurationConstants.ERR_CONNECTOR_NOT_AVAILABLE);
+      }
+      mapDebugVM = connectorDebugVM.defaultArguments();
+  
+      specifyArguments(mapDebugVM, portDebugVM);
+    }
     Process p = null;
     try {
       try {
@@ -175,6 +201,9 @@ public class JPFDebugger extends StandardVMDebugger {
         }
 
         connector.startListening(map);
+        if (debugVM) {
+          connectorDebugVM.startListening(mapDebugVM);
+        }
 
         File workingDir = getWorkingDir(config);
         p = exec(cmdLine, workingDir, envp);
@@ -195,7 +224,57 @@ public class JPFDebugger extends StandardVMDebugger {
         boolean retry = false;
         do {
           try {
-
+            ConnectRunnable runnableDebugVM = null;
+            if (debugVM) {
+              runnableDebugVM = new ConnectRunnable(connectorDebugVM, mapDebugVM);
+              Thread connectThreadDebugVM = new Thread(runnableDebugVM, "Listening Connector DebugVM"); //$NON-NLS-1$
+              connectThreadDebugVM.setDaemon(true);
+              connectThreadDebugVM.start();
+              while (connectThreadDebugVM.isAlive()) {
+                if (monitor.isCanceled()) {
+                  try {
+                    connectorDebugVM.stopListening(mapDebugVM);
+                  } catch (IOException ioe) {
+                    // expected
+                  }
+                  p.destroy();
+                  return;
+                }
+                try {
+                  p.exitValue();
+                  // process has terminated - stop waiting for a connection
+                  try {
+                    connectorDebugVM.stopListening(mapDebugVM);
+                  } catch (IOException e) {
+                    // expected
+                  }
+                  checkErrorMessage(process);
+                } catch (IllegalThreadStateException e) {
+                  // expected while process is alive
+                }
+                try {
+                  Thread.sleep(100);
+                } catch (InterruptedException e) {
+                }
+              }
+              
+              Exception ex = runnableDebugVM.getException();
+              if (ex instanceof IllegalConnectorArgumentsException) {
+                throw (IllegalConnectorArgumentsException) ex;
+              }
+              if (ex instanceof InterruptedIOException) {
+                throw (InterruptedIOException) ex;
+              }
+              if (ex instanceof IOException) {
+                throw (IOException) ex;
+              }
+              
+              VirtualMachine vmDebugVM = runnableDebugVM.getVirtualMachine();
+              if (vmDebugVM != null) {
+                createDebugTarget(config, launch, portDebugVM, process, vmDebugVM);
+              }
+            }
+            
             ConnectRunnable runnable = new ConnectRunnable(connector, map);
             Thread connectThread = new Thread(runnable, "Listening Connector"); //$NON-NLS-1$
             connectThread.setDaemon(true);
@@ -267,6 +346,9 @@ public class JPFDebugger extends StandardVMDebugger {
         } while (retry);
       } finally {
         connector.stopListening(map);
+        if (debugVM) {
+          connectorDebugVM.stopListening(mapDebugVM);
+        }
       }
     } catch (IOException e) {
       abort(LaunchingMessages.StandardVMDebugger_Couldn__t_connect_to_VM_4, e, IJavaLaunchConfigurationConstants.ERR_CONNECTION_FAILED);
