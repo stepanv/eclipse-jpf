@@ -109,8 +109,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       runConfig.setVMArguments(execArgs.getVMArgumentsArray());
 
       // runConfig
-      
-      runConfig.setWorkingDirectory(getWorkingDirectoryPath(configuration).toFile().getAbsolutePath());
+      if (verifyWorkingDirectory(configuration) != null) {
+        runConfig.setWorkingDirectory(verifyWorkingDirectory(configuration).getAbsolutePath());
+      }
       runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
 
       // Boot path

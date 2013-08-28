@@ -1,15 +1,27 @@
 package gov.nasa.runjpf.tab;
 
+import gov.nasa.jpf.util.IntSet;
 import gov.nasa.runjpf.EclipseJPF;
 
+import java.io.File;
+import java.lang.ref.Reference;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -63,6 +75,9 @@ public class JPFCommonTab extends JavaLaunchTab {
   private Text listenerText;
   private Text searchText;
   private Text targetText;
+  private IType listenerType;
+  private IType searchType;
+  private IType targetType;
   private Button radioAppend;
   private Button radioOverride;
 
@@ -145,7 +160,7 @@ public class JPFCommonTab extends JavaLaunchTab {
       }
 
       public void widgetSelected(SelectionEvent e) {
-        handleSearchMainClassButtonSelected(targetText);
+        targetType = handleSearchMainClassButtonSelected(targetText, targetType);
       }
     });
 
@@ -168,7 +183,8 @@ public class JPFCommonTab extends JavaLaunchTab {
       }
 
       public void widgetSelected(SelectionEvent e) {
-        handleSupertypeSearchButtonSelected("gov.nasa.jpf.JPFListener", listenerText);
+        listenerType = handleSupertypeSearchButtonSelected("gov.nasa.jpf.JPFListener", listenerText, listenerType);
+        
       }
     });
 
@@ -190,7 +206,7 @@ public class JPFCommonTab extends JavaLaunchTab {
       }
 
       public void widgetSelected(SelectionEvent e) {
-        handleSupertypeSearchButtonSelected("gov.nasa.jpf.search.Search", searchText);
+        searchType = handleSupertypeSearchButtonSelected("gov.nasa.jpf.search.Search", searchText, searchType);
       }
     });
 
@@ -223,24 +239,24 @@ public class JPFCommonTab extends JavaLaunchTab {
     abstract IType[] search() throws InvocationTargetException, InterruptedException;
   }
 
-  protected void handleSupertypeSearchButtonSelected(final String supertype, Text text) {
-    handleSearchButtonSelected(new InlineSearcher() {
+  protected IType handleSupertypeSearchButtonSelected(final String supertype, Text text, IType originalType) {
+    return handleSearchButtonSelected(new InlineSearcher() {
       @Override
       IType[] search() throws InvocationTargetException, InterruptedException {
         ClassSearchEngine engine = new ClassSearchEngine();
         return engine.searchClasses(getLaunchConfigurationDialog(), simpleSearchScope(), true, supertype);
       }
-    }, text);
+    }, text, originalType);
   }
 
-  protected void handleSearchMainClassButtonSelected(Text text) {
-    handleSearchButtonSelected(new InlineSearcher() {
+  protected IType handleSearchMainClassButtonSelected(Text text, IType originalType) {
+    return handleSearchButtonSelected(new InlineSearcher() {
       @Override
       IType[] search() throws InvocationTargetException, InterruptedException {
         MainMethodSearchEngine engine = new MainMethodSearchEngine();
         return engine.searchMainMethods(getLaunchConfigurationDialog(), simpleSearchScope(), true);
       }
-    }, text);
+    }, text, originalType);
   }
 
   protected IJavaSearchScope simpleSearchScope() {
@@ -264,7 +280,7 @@ public class JPFCommonTab extends JavaLaunchTab {
   /**
    * Show a dialog that lists all main types
    */
-  protected void handleSearchButtonSelected(InlineSearcher searcher, Text text) {
+  protected IType handleSearchButtonSelected(InlineSearcher searcher, Text text, IType originalType) {
 
     IType[] types = null;
     try {
@@ -272,26 +288,29 @@ public class JPFCommonTab extends JavaLaunchTab {
 
     } catch (InvocationTargetException e) {
       setErrorMessage(e.getMessage());
-      return;
+      return null;
     } catch (InterruptedException e) {
       setErrorMessage(e.getMessage());
-      return;
+      return null;
     }
     DebugTypeSelectionDialog mmsd = new DebugTypeSelectionDialog(getShell(), types, LauncherMessages.JavaMainTab_Choose_Main_Type_11);
     if (mmsd.open() == Window.CANCEL) {
-      return;
+      return null;
     }
     Object[] results = mmsd.getResult();
     IType type = (IType) results[0];
     if (type != null) {
       text.setText(type.getFullyQualifiedName());
+      return type;
     }
+    return originalType;
   }
 
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName) {
 
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
     configuration.setAttribute(JPF_FILE_LOCATION, "");
+    configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
     
     // TODO get the configuration from the JPF
     // listener, target .. and other stuff
@@ -332,11 +351,35 @@ public class JPFCommonTab extends JavaLaunchTab {
 
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
+    IProject implicitProject = null;
+    
+    for (IType type : new IType[] {searchType, listenerType, targetType}) {
+      if (type == null || type.getJavaProject() == null) {
+        continue;
+      }
+      implicitProject = type.getJavaProject().getProject();
+    }
+    
+    IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+    URI jpfFileUri = new File(jpfFileLocationText.getText()).toURI();
+    
+    IFile[] iFiles = root.findFilesForLocationURI(jpfFileUri);
+    for (int i = iFiles.length - 1; i >= 0; --i) {
+      if (iFiles[i].getProject() == null) {
+        continue;
+      }
+      implicitProject = iFiles[i].getProject();
+    }
+    
     configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
     configuration.setAttribute(JPF_OPT_TARGET, targetText.getText());
     configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText());
     configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText());
     configuration.setAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, radioOverride.getSelection() && !radioAppend.getSelection());
+    
+    if (implicitProject != null) {
+      configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, implicitProject.getName());
+    }
   }
 
   @Override

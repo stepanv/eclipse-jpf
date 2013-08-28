@@ -193,9 +193,8 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         String launchConfigName = getLaunchManager().generateLaunchConfigurationName(typeName);
 
         wc = configType.newInstance(null, launchConfigName);
-
-        JPFRunTab.initDefaultConfiguration(wc, null, launchConfigName);
-
+        
+        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName);
         wc.setAttribute(JPFRunTab.JPF_FILE_LOCATION, ((IFile) type).getLocation().toFile().getAbsolutePath());
 
         addProjectAsSourceLookup(type.getProject(), wc);
