@@ -41,6 +41,12 @@ public class JPFCommonTab extends JavaLaunchTab {
   public static final String JPF_FILE_LOCATION = "JPF_FILE";
   public static final String JPF_DEBUG_BOTHVMS = "JPF_DEBUG_VM";
   public static final String JPF_DEBUG_JPF_INSTEADOFPROGRAM = "JPF_DEBUG_JPF_INSTEADOFPROGRAM";
+  
+  public static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
+  public static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
+  public static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
+  public static final String JPF_OPT_OVERRIDE_INSTEADOFADD = "JPF_OPT_OVERRIDE_INSTEADOFADD";
+  
 
   private Text jpfFileLocationText;
 
@@ -57,6 +63,8 @@ public class JPFCommonTab extends JavaLaunchTab {
   private Text listenerText;
   private Text searchText;
   private Text targetText;
+  private Button radioAppend;
+  private Button radioOverride;
 
   /**
    * @wbp.parser.entryPoint
@@ -193,11 +201,21 @@ public class JPFCommonTab extends JavaLaunchTab {
     grpInteraction.setText("Interaction with settings from *.jpf file");
     grpInteraction.setLayout(new GridLayout(2, false));
 
-    Button btnAppend = new Button(grpInteraction, SWT.RADIO);
-    btnAppend.setText("Add");
+    radioAppend = new Button(grpInteraction, SWT.RADIO);
+    radioAppend.setText("Add");
+    radioAppend.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
 
-    Button btnOverride = new Button(grpInteraction, SWT.RADIO);
-    btnOverride.setText("Override");
+    radioOverride = new Button(grpInteraction, SWT.RADIO);
+    radioOverride.setText("Override");
+    radioOverride.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
 
   }
 
@@ -267,7 +285,6 @@ public class JPFCommonTab extends JavaLaunchTab {
     IType type = (IType) results[0];
     if (type != null) {
       text.setText(type.getFullyQualifiedName());
-      // fProjText.setText(type.getJavaProject().getElementName());
     }
   }
 
@@ -275,12 +292,27 @@ public class JPFCommonTab extends JavaLaunchTab {
 
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
     configuration.setAttribute(JPF_FILE_LOCATION, "");
+    
+    // TODO get the configuration from the JPF
+    // listener, target .. and other stuff
   }
 
+  protected void setText(ILaunchConfiguration configuration, Text text, String attribute) throws CoreException {
+    text.setText(configuration.getAttribute(attribute, ""));
+  }
+  
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
       jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
+      setText(configuration, listenerText, JPF_OPT_LISTENER);
+      setText(configuration, searchText, JPF_OPT_SEARCH);
+      setText(configuration, targetText, JPF_OPT_TARGET);
+      
+      boolean override = configuration.getAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, false);
+      radioOverride.setSelection(override);
+      radioAppend.setSelection(!override);
+      
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
     }
@@ -301,6 +333,10 @@ public class JPFCommonTab extends JavaLaunchTab {
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
+    configuration.setAttribute(JPF_OPT_TARGET, targetText.getText());
+    configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText());
+    configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText());
+    configuration.setAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, radioOverride.getSelection() && !radioAppend.getSelection());
   }
 
   @Override

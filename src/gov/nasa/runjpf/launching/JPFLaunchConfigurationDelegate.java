@@ -9,6 +9,7 @@ import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -26,11 +27,26 @@ import org.eclipse.jdt.launching.VMRunnerConfiguration;
 public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
     ILaunchConfigurationDelegate {
 
+  private void conditionallyAddOrOverride(List<String> programArgs, boolean override, String param, String value) {
+    if (value == null || "".equals(value)) {
+      return;
+    }
+    if (override) {
+      programArgs.add(new StringBuilder("+").append(param).append("=").append(value).toString());
+    } else {
+      programArgs.add(new StringBuilder("++").append(param).append("=").append(value).append(",").toString());
+    }
+  }
+  
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
     String jpfFile = configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "");
     boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_BOTHVMS, false);
     boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
+    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
+    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
+    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
+    boolean override = configuration.getAttribute(JPFCommonTab.JPF_OPT_OVERRIDE_INSTEADOFADD, false);
 
     // /*
     // * for those terminate by our self .
@@ -78,8 +94,12 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
 
-      ArrayList<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
+      List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
+      
+      conditionallyAddOrOverride(programArgs, override, "target", targetClass);
+      conditionallyAddOrOverride(programArgs, override, "listener", listenerClass);
+      conditionallyAddOrOverride(programArgs, override, "search", searchClass);
       
       runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
 
@@ -89,7 +109,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       runConfig.setVMArguments(execArgs.getVMArgumentsArray());
 
       // runConfig
-      // .setWorkingDirectory(getWorkingDirectoryAbsolutePath(configuration));
+      
+      runConfig.setWorkingDirectory(getWorkingDirectoryPath(configuration).toFile().getAbsolutePath());
       runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
 
       // Boot path
@@ -111,6 +132,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       launch.getSourceLocator();
       monitor.worked(1);
 
+      
       synchronized (configuration) {
         // terminateOldRJRLauncher(configuration, launch);
         // Launch the configuration - 1 unit of work
