@@ -1,5 +1,6 @@
 package gov.nasa.runjpf.tab;
 
+import gov.nasa.jpf.Config;
 import gov.nasa.jpf.util.IntSet;
 import gov.nasa.runjpf.EclipseJPF;
 
@@ -80,7 +81,8 @@ public class JPFCommonTab extends JavaLaunchTab {
   private IType targetType;
   private Button radioAppend;
   private Button radioOverride;
-
+  private Text text_1;
+  
   /**
    * @wbp.parser.entryPoint
    */
@@ -107,17 +109,25 @@ public class JPFCommonTab extends JavaLaunchTab {
     Group basicConfiguraionGroup = new Group(comp, SWT.NONE);
     basicConfiguraionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     basicConfiguraionGroup.setText("JPF &File to execute (*.jpf):");
-    basicConfiguraionGroup.setLayout(new GridLayout(3, false));
+    basicConfiguraionGroup.setLayout(new GridLayout(4, false));
     basicConfiguraionGroup.setFont(comp.getFont());
 
     jpfFileLocationText = new Text(basicConfiguraionGroup, SWT.BORDER);
-    jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
+    jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 3, 1));
     jpfFileLocationText.addModifyListener(updatedListener);
     jpfFileLocationText.setBounds(10, 35, 524, 21);
 
     Button button = new Button(basicConfiguraionGroup, SWT.NONE);
     button.setText("&Browse...");
     button.setBounds(540, 33, 71, 25);
+    
+    Button btnReload = new Button(basicConfiguraionGroup, SWT.NONE);
+    btnReload.setText("Reload");
+    
+    Button button_1 = new Button(basicConfiguraionGroup, SWT.NONE);
+    button_1.setText("New Button");
+    new Label(basicConfiguraionGroup, SWT.NONE);
+    new Label(basicConfiguraionGroup, SWT.NONE);
 
     button.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
@@ -227,6 +237,41 @@ public class JPFCommonTab extends JavaLaunchTab {
 
     radioOverride = new Button(grpInteraction, SWT.RADIO);
     radioOverride.setText("Override");
+    
+    Group grpTrace = new Group(comp2, SWT.NONE);
+    grpTrace.setLayout(new GridLayout(3, false));
+    grpTrace.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    grpTrace.setText("Trace");
+    
+    Composite composite = new Composite(grpTrace, SWT.NONE);
+    composite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+    composite.setLayout(new GridLayout(2, false));
+    
+    Button btnStore = new Button(composite, SWT.RADIO);
+    btnStore.setBounds(0, 0, 90, 16);
+    btnStore.setText("Store");
+    
+    Button btnReplay = new Button(composite, SWT.RADIO);
+    btnReplay.setText("Replay");
+    
+    Button btnAdvancedSettings = new Button(grpTrace, SWT.CHECK);
+    btnAdvancedSettings.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+    btnAdvancedSettings.setText("Advanced settings");
+    
+    Label lblFile = new Label(grpTrace, SWT.NONE);
+    lblFile.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+    lblFile.setText("File:");
+    
+    text_1 = new Text(grpTrace, SWT.BORDER);
+    text_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    
+    Button btnBrowse = new Button(grpTrace, SWT.NONE);
+    btnBrowse.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+      }
+    });
+    btnBrowse.setText("Browse...");
     radioOverride.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
         updateLaunchConfigurationDialog();
@@ -306,14 +351,23 @@ public class JPFCommonTab extends JavaLaunchTab {
     return originalType;
   }
 
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName) {
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
 
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
     configuration.setAttribute(JPF_FILE_LOCATION, "");
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
+   
+    String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();
+    configuration.setAttribute(JPFCommonTab.JPF_FILE_LOCATION, jpfFileAbsolutePath);
     
     // TODO get the configuration from the JPF
     // listener, target .. and other stuff
+    Config config = new Config(new String[] {jpfFileAbsolutePath});
+    
+    configuration.setAttribute(JPFCommonTab.JPF_OPT_LISTENER, config.getProperty("listener", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_OPT_SEARCH, config.getProperty("search.class", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_OPT_TARGET, config.getProperty("target", ""));
+   
   }
 
   protected void setText(ILaunchConfiguration configuration, Text text, String attribute) throws CoreException {

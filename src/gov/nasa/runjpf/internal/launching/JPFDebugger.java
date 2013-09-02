@@ -217,7 +217,8 @@ public class JPFDebugger extends StandardVMDebugger {
           return;
         }
 
-        IProcess process = newProcess(launch, p, renderProcessLabel(cmdLine), getDefaultProcessMap());
+        String timestamp = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(new Date(System.currentTimeMillis()));
+        IProcess process = newProcess(launch, p, renderProcessLabel(cmdLine, timestamp), getDefaultProcessMap());
         process.setAttribute(IProcess.ATTR_CMDLINE, renderCommandLine(cmdLine));
         subMonitor.worked(1);
         subMonitor.subTask(LaunchingMessages.StandardVMDebugger_Establishing_debug_connection____5);

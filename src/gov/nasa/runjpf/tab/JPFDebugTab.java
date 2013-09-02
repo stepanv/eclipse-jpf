@@ -2,6 +2,7 @@ package gov.nasa.runjpf.tab;
 
 import gov.nasa.runjpf.EclipseJPF;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -89,8 +90,8 @@ public class JPFDebugTab extends JPFCommonTab {
 
   }
 
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName) {
-    JPFCommonTab.initDefaultConfiguration(configuration, projectName, launchConfigName);
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
+    JPFCommonTab.initDefaultConfiguration(configuration, projectName, launchConfigName, jpfFile);
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, false);
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
   }

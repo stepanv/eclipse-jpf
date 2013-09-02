@@ -13,7 +13,9 @@ import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
@@ -47,7 +49,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
     String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
     boolean override = configuration.getAttribute(JPFCommonTab.JPF_OPT_OVERRIDE_INSTEADOFADD, false);
-
+    
     // /*
     // * for those terminate by our self .
     // *
@@ -89,7 +91,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         jpfRunPath = jpfRunJar.getAbsolutePath();
       } catch (NullPointerException npe) {
         EclipseJPF.logError("JPF was not sucessfully found.", npe);
-        return;
+        throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
       }
 
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
@@ -99,7 +101,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       
       conditionallyAddOrOverride(programArgs, override, "target", targetClass);
       conditionallyAddOrOverride(programArgs, override, "listener", listenerClass);
-      conditionallyAddOrOverride(programArgs, override, "search", searchClass);
+      conditionallyAddOrOverride(programArgs, override, "search.class", searchClass);
       
       runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
 

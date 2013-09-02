@@ -1,5 +1,6 @@
 package gov.nasa.runjpf.tab;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.swt.SWT;
@@ -40,8 +41,8 @@ public class JPFRunTab extends JPFCommonTab {
 
   }
 
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName) {
-    JPFCommonTab.initDefaultConfiguration(configuration, projectName, launchConfigName);
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
+    JPFCommonTab.initDefaultConfiguration(configuration, projectName, launchConfigName, jpfFile);
   }
 
   public void initializeFrom(ILaunchConfiguration configuration) {

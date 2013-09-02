@@ -1,6 +1,8 @@
 package gov.nasa.runjpf.launching;
 
+import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.util.ProjectUtil;
 
@@ -194,11 +196,10 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
         wc = configType.newInstance(null, launchConfigName);
         
-        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName);
-        wc.setAttribute(JPFRunTab.JPF_FILE_LOCATION, ((IFile) type).getLocation().toFile().getAbsolutePath());
+        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
 
         addProjectAsSourceLookup(type.getProject(), wc);
-
+        
         // set mapped resource , let next time we could execute this
         // directly from menuitem.
         wc.setMappedResources(new IResource[] { type });
