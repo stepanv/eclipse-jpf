@@ -8,6 +8,7 @@ Bundle-ClassPath: lib/antlr-runtime-3.4.jar,
  lib/jpf-template.jar,
  lib/RunJPF.jar,
  .,
+ swing2swt.jar,
  swing2swt.jar
 Bundle-Activator: gov.nasa.runjpf.EclipseJPF
 Export-Package: gov.nasa.runjpf,
