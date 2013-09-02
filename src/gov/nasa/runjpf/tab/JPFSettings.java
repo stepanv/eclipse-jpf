@@ -36,6 +36,8 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -69,6 +71,10 @@ public class JPFSettings extends AbstractJPFTab {
  // private Table table;
   private Table table_1;
   private TableViewer environmentTable;
+  private Button envAddButton;
+  private Button envSelectButton;
+  private Button envEditButton;
+  private Button envRemoveButton;
   
   /**
    * @wbp.parser.entryPoint
@@ -76,27 +82,34 @@ public class JPFSettings extends AbstractJPFTab {
   @Override
   public void createControl(Composite parent) {
 
-    Composite comp2 = new Composite(parent, SWT.NONE);
-    comp2.setFont(parent.getFont());
+    
+    Composite mainComposite = SWTFactory.createComposite(parent, 2, 1, GridData.FILL_HORIZONTAL);
+    setControl(mainComposite);
+//    Composite mainComposit = new Composite(parent, SWT.NONE);
+//    mainComposit.setFont(parent.getFont());
+//
+//    GridData gd = new GridData(1);
+//    gd.horizontalAlignment = SWT.FILL;
+//    gd.grabExcessHorizontalSpace = true;
+//    gd.horizontalSpan = GridData.FILL_BOTH;
+//    mainComposit.setLayoutData(gd);
+//
+//    
+//
+//    GridLayout glMainComposit = new GridLayout(1, false);
+//    glMainComposit.marginHeight = 0;
+//    glMainComposit.marginWidth = 0;
+//    mainComposit.setLayout(glMainComposit);
+    
+    
+    
+    createEnvironmentTable(mainComposite);
+    createTableButtons(mainComposite);
 
-    GridData gd = new GridData(1);
-    gd.horizontalAlignment = SWT.FILL;
-    gd.grabExcessHorizontalSpace = true;
-    gd.horizontalSpan = GridData.FILL_BOTH;
-    comp2.setLayoutData(gd);
-
-    setControl(comp2);
-
-    Composite comp = comp2;
-    GridLayout gl_comp2 = new GridLayout(1, false);
-    gl_comp2.marginHeight = 0;
-    gl_comp2.marginWidth = 0;
-    comp2.setLayout(gl_comp2);
-
-    Group grpSettings = new Group(comp2, SWT.NONE);
-    grpSettings.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    grpSettings.setText("Settings");
-    grpSettings.setLayout(new GridLayout(2, false));
+//    Group grpSettings = new Group(mainComposit, SWT.NONE);
+//    grpSettings.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+//    grpSettings.setText("Settings");
+//    grpSettings.setLayout(new GridLayout(2, false));
     
 //    Composite composite_2 = new Composite(grpSettings, SWT.NONE);
 //    RowLayout rl_composite_2 = new RowLayout(SWT.HORIZONTAL);
@@ -193,7 +206,7 @@ public class JPFSettings extends AbstractJPFTab {
 //    btnEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 //    btnEdit.setText("Edit");
 
-    createEnvironmentTable(comp);
+   
     
 //    Button btnFoo = new Button(grpSettings, SWT.NONE);
 //    btnFoo.setText("foo");
@@ -224,7 +237,7 @@ public class JPFSettings extends AbstractJPFTab {
 //    comp2.setLayout(gl_comp2);
     
 //    parent = comp2;
-    
+    SWTFactory.createLabel(parent, LaunchConfigurationsMessages.EnvironmentTab_Environment_variables_to_set__3, 2);
     Font font = parent.getFont();
     // Create table composite
     Composite tableComposite = SWTFactory.createComposite(parent, font, 1, 1, GridData.FILL_BOTH, 0, 0);
@@ -290,6 +303,43 @@ public class JPFSettings extends AbstractJPFTab {
         }
       }
     });
+  }
+  
+  /**
+   * Creates the add/edit/remove buttons for the environment table
+   * @param parent the composite in which the buttons should be created
+   */
+  protected void createTableButtons(Composite parent) {
+    // Create button composite
+    Composite buttonComposite = SWTFactory.createComposite(parent, parent.getFont(), 1, 1, GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_END, 0, 0);
+
+    // Create buttons
+    envAddButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_New_4, null); 
+    envAddButton.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent event) {
+        //handleEnvAddButtonSelected();
+      }
+    });
+    envSelectButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_18, null); 
+    envSelectButton.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent event) {
+        //handleEnvSelectButtonSelected();
+      }
+    });
+    envEditButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_Edit_5, null); 
+    envEditButton.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent event) {
+        //handleEnvEditButtonSelected();
+      }
+    });
+    envEditButton.setEnabled(false);
+    envRemoveButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_Remove_6, null); 
+    envRemoveButton.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent event) {
+        //handleEnvRemoveButtonSelected();
+      }
+    });
+    envRemoveButton.setEnabled(false);
   }
 
   abstract private class InlineSearcher {
