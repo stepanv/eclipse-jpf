@@ -2,8 +2,11 @@ package gov.nasa.runjpf.launching;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.tab.JPFCommonTab;
+import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
+import gov.nasa.runjpf.tab.JPFSettings;
 import gov.nasa.runjpf.util.ProjectUtil;
 
 import java.io.File;
@@ -196,7 +199,9 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
         wc = configType.newInstance(null, launchConfigName);
         
+        JPFSettings.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
         JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
+        JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
 
         addProjectAsSourceLookup(type.getProject(), wc);
         

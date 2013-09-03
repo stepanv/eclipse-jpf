@@ -45,9 +45,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     String jpfFile = configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "");
     boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_BOTHVMS, false);
     boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
-    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
-    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
-    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
+//    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
+//    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
+//    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
     boolean override = configuration.getAttribute(JPFCommonTab.JPF_OPT_OVERRIDE_INSTEADOFADD, false);
     
     // /*
@@ -99,9 +99,10 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       
-      conditionallyAddOrOverride(programArgs, override, "target", targetClass);
-      conditionallyAddOrOverride(programArgs, override, "listener", listenerClass);
-      conditionallyAddOrOverride(programArgs, override, "search.class", searchClass);
+      // TODO
+//      conditionallyAddOrOverride(programArgs, override, "target", targetClass);
+//      conditionallyAddOrOverride(programArgs, override, "listener", listenerClass);
+//      conditionallyAddOrOverride(programArgs, override, "search.class", searchClass);
       
       runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
 

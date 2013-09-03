@@ -5,11 +5,16 @@ import gov.nasa.jpf.util.IntSet;
 import gov.nasa.runjpf.EclipseJPF;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
+
+import javax.management.RuntimeErrorException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -53,11 +58,19 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.layout.RowLayout;
+
 import swing2swt.layout.FlowLayout;
+
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.custom.TableCursor;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class JPFCommonTab extends AbstractJPFTab {
+
+  public static final String JPF_TRACE_STORE = "JPF_TRACE_STORE";
+  public static final String JPF_TRACE_FILE = "JPF_TRACE_FILE";
+  private static final String JPF_TRACE_ENABLED = "JPF_TRACE_ENABLED";
+  private static final String JPF_TRACE_CUSTOMFILE = "JPF_TRACE_CUSTOMFILE";
 
   private Text jpfFileLocationText;
 
@@ -69,9 +82,29 @@ public class JPFCommonTab extends AbstractJPFTab {
   private IType targetType;
   private Button radioAppend;
   private Button radioOverride;
-  private Text text_1;
-  private Table table;
+  private Text textTraceFile;
+
+  private Button radioTraceStore;
+
+  private Button radioTraceReplay;
+
+  // TODO should use a string only - not to create the whole file
+  private String lastTmpTraceFile;
+  private String lastUserTraceFile = "";
+
+  private Button radioTraceNoTrace;
+
+  private Button checkTraceFile;
+
+  private Button buttonTraceBrowse;
   
+  public JPFCommonTab() {
+  try {
+    lastTmpTraceFile = Files.createTempFile("trace-", ".txt").toFile().toString();
+  } catch (IOException e) {
+    throw new RuntimeException(e);
+  }
+  }
   /**
    * @wbp.parser.entryPoint
    */
@@ -239,100 +272,98 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     Composite composite = new Composite(grpTrace, SWT.NONE);
     composite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-    composite.setLayout(new GridLayout(2, false));
+    composite.setLayout(new GridLayout(3, false));
     
-    Button btnStore = new Button(composite, SWT.RADIO);
-    btnStore.setBounds(0, 0, 90, 16);
-    btnStore.setText("Store");
+    radioTraceNoTrace = new Button(composite, SWT.RADIO);
+    radioTraceNoTrace.setText("No Trace");
     
-    Button btnReplay = new Button(composite, SWT.RADIO);
-    btnReplay.setText("Replay");
-    
-    Button btnAdvancedSettings = new Button(grpTrace, SWT.CHECK);
-    btnAdvancedSettings.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-    btnAdvancedSettings.setText("Advanced settings");
-    
-    Label lblFile = new Label(grpTrace, SWT.NONE);
-    lblFile.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-    lblFile.setText("File:");
-    
-    text_1 = new Text(grpTrace, SWT.BORDER);
-    text_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    
-    Button btnBrowse = new Button(grpTrace, SWT.NONE);
-    btnBrowse.addSelectionListener(new SelectionAdapter() {
+    radioTraceStore = new Button(composite, SWT.RADIO);
+    radioTraceStore.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
+        if (checkTraceFile.getSelection()) {
+          textTraceFile.setText(lastUserTraceFile);
+        } else {
+          textTraceFile.setText(lastTmpTraceFile);
+        }
+        textTraceFile.setEnabled(checkTraceFile.getSelection());
+        buttonTraceBrowse.setEnabled(checkTraceFile.getSelection());
+        updateLaunchConfigurationDialog();
       }
     });
-    btnBrowse.setText("Browse...");
+    radioTraceStore.setBounds(0, 0, 90, 16);
+    radioTraceStore.setText("Store");
     
-    Group grpSettings = new Group(comp2, SWT.NONE);
-    grpSettings.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    grpSettings.setText("Settings");
-    grpSettings.setLayout(new GridLayout(1, false));
-    
-    Composite composite_2 = new Composite(grpSettings, SWT.NONE);
-    RowLayout rl_composite_2 = new RowLayout(SWT.HORIZONTAL);
-    rl_composite_2.spacing = 8;
-    composite_2.setLayout(rl_composite_2);
-    
-    Button btnShowDefaultProperties = new Button(composite_2, SWT.CHECK);
-    btnShowDefaultProperties.setText("Show default properties");
-    
-    Button btnShowSiteProperties = new Button(composite_2, SWT.CHECK);
-    btnShowSiteProperties.setText("Show site properties");
-    
-    Button btnShowAppProperties = new Button(composite_2, SWT.CHECK);
-    btnShowAppProperties.setText("Show app properties");
-    
-    Button btnShowDynamicProperties = new Button(composite_2, SWT.CHECK);
-    btnShowDynamicProperties.setText("Show dynamic properties");
-    
-    Composite composite_1 = new Composite(grpSettings, SWT.NONE);
-    composite_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    composite_1.setLayout(new GridLayout(2, false));
-    composite_1.setBounds(0, 0, 64, 64);
-    
-    table = new Table(composite_1, SWT.BORDER | SWT.FULL_SELECTION);
-    table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 3));
-    table.setHeaderVisible(true);
-    table.setLinesVisible(true);
-    
-    TableColumn tblclmnProperty = new TableColumn(table, SWT.NONE);
-    tblclmnProperty.setWidth(200);
-    tblclmnProperty.setText("Property");
-    
-    TableColumn tblclmnValue = new TableColumn(table, SWT.NONE);
-    tblclmnValue.setWidth(200);
-    tblclmnValue.setText("Value");
-    
-    TableItem tableItem = new TableItem(table, SWT.NONE);
-    tableItem.setText("EMPTY TABLE FOO");
-    
-    TableItem tableItem_1 = new TableItem(table, SWT.NONE);
-    tableItem_1.setText("New TableItem");
-    
-    TableColumn tblclmnPropertyLocation = new TableColumn(table, SWT.NONE);
-    tblclmnPropertyLocation.setWidth(100);
-    tblclmnPropertyLocation.setText("Property location");
-    
-    Button btnAdd = new Button(composite_1, SWT.NONE);
-    btnAdd.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-    btnAdd.setText("Add");
-    
-    Button btnNewButton = new Button(composite_1, SWT.NONE);
-    btnNewButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-    btnNewButton.addSelectionListener(new SelectionAdapter() {
+    radioTraceReplay = new Button(composite, SWT.RADIO);
+    radioTraceReplay.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
+        if (checkTraceFile.getSelection()) {
+          textTraceFile.setText(lastUserTraceFile);
+        } else {
+          textTraceFile.setText(lastTmpTraceFile);
+        }
+        textTraceFile.setEnabled(checkTraceFile.getSelection());
+        buttonTraceBrowse.setEnabled(checkTraceFile.getSelection());
+        updateLaunchConfigurationDialog();
       }
     });
-    btnNewButton.setText("Delete");
+    radioTraceReplay.setText("Replay");
     
-    Button btnEdit = new Button(composite_1, SWT.NONE);
-    btnEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-    btnEdit.setText("Edit");
+    checkTraceFile = new Button(grpTrace, SWT.CHECK);
+    checkTraceFile.setText("Trace File:");
+    
+    textTraceFile = new Text(grpTrace, SWT.BORDER);
+    textTraceFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    
+    buttonTraceBrowse = new Button(grpTrace, SWT.NONE);
+    buttonTraceBrowse.setText("Browse...");
+    
+    radioTraceNoTrace.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        boolean traceEnabled = !radioTraceNoTrace.getSelection();
+        buttonTraceBrowse.setEnabled(traceEnabled);
+        checkTraceFile.setEnabled(traceEnabled);
+        textTraceFile.setEnabled(traceEnabled);
+        updateLaunchConfigurationDialog();
+      }
+    });
+    
+    buttonTraceBrowse.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+        dialog.setFilterExtensions(new String[] { "*.*" });
+        if (getJpfFileLocation().length() > 0) {
+          dialog.setFileName(getJpfFileLocation());
+        }
+        String file = dialog.open();
+        if (file != null) {
+          file = file.trim();
+          if (file.length() > 0) {
+            lastUserTraceFile = file;
+            textTraceFile.setText(file);
+          }
+        }
+      }
+    });
+    
+    checkTraceFile.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        textTraceFile.setEnabled(checkTraceFile.getSelection());
+        buttonTraceBrowse.setEnabled(checkTraceFile.getSelection());
+        if (checkTraceFile.getSelection()) {
+          textTraceFile.setText(lastUserTraceFile);
+        } else {
+          textTraceFile.setText(lastTmpTraceFile);
+        }
+        updateLaunchConfigurationDialog();
+      }
+    });
+    
+    
     radioOverride.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
         updateLaunchConfigurationDialog();
@@ -341,6 +372,16 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   }
 
+  private static String defaultProperty(Map<String,String> map, String property, String defValue) {
+    if (map == null || !map.containsKey(property)) {
+      return defValue;
+    }
+    return (String) map.get(property);
+  }
+  
+  private void updateTraceRadio() {
+    
+  }
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
 
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
@@ -349,31 +390,68 @@ public class JPFCommonTab extends AbstractJPFTab {
     String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();
     configuration.setAttribute(JPF_FILE_LOCATION, jpfFileAbsolutePath);
     
+    configuration.setAttribute(JPF_TRACE_FILE, "");
+    configuration.setAttribute(JPF_TRACE_STORE, false);
+    
     // TODO get the configuration from the JPF
     // listener, target .. and other stuff
-    Config config = new Config(new String[] {jpfFileAbsolutePath});
+//    Config config = new Config(new String[] {jpfFileAbsolutePath});
     
-    configuration.setAttribute(JPFCommonTab.JPF_OPT_LISTENER, config.getProperty("listener", ""));
-    configuration.setAttribute(JPFCommonTab.JPF_OPT_SEARCH, config.getProperty("search.class", ""));
-    configuration.setAttribute(JPFCommonTab.JPF_OPT_TARGET, config.getProperty("target", ""));
+//    try {
+//      Map map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, (Map)null);
+//    
+//    
+//    configuration.setAttribute(JPFCommonTab.JPF_OPT_LISTENER, defaultProperty(map, "listener", ""));
+//    configuration.setAttribute(JPFCommonTab.JPF_OPT_SEARCH, defaultProperty(map, "search.class", ""));
+//    configuration.setAttribute(JPFCommonTab.JPF_OPT_TARGET, defaultProperty(map, "target", ""));
+//    
+//    } catch (CoreException e) {
+//      // TODO Auto-generated catch block
+//      e.printStackTrace();
+//    }
    
   }
 
-  protected void setText(ILaunchConfiguration configuration, Text text, String attribute) throws CoreException {
-    text.setText(configuration.getAttribute(attribute, ""));
+  protected void setText(ILaunchConfiguration configuration, Text text, String property) throws CoreException {
+    
+    Map appConfigMap = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, (Map)null);
+    text.setText(defaultProperty(appConfigMap, property, ""));
   }
   
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
       jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
-      setText(configuration, listenerText, JPF_OPT_LISTENER);
-      setText(configuration, searchText, JPF_OPT_SEARCH);
-      setText(configuration, targetText, JPF_OPT_TARGET);
+      setText(configuration, listenerText, "listener");
+      setText(configuration, searchText, "search.class");
+      setText(configuration, targetText, "target");
       
       boolean override = configuration.getAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, false);
       radioOverride.setSelection(override);
       radioAppend.setSelection(!override);
+      
+      
+      
+      
+      boolean traceEnabled = configuration.getAttribute(JPF_TRACE_ENABLED, false);
+      
+      radioTraceNoTrace.setSelection(!traceEnabled);
+      radioTraceReplay.setSelection(traceEnabled && !configuration.getAttribute(JPF_TRACE_STORE, false));
+      radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_TRACE_STORE, false));
+      checkTraceFile.setSelection(configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
+      checkTraceFile.setEnabled(traceEnabled);
+      textTraceFile.setEnabled(traceEnabled);
+      buttonTraceBrowse.setEnabled(traceEnabled);
+      
+      String defaultFileText;
+      if (checkTraceFile.getSelection()) {
+        defaultFileText = "";
+      } else {
+        // TODO this should be generated right here
+        defaultFileText = lastTmpTraceFile;
+      }
+      textTraceFile.setText(configuration.getAttribute(JPF_TRACE_FILE, defaultFileText));
+      
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
@@ -392,6 +470,33 @@ public class JPFCommonTab extends AbstractJPFTab {
     return "JPF Run";
   }
 
+  private void conditionallySetDynamicProperty() {
+    
+  }
+  
+  private String addListener(String originalListener, String newListener) {
+    if (originalListener == null || "".equals(originalListener)) {
+      return newListener;
+    }
+    if (originalListener.contains(newListener)) {
+      return originalListener;
+    }
+    return originalListener + "," + newListener;
+  }
+  private String removeListener(String originalListener, String removalListener) {
+    if (originalListener == null) {
+      return null;
+    }
+    if (originalListener.contains(removalListener)) {
+      // TODO this is completely wrong!!!
+      int startIndex = originalListener.indexOf(removalListener);
+      String result = originalListener.substring(0, startIndex);
+      result += originalListener.substring(startIndex + removalListener.length() + 1);
+      return result;
+    }
+    return originalListener;
+  }
+  
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     IProject implicitProject = null;
@@ -415,9 +520,67 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
     
     configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
-    configuration.setAttribute(JPF_OPT_TARGET, targetText.getText());
-    configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText());
-    configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText());
+    
+    configuration.setAttribute(JPF_TRACE_ENABLED, radioTraceNoTrace.getSelection());
+    configuration.setAttribute(JPF_TRACE_STORE, radioTraceStore.getSelection());
+    configuration.setAttribute(JPF_TRACE_FILE, textTraceFile.getText());
+    configuration.setAttribute(JPF_TRACE_CUSTOMFILE, checkTraceFile.getSelection());
+    
+    Map map;
+    try {
+      map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, (Map)null);
+    
+      String listenerString = listenerText.getText();
+      
+      if (!radioTraceNoTrace.getSelection()) {
+        // we're tracing
+        if (radioTraceStore.getSelection()) {
+          // we're storing a trace
+          map.put("trace.file", textTraceFile.getText());
+          map.remove("choice.use_trace");
+          
+          listenerString = (String) map.remove("listener");
+          listenerString = addListener(listenerString, ".listener.TraceStore");
+          map.put("listener", removeListener(listenerString, ".listener.ChoiceSelector"));
+        } else if (radioTraceReplay.getSelection()) {
+          map.put("choice.use_trace", textTraceFile.getText());
+          map.remove("trace.file");
+          
+          listenerString = (String) map.remove("listener");
+          listenerString = addListener(listenerString, ".listener.ChoiceSelector");
+          map.put("listener", removeListener(listenerString, ".listener.TraceStore"));
+        } else {
+          throw new IllegalStateException("Shouldn't occur");
+        }
+      } else {
+        map.remove("trace.file");
+        map.remove("choice.use_trace");
+        String listener = (String) map.remove("listener");
+        listener = removeListener(listener, ".listener.ChoiceSelector");
+        listener = removeListener(listener, ".listener.TraceStore");
+        map.put("listener", listener);
+      }
+      
+      map.put("listener", addListener((String)map.get("listener"), listenerText.getText()));
+      
+      map.put("search.class", searchText.getText());
+      map.put("target", targetText.getText());
+      //map.put("listener", listenerText.getText());
+      
+      try {
+        File tmpFIle = File.createTempFile("trace", ".txt");
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    } catch (CoreException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+//    configuration.setAttribute(JPF_OPT_TARGET, targetText.getText());
+//    configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText());
+//    configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText());
+    
     configuration.setAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, radioOverride.getSelection() && !radioAppend.getSelection());
     
     if (implicitProject != null) {

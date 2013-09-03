@@ -119,8 +119,11 @@ public class HierarchicalConfig extends Config {
   }
   
   HierarchicalConfig() {
+    this("");
+  }
+  HierarchicalConfig(String appPropertiesInput) {
     super((String)null);
-    final String[] a = new String[]{};
+    final String[] a = new String[]{appPropertiesInput};
     final String appProperties = getAppPropertiesLocation(a);
     
     configList.add(new InnerHiararchicalConfig("Properties as Arguments") {
@@ -214,6 +217,20 @@ public class HierarchicalConfig extends Config {
     
     return null;
     
+  }
+
+  @Override
+  public synchronized int size() {
+    int size = 0;
+    for (InnerHiararchicalConfig config : configList) {
+      size += config.size();
+    }
+    return size;
+  }
+
+  @Override
+  public synchronized boolean isEmpty() {
+    return size() > 0;
   }
   
   
