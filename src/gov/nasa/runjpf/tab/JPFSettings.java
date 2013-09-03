@@ -4,6 +4,7 @@ import gov.nasa.jpf.Config;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,7 +72,8 @@ public class JPFSettings extends AbstractJPFTab {
   public static final String ATTR_JPF_APPCONFIG = "ATTR_JPF_APPCONFIG";
   public static final String ATTR_JPF_DYNAMICCONFIG = "ATTR_JPF_DYNAMICCONFIG";
   
-  private static final Map<String, String> CONFIG_TO_NAME_MAP = new HashMap<>();
+  @SuppressWarnings("unchecked")
+  private static final Map<String, String> CONFIG_TO_NAME_MAP = new HashMap<String, String>();
   
   static {
     CONFIG_TO_NAME_MAP.put(ATTR_JPF_DEFAULTCONFIG, "Default properties");

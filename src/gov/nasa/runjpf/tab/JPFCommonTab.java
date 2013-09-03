@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -15,13 +16,18 @@ import junit.framework.Assert;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -101,8 +107,10 @@ public class JPFCommonTab extends AbstractJPFTab {
     TEMP_DIR_PATH = tmpDirString;
   }
   
+  public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
+  
   public JPFCommonTab() {
-    lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-{UNIQUE_ID}.txt";
+    lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
   }
   /**
    * @wbp.parser.entryPoint
@@ -401,7 +409,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, new HashMap<String, String>());
+      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
     
     
     configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_LISTENER, defaultProperty(map, "listener", ""));
@@ -571,7 +579,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       configuration.setAttribute(JPF_ATTR_OPT_TARGET, targetText.getText().trim());
     
       @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
+      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
     
       String listenerString = "";
       map.remove("trace.file");
@@ -586,7 +594,7 @@ public class JPFCommonTab extends AbstractJPFTab {
           // we're storing a trace
           map.put("trace.file", textTraceFile.getText().trim());
           
-          listenerString = addListener(listenerString, ".listener.TraceStore");
+          listenerString = addListener(listenerString, ".listener.TraceStorer");
           
         } else if (radioTraceReplay.getSelection()) {
           map.put("choice.use_trace", textTraceFile.getText().trim());
@@ -629,7 +637,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     // TODO look at other configs too
     @SuppressWarnings("unchecked")
-    Map<String, String> appMap = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, new HashMap<>());
+    Map<String, String> appMap = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
     
     String appValue = (String) appMap.get(key);
     if (appValue != null && appValue.trim().equals(value.trim())) {
@@ -641,6 +649,25 @@ public class JPFCommonTab extends AbstractJPFTab {
     if (!Objects.equals("", value) && isDynamic(configuration, key, value)) {
       map.put(key, value);
     }
+  }
+  
+  /* (non-Javadoc)
+   * @see org.eclipse.debug.ui.AbstractLaunchConfigurationTab#isValid(org.eclipse.debug.core.ILaunchConfiguration)
+   */
+  @Override
+  public boolean isValid(ILaunchConfiguration config) {
+    setErrorMessage(null);
+    setMessage(null);
+    String jpfFileString = jpfFileLocationText.getText();
+    String targetString = targetText.getText();
+    if (Objects.equals("", jpfFileString) && Objects.equals("", targetString)) {
+      setErrorMessage("Either JPF File (*.jpf) or Target class has to be specified");
+      return false;
+    }
+    if (!"".equals(jpfFileString) && !jpfFileString.toLowerCase().endsWith(".jpf")) {
+      setErrorMessage("JPF File (*.jpf) must end with .jpf extension!");
+    }
+    return true;
   }
   
   @Override

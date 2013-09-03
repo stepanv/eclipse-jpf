@@ -4,12 +4,17 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.tab.JPFCommonTab;
+import gov.nasa.runjpf.tab.JPFSettings;
 
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -25,6 +30,8 @@ import org.eclipse.jdt.launching.ExecutionArguments;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
+
+import com.sun.jdi.connect.Connector.Argument;
 
 public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
     ILaunchConfigurationDelegate {
@@ -99,6 +106,19 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       
+      @SuppressWarnings({ "unchecked" })
+      Map<String, String> dynamicMap = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
+      
+      for (String key : dynamicMap.keySet()) {
+        String value = dynamicMap.get(key);
+        
+        if (value.contains(JPFCommonTab.UNIQUE_ID_PLACEHOLDER)) {
+          String uniqueId = UUID.randomUUID().toString();
+          value = value.replace(JPFCommonTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
+        }
+        
+        programArgs.add(new StringBuilder("+").append(key).append("=").append(value).toString());
+      }
       // TODO
 //      conditionallyAddOrOverride(programArgs, override, "target", targetClass);
 //      conditionallyAddOrOverride(programArgs, override, "listener", listenerClass);
