@@ -199,9 +199,9 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
         wc = configType.newInstance(null, launchConfigName);
         
-        JPFSettings.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
-        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
-        JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), launchConfigName, (IFile)type);
+        JPFSettings.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
+        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
+        JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
 
         addProjectAsSourceLookup(type.getProject(), wc);
         

@@ -1,7 +1,6 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
-import gov.nasa.runjpf.tab.HierarchicalConfig.InnerHiararchicalConfig;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -18,11 +17,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.internal.ui.DebugPluginImages;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.SWTFactory;
-import org.eclipse.debug.internal.ui.launchConfigurations.EnvironmentVariable;
 import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationsMessages;
 import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.jdt.core.IJavaElement;
@@ -66,7 +63,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class JPFSettings extends AbstractJPFTab {
@@ -484,13 +480,17 @@ public class JPFSettings extends AbstractJPFTab {
     return originalType;
   }
   
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
-//    HierarchicalConfig hierarchicalConfig = new HierarchicalConfig(jpfFile.getLocation().toFile().getAbsolutePath());
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
     
     Config config = new Config(new String[] {});
     configuration.setAttribute(ATTR_JPF_DEFAULTCONFIG, config);
     
-    Config appConfig = new Config(jpfFile.getLocation().toFile().getAbsolutePath());
+    Config appConfig;
+    if (jpfFile != null) {
+      appConfig = new Config(jpfFile.getLocation().toFile().getAbsolutePath());
+    } else {
+      appConfig = new Config("");
+    }
     configuration.setAttribute(ATTR_JPF_APPCONFIG, appConfig);
     
     Config dynamicConfig = new Config("");
@@ -683,7 +683,7 @@ public class JPFSettings extends AbstractJPFTab {
   }
 
   @Override
-  public void setDefaults(ILaunchConfigurationWorkingCopy arg0) {
-    System.out.println("DEFAULTS");
+  public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+    initDefaultConfiguration(configuration, null, null);
   }
 }

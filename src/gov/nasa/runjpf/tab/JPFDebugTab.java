@@ -90,8 +90,8 @@ public class JPFDebugTab extends JPFCommonTab {
 
   }
 
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
-    JPFCommonTab.initDefaultConfiguration(configuration, projectName, launchConfigName, jpfFile);
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
+    JPFCommonTab.initDefaultConfiguration(configuration, projectName, jpfFile);
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, false);
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
   }
@@ -118,6 +118,11 @@ public class JPFDebugTab extends JPFCommonTab {
     super.performApply(configuration);
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, btnDebugBothTargets.getSelection());
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, btnDebugJpfItself.getSelection());
+  }
+  
+  @Override
+  public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+    super.setDefaults(configuration);
   }
 
 }

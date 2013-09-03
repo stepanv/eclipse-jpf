@@ -1,21 +1,15 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.util.IntSet;
 import gov.nasa.runjpf.EclipseJPF;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.Reference;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.management.RuntimeErrorException;
 
 import junit.framework.Assert;
 
@@ -24,25 +18,10 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModel;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
-import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
-import org.eclipse.jdt.internal.debug.ui.launcher.DebugTypeSelectionDialog;
-import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
-import org.eclipse.jdt.internal.debug.ui.launcher.MainMethodSearchEngine;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -57,27 +36,19 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.layout.RowLayout;
-
-import swing2swt.layout.FlowLayout;
-
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.custom.TableCursor;
-import org.eclipse.wb.swt.SWTResourceManager;
 import org.junit.Test;
 
 public class JPFCommonTab extends AbstractJPFTab {
 
-  public static final String JPF_TRACE_STORE = "JPF_TRACE_STORE";
-  public static final String JPF_TRACE_FILE = "JPF_TRACE_FILE";
-  private static final String JPF_TRACE_ENABLED = "JPF_TRACE_ENABLED";
-  private static final String JPF_TRACE_CUSTOMFILE = "JPF_TRACE_CUSTOMFILE";
-  private static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
-  private static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
-  private static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
+  private static final String ATTRIBUTE_UNIQUE_PREFIX = "asdlkjasdfkj";
+  
+  public static final String JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_STORE";
+  public static final String JPF_ATTR_TRACE_FILE = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_FILE";
+  public static final String JPF_ATTR_TRACE_ENABLED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_ENABLED";
+  public static final String JPF_ATTR_TRACE_CUSTOMFILECHECKED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_CUSTOMFILE";
+  public static final String JPF_ATTR_OPT_LISTENER = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_LISTENER";
+  public static final String JPF_ATTR_OPT_SEARCH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_SEARCH";
+  public static final String JPF_ATTR_OPT_TARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_TARGET";
 
   private Text jpfFileLocationText;
 
@@ -105,12 +76,33 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button buttonTraceBrowse;
   
-  public JPFCommonTab() {
-  try {
-    lastTmpTraceFile = Files.createTempFile("trace-", ".txt").toFile().toString();
-  } catch (IOException e) {
-    throw new RuntimeException(e);
+  private static final String TEMP_DIR_PATH;
+  
+  static {
+    String tmpDirString;
+    try {
+      java.nio.file.Path tmpPath = Files.createTempFile("tmpdirlookup", ".tmp");
+      File tmpDir = tmpPath.getParent().toFile();
+      
+      tmpDirString = tmpDir.getAbsolutePath();
+      
+    } catch (IOException e) {
+      
+      tmpDirString = System.getProperty("java.io.tmpdir");
+      if (tmpDirString == null) {
+        File[] roots = File.listRoots();
+        if (roots != null && roots.length > 0) {
+          tmpDirString = roots[0].getAbsolutePath();
+        } else {
+          throw new IllegalStateException("Unable to determine any directory as a temporary direcotyr");
+        }
+      }
+    }
+    TEMP_DIR_PATH = tmpDirString;
   }
+  
+  public JPFCommonTab() {
+    lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-{UNIQUE_ID}.txt";
   }
   /**
    * @wbp.parser.entryPoint
@@ -386,31 +378,35 @@ public class JPFCommonTab extends AbstractJPFTab {
     return (String) map.get(property);
   }
   
-  private void updateTraceRadio() {
-    
-  }
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
 
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
    
-    String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();
-    configuration.setAttribute(JPF_FILE_LOCATION, jpfFileAbsolutePath);
+    if (jpfFile != null) {
+      String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();
+      configuration.setAttribute(JPF_FILE_LOCATION, jpfFileAbsolutePath);
+    } else {
+      configuration.setAttribute(JPF_FILE_LOCATION, "");
+    }
     
-    configuration.setAttribute(JPF_TRACE_FILE, "");
-    configuration.setAttribute(JPF_TRACE_STORE, false);
+    configuration.setAttribute(JPF_ATTR_TRACE_FILE, "");
+    configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false);
+    configuration.setAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false);
+    configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, false);
     
     // TODO get the configuration from the JPF
     // listener, target .. and other stuff
 //    Config config = new Config(new String[] {jpfFileAbsolutePath});
     
     try {
-      Map map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, (Map)null);
+      @SuppressWarnings("unchecked")
+      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, new HashMap<String, String>());
     
     
-    configuration.setAttribute(JPFCommonTab.JPF_OPT_LISTENER, defaultProperty(map, "listener", ""));
-    configuration.setAttribute(JPFCommonTab.JPF_OPT_SEARCH, defaultProperty(map, "search.class", ""));
-    configuration.setAttribute(JPFCommonTab.JPF_OPT_TARGET, defaultProperty(map, "target", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_LISTENER, defaultProperty(map, "listener", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_SEARCH, defaultProperty(map, "search.class", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_TARGET, defaultProperty(map, "target", ""));
     
     } catch (CoreException e) {
       // TODO Auto-generated catch block
@@ -427,9 +423,9 @@ public class JPFCommonTab extends AbstractJPFTab {
 
     try {
       jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
-      setText(configuration, listenerText, JPFCommonTab.JPF_OPT_LISTENER);
-      setText(configuration, searchText, JPFCommonTab.JPF_OPT_SEARCH);
-      setText(configuration, targetText, JPFCommonTab.JPF_OPT_TARGET);
+      setText(configuration, listenerText, JPFCommonTab.JPF_ATTR_OPT_LISTENER);
+      setText(configuration, searchText, JPFCommonTab.JPF_ATTR_OPT_SEARCH);
+      setText(configuration, targetText, JPFCommonTab.JPF_ATTR_OPT_TARGET);
       
       boolean override = configuration.getAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, false);
       radioOverride.setSelection(override);
@@ -438,15 +434,15 @@ public class JPFCommonTab extends AbstractJPFTab {
       
       
       
-      boolean traceEnabled = configuration.getAttribute(JPF_TRACE_ENABLED, false);
+      boolean traceEnabled = configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false);
       
       radioTraceNoTrace.setSelection(!traceEnabled);
-      radioTraceReplay.setSelection(traceEnabled && !configuration.getAttribute(JPF_TRACE_STORE, false));
-      radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_TRACE_STORE, false));
-      checkTraceFile.setSelection(configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
+      radioTraceReplay.setSelection(traceEnabled && !configuration.getAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false));
+      radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false));
+      checkTraceFile.setSelection(configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
       checkTraceFile.setEnabled(traceEnabled);
-      textTraceFile.setEnabled(traceEnabled && configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
-      buttonTraceBrowse.setEnabled(traceEnabled && configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
+      textTraceFile.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
+      buttonTraceBrowse.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
       
       String defaultFileText;
       if (checkTraceFile.getSelection()) {
@@ -455,7 +451,7 @@ public class JPFCommonTab extends AbstractJPFTab {
         // TODO this should be generated right here
         defaultFileText = lastTmpTraceFile;
       }
-      textTraceFile.setText(configuration.getAttribute(JPF_TRACE_FILE, defaultFileText));
+      textTraceFile.setText(configuration.getAttribute(JPF_ATTR_TRACE_FILE, defaultFileText));
       
       
     } catch (CoreException e) {
@@ -475,10 +471,6 @@ public class JPFCommonTab extends AbstractJPFTab {
     return "JPF Run";
   }
 
-  private void conditionallySetDynamicProperty() {
-    
-  }
-  
   private String addListener(String originalListener, String newListener) {
     if (originalListener == null || "".equals(originalListener)) {
       return newListener;
@@ -530,6 +522,14 @@ public class JPFCommonTab extends AbstractJPFTab {
     Assert.assertEquals("bar,ooo", addListener("bar,ooo", "ooo"));
   }
   
+  public boolean attributeEquals(String attributeName, ILaunchConfiguration configuration, String valueCandidate) throws CoreException {
+    if (valueCandidate == null) {
+      return false;
+    }
+    String currentValue = configuration.getAttribute(attributeName, "");
+    return currentValue.trim().equals(valueCandidate.trim());
+  }
+  
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     IProject implicitProject = null;
@@ -551,21 +551,27 @@ public class JPFCommonTab extends AbstractJPFTab {
       }
       implicitProject = iFiles[i].getProject();
     }
-    
-    configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
-    
-    configuration.setAttribute(JPF_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
-    configuration.setAttribute(JPF_TRACE_STORE, radioTraceStore.getSelection());
-    configuration.setAttribute(JPF_TRACE_FILE, textTraceFile.getText());
-    configuration.setAttribute(JPF_TRACE_CUSTOMFILE, checkTraceFile.getSelection());
-    
-    configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText().trim());
-    configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText().trim());
-    configuration.setAttribute(JPF_OPT_TARGET, targetText.getText().trim());
-    
-    Map map;
     try {
-      map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, (Map)null);
+      if (!attributeEquals(JPF_FILE_LOCATION, configuration, jpfFileLocationText.getText())) {
+        configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
+        
+        // reload app config
+        Config appConfig = new Config(jpfFileLocationText.getText());
+        configuration.setAttribute(JPFSettings.ATTR_JPF_APPCONFIG, appConfig);
+      }
+      
+      
+      configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
+      configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, radioTraceStore.getSelection());
+      configuration.setAttribute(JPF_ATTR_TRACE_FILE, textTraceFile.getText());
+      configuration.setAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, checkTraceFile.getSelection());
+      
+      configuration.setAttribute(JPF_ATTR_OPT_LISTENER, listenerText.getText().trim());
+      configuration.setAttribute(JPF_ATTR_OPT_SEARCH, searchText.getText().trim());
+      configuration.setAttribute(JPF_ATTR_OPT_TARGET, targetText.getText().trim());
+    
+      @SuppressWarnings("unchecked")
+      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
     
       String listenerString = "";
       map.remove("trace.file");
@@ -595,9 +601,11 @@ public class JPFCommonTab extends AbstractJPFTab {
       if (isDynamic(configuration, "listener", listenerText.getText())) {
         listenerString = addListener(listenerString, listenerText.getText().trim());
       }
-      map.put("listener", listenerString);
-      putIfDynamic(configuration, map, "search.class", searchText.getText());
-      putIfDynamic(configuration, map, "target", targetText.getText());
+      if (!Objects.equals("", listenerString)) {
+        map.put("listener", listenerString);
+      }
+      putIfDynamicAndNotEmpty(configuration, map, "search.class", searchText.getText());
+      putIfDynamicAndNotEmpty(configuration, map, "target", targetText.getText());
         
     } catch (CoreException e) {
       // TODO Auto-generated catch block
@@ -620,7 +628,8 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
     
     // TODO look at other configs too
-    Map appMap = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, (Map)null);
+    @SuppressWarnings("unchecked")
+    Map<String, String> appMap = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, new HashMap<>());
     
     String appValue = (String) appMap.get(key);
     if (appValue != null && appValue.trim().equals(value.trim())) {
@@ -628,14 +637,14 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
     return true;
   }
-  private void putIfDynamic(ILaunchConfigurationWorkingCopy configuration, Map map, String key, String value) throws CoreException {
-    if (isDynamic(configuration, key, value)) {
+  private void putIfDynamicAndNotEmpty(ILaunchConfigurationWorkingCopy configuration, Map<String, String> map, String key, String value) throws CoreException {
+    if (!Objects.equals("", value) && isDynamic(configuration, key, value)) {
       map.put(key, value);
     }
   }
   
   @Override
-  public void setDefaults(ILaunchConfigurationWorkingCopy arg0) {
-    System.out.println("DEFAULTS");
+  public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+    initDefaultConfiguration(configuration, null, null);
   }
 }

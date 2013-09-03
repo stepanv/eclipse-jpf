@@ -41,8 +41,8 @@ public class JPFRunTab extends JPFCommonTab {
 
   }
 
-  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, String launchConfigName, IFile jpfFile) {
-    JPFCommonTab.initDefaultConfiguration(configuration, projectName, launchConfigName, jpfFile);
+  public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
+    JPFCommonTab.initDefaultConfiguration(configuration, projectName, jpfFile);
   }
 
   public void initializeFrom(ILaunchConfiguration configuration) {
@@ -58,6 +58,12 @@ public class JPFRunTab extends JPFCommonTab {
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     super.performApply(configuration);
+  }
+  
+  @Override
+  public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+    super.setDefaults(configuration);
+    initDefaultConfiguration(configuration, null, null);
   }
 
 }
