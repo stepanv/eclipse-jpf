@@ -13,8 +13,11 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.management.RuntimeErrorException;
+
+import junit.framework.Assert;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -64,6 +67,7 @@ import swing2swt.layout.FlowLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.custom.TableCursor;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.junit.Test;
 
 public class JPFCommonTab extends AbstractJPFTab {
 
@@ -71,6 +75,9 @@ public class JPFCommonTab extends AbstractJPFTab {
   public static final String JPF_TRACE_FILE = "JPF_TRACE_FILE";
   private static final String JPF_TRACE_ENABLED = "JPF_TRACE_ENABLED";
   private static final String JPF_TRACE_CUSTOMFILE = "JPF_TRACE_CUSTOMFILE";
+  private static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
+  private static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
+  private static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
 
   private Text jpfFileLocationText;
 
@@ -397,34 +404,32 @@ public class JPFCommonTab extends AbstractJPFTab {
     // listener, target .. and other stuff
 //    Config config = new Config(new String[] {jpfFileAbsolutePath});
     
-//    try {
-//      Map map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, (Map)null);
-//    
-//    
-//    configuration.setAttribute(JPFCommonTab.JPF_OPT_LISTENER, defaultProperty(map, "listener", ""));
-//    configuration.setAttribute(JPFCommonTab.JPF_OPT_SEARCH, defaultProperty(map, "search.class", ""));
-//    configuration.setAttribute(JPFCommonTab.JPF_OPT_TARGET, defaultProperty(map, "target", ""));
-//    
-//    } catch (CoreException e) {
-//      // TODO Auto-generated catch block
-//      e.printStackTrace();
-//    }
+    try {
+      Map map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, (Map)null);
+    
+    
+    configuration.setAttribute(JPFCommonTab.JPF_OPT_LISTENER, defaultProperty(map, "listener", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_OPT_SEARCH, defaultProperty(map, "search.class", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_OPT_TARGET, defaultProperty(map, "target", ""));
+    
+    } catch (CoreException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
    
   }
 
-  protected void setText(ILaunchConfiguration configuration, Text text, String property) throws CoreException {
-    
-    Map appConfigMap = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, (Map)null);
-    text.setText(defaultProperty(appConfigMap, property, ""));
+  protected void setText(ILaunchConfiguration configuration, Text text, String attributeName) throws CoreException {
+    text.setText(configuration.getAttribute(attributeName, ""));
   }
   
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
       jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
-      setText(configuration, listenerText, "listener");
-      setText(configuration, searchText, "search.class");
-      setText(configuration, targetText, "target");
+      setText(configuration, listenerText, JPFCommonTab.JPF_OPT_LISTENER);
+      setText(configuration, searchText, JPFCommonTab.JPF_OPT_SEARCH);
+      setText(configuration, targetText, JPFCommonTab.JPF_OPT_TARGET);
       
       boolean override = configuration.getAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, false);
       radioOverride.setSelection(override);
@@ -440,8 +445,8 @@ public class JPFCommonTab extends AbstractJPFTab {
       radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_TRACE_STORE, false));
       checkTraceFile.setSelection(configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
       checkTraceFile.setEnabled(traceEnabled);
-      textTraceFile.setEnabled(traceEnabled);
-      buttonTraceBrowse.setEnabled(traceEnabled);
+      textTraceFile.setEnabled(traceEnabled && configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
+      buttonTraceBrowse.setEnabled(traceEnabled && configuration.getAttribute(JPF_TRACE_CUSTOMFILE, false));
       
       String defaultFileText;
       if (checkTraceFile.getSelection()) {
@@ -491,10 +496,38 @@ public class JPFCommonTab extends AbstractJPFTab {
       // TODO this is completely wrong!!!
       int startIndex = originalListener.indexOf(removalListener);
       String result = originalListener.substring(0, startIndex);
-      result += originalListener.substring(startIndex + removalListener.length() + 1);
+      int advancedIndex = startIndex + removalListener.length() + 1;
+      if (originalListener.length() >= advancedIndex) {
+        String append = originalListener.substring(startIndex + removalListener.length() + 1);
+        
+        if (result.endsWith(",") && append.startsWith(",")) {
+          result += append.substring(1);
+        } else {
+          result += append;
+        }
+      } else {
+        if (result.endsWith(",")) {
+          result = result.substring(0, result.length() - 1);
+        }
+      }
       return result;
     }
     return originalListener;
+  }
+  
+  @Test
+  public void testRemove() {
+    Assert.assertEquals("foo,ooo", removeListener("foo,bar,ooo", "bar"));
+    Assert.assertEquals("foo,bar", removeListener("foo,bar,ooo", "ooo"));
+    Assert.assertEquals("bar,ooo", removeListener("foo,bar,ooo", "foo"));
+    Assert.assertEquals("bar,ooo", removeListener("bar,ooo", "foo"));
+  }
+  
+  @Test
+  public void testAdd() {
+    Assert.assertEquals("bar,ooo,foo", addListener("bar,ooo", "foo"));
+    Assert.assertEquals("bar,ooo", addListener("bar,ooo", "bar"));
+    Assert.assertEquals("bar,ooo", addListener("bar,ooo", "ooo"));
   }
   
   @Override
@@ -521,58 +554,51 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
     
-    configuration.setAttribute(JPF_TRACE_ENABLED, radioTraceNoTrace.getSelection());
+    configuration.setAttribute(JPF_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
     configuration.setAttribute(JPF_TRACE_STORE, radioTraceStore.getSelection());
     configuration.setAttribute(JPF_TRACE_FILE, textTraceFile.getText());
     configuration.setAttribute(JPF_TRACE_CUSTOMFILE, checkTraceFile.getSelection());
+    
+    configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText().trim());
+    configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText().trim());
+    configuration.setAttribute(JPF_OPT_TARGET, targetText.getText().trim());
     
     Map map;
     try {
       map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, (Map)null);
     
-      String listenerString = listenerText.getText();
+      String listenerString = "";
+      map.remove("trace.file");
+      map.remove("choice.use_trace");
+      map.remove("listener");
+      map.remove("search.class");
+      map.remove("target");
       
       if (!radioTraceNoTrace.getSelection()) {
         // we're tracing
         if (radioTraceStore.getSelection()) {
           // we're storing a trace
-          map.put("trace.file", textTraceFile.getText());
-          map.remove("choice.use_trace");
+          map.put("trace.file", textTraceFile.getText().trim());
           
-          listenerString = (String) map.remove("listener");
           listenerString = addListener(listenerString, ".listener.TraceStore");
-          map.put("listener", removeListener(listenerString, ".listener.ChoiceSelector"));
-        } else if (radioTraceReplay.getSelection()) {
-          map.put("choice.use_trace", textTraceFile.getText());
-          map.remove("trace.file");
           
-          listenerString = (String) map.remove("listener");
+        } else if (radioTraceReplay.getSelection()) {
+          map.put("choice.use_trace", textTraceFile.getText().trim());
+          
           listenerString = addListener(listenerString, ".listener.ChoiceSelector");
-          map.put("listener", removeListener(listenerString, ".listener.TraceStore"));
         } else {
           throw new IllegalStateException("Shouldn't occur");
         }
-      } else {
-        map.remove("trace.file");
-        map.remove("choice.use_trace");
-        String listener = (String) map.remove("listener");
-        listener = removeListener(listener, ".listener.ChoiceSelector");
-        listener = removeListener(listener, ".listener.TraceStore");
-        map.put("listener", listener);
       }
       
-      map.put("listener", addListener((String)map.get("listener"), listenerText.getText()));
       
-      map.put("search.class", searchText.getText());
-      map.put("target", targetText.getText());
-      //map.put("listener", listenerText.getText());
-      
-      try {
-        File tmpFIle = File.createTempFile("trace", ".txt");
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+      if (isDynamic(configuration, "listener", listenerText.getText())) {
+        listenerString = addListener(listenerString, listenerText.getText().trim());
       }
+      map.put("listener", listenerString);
+      putIfDynamic(configuration, map, "search.class", searchText.getText());
+      putIfDynamic(configuration, map, "target", targetText.getText());
+        
     } catch (CoreException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -588,6 +614,26 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
   }
 
+  private boolean isDynamic(ILaunchConfigurationWorkingCopy configuration, String key, String value) throws CoreException {
+    if (value == null) {
+      return false;
+    }
+    
+    // TODO look at other configs too
+    Map appMap = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, (Map)null);
+    
+    String appValue = (String) appMap.get(key);
+    if (appValue != null && appValue.trim().equals(value.trim())) {
+        return false;
+    }
+    return true;
+  }
+  private void putIfDynamic(ILaunchConfigurationWorkingCopy configuration, Map map, String key, String value) throws CoreException {
+    if (isDynamic(configuration, key, value)) {
+      map.put(key, value);
+    }
+  }
+  
   @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy arg0) {
     System.out.println("DEFAULTS");
