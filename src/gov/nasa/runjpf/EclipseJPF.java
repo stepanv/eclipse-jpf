@@ -38,6 +38,7 @@ public class EclipseJPF extends AbstractUIPlugin {
    * The plug-in ID
    */
   public static final String PLUGIN_ID = "RunJPF";
+  public static final String BUNDLE_SYMBOLIC = "eclipse-jpf";
 
   // The shared instance
   private static EclipseJPF plugin;

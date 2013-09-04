@@ -4,6 +4,8 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.tab.JPFCommonTab;
+import gov.nasa.runjpf.tab.JPFDebugTab.JDWPInstallation;
+import gov.nasa.runjpf.tab.JPFDebugTab.JDWPInstallations;
 import gov.nasa.runjpf.tab.JPFSettings;
 
 import java.io.File;
@@ -12,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -101,7 +104,22 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
       }
 
-      VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, new String[] { jpfRunPath });
+      List<String> classpath = new LinkedList<>();
+      classpath.add(jpfRunPath);
+      
+      if (ILaunchManager.DEBUG_MODE.equals(mode)) {
+        int selectedJdwpInstallation = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
+        
+        if (selectedJdwpInstallation == -1) {
+          throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JDWP was not selected - this shouldn't happended"));
+        }
+        
+        if (selectedJdwpInstallation == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
+          // using embedded jdwp
+          classpath.add(JDWPInstallation.EMBEDDED.getClasspathFile().getAbsolutePath());
+        } // else JPF will resolve jpf-jdwp by itself 
+      } 
+      VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));

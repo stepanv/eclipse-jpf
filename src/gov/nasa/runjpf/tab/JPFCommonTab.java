@@ -46,7 +46,7 @@ import org.junit.Test;
 
 public class JPFCommonTab extends AbstractJPFTab {
 
-  private static final String ATTRIBUTE_UNIQUE_PREFIX = "asdlkjasdfkj";
+  private static final String ATTRIBUTE_UNIQUE_PREFIX = "gov.nasa.jpf.runjpf-attributeprefix-";
   
   public static final String JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_STORE";
   public static final String JPF_ATTR_TRACE_FILE = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_FILE";
@@ -55,6 +55,8 @@ public class JPFCommonTab extends AbstractJPFTab {
   public static final String JPF_ATTR_OPT_LISTENER = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_LISTENER";
   public static final String JPF_ATTR_OPT_SEARCH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_SEARCH";
   public static final String JPF_ATTR_OPT_TARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_TARGET";
+  
+  public static final String JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX";
 
   private Text jpfFileLocationText;
 

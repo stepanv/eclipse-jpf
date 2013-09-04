@@ -3,6 +3,9 @@ package gov.nasa.runjpf.tab;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +18,9 @@ import gov.nasa.runjpf.EclipseJPFLauncher;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
@@ -35,9 +41,11 @@ import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormAttachment;
+import org.osgi.framework.Bundle;
 
 public class JPFDebugTab extends JPFCommonTab {
 
+  
   private Button btnDebugBothTargets;
   private Button btnDebugJpfItself;
   private Button btnDebugTheProgram;
@@ -71,12 +79,19 @@ public class JPFDebugTab extends JPFCommonTab {
     setControl(comp2);
     
     grpRuntime = new Group(comp2, SWT.NONE);
-    grpRuntime.setLayout(new GridLayout(1, false));
+    grpRuntime.setLayout(new GridLayout(3, false));
     grpRuntime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     grpRuntime.setText("Runtime");
     
+    lblJdwp = new Label(grpRuntime, SWT.NONE);
+    lblJdwp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+    lblJdwp.setText("JDWP:");
+    
     
     fCombo = SWTFactory.createCombo(grpRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
+    
+    btnConfigure = new Button(grpRuntime, SWT.NONE);
+    btnConfigure.setText("Configure");
     //ControlAccessibleListener.addListener(fCombo, fSpecificButton.getText());
     fCombo.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -85,28 +100,83 @@ public class JPFDebugTab extends JPFCommonTab {
 //        firePropertyChange();
       }
     });
-    String[] jdwps = (String[]) jdwpInstallations.toArray();
-    fCombo.setItems(jdwps);
-    fCombo.setVisibleItemCount(Math.min(jdwps.length, 20));
-    
-    String[] names = new String[] {"sdlfj", "sdlfkj", "dfdddd", "SDSS"};
+   
   }
   
   public static class JDWPInstallation {
-    public static final JDWPInstallation EMBEDED = new JDWPInstallation("Embeded", "Eclipse plugin-in");
+    public static final JDWPInstallation EMBEDDED = new JDWPInstallation("Embedded", locateEmbeddedJdwpInstallation());
+    
+    private static File locateEmbeddedJdwpInstallation() {
+      try {
+        Bundle bundle = Platform.getBundle(EclipseJPF.BUNDLE_SYMBOLIC);
+        Path path = new Path("lib/jpf-jdwp.jar");
+        URL clientFileURL = FileLocator.find(bundle, path, null);
+        URL fileURL = FileLocator.resolve(clientFileURL);
+        return new File(fileURL.toURI());
+      } catch (URISyntaxException | IOException e) {
+        EclipseJPF.logError("Cannot locate embedded JPF JDWP", e);
+        return new File("");
+      }
+    }
+    
     private String friendlyName;
     private String pseudoPath;
+    private File classpathFile;
     
     JDWPInstallation(String friendlyName, String pseudoPath) {
       this.friendlyName = friendlyName;
       this.pseudoPath = pseudoPath;
     }
+    
+    JDWPInstallation(String friendlyName, File classpathFile) {
+      this.friendlyName = friendlyName;
+      this.classpathFile = classpathFile;
+      
+      String path = classpathFile.getAbsolutePath();
+      int trimLength = 50;
+      if (path.length() - trimLength >= 0) {
+        path = ".." + path.substring(path.length() - trimLength, path.length());
+      }
+      this.pseudoPath = path;
+    }
+
+  	@Override
+  	public String toString() {
+  		return new StringBuilder(friendlyName).append(" (location:").append(pseudoPath).append(")").toString();
+  	}
+
+    public File getClasspathFile() {
+      return classpathFile;
+    }
   }
   
-  List<JDWPInstallation> jdwpInstallations = new ArrayList<>();
+  public static class JDWPInstallations extends ArrayList<JDWPInstallation> implements List<JDWPInstallation> {
+    /**	 */
+    private static final long serialVersionUID = 1L;
+    
+    public static final int DEFAULT_INSTALLATION_INDEX = 0;
+    public JDWPInstallations() {
+      add(DEFAULT_INSTALLATION_INDEX, JDWPInstallation.EMBEDDED);
+    }
+
+    public String[] toStringArray(String[] array) {
+      if (array.length < this.size()) {
+        throw new UnsupportedOperationException("The array specified must have a good size!");
+      }
+      int i = 0;
+      for (JDWPInstallation jdwpInstallation : this) {
+        array[i++] = jdwpInstallation.toString();
+      }
+      return array;
+    }
+  }
+  
+  // TODO put them to an appropriate place
+  public static final JDWPInstallations jdwpInstallations = new JDWPInstallations();
+  private Label lblJdwp;
+  private Button btnConfigure;
   
   private void populateJdwpInstallations(ILaunchConfiguration configuration) throws CoreException {
-    jdwpInstallations.add(JDWPInstallation.EMBEDED);
     lookupLocalJdwpInstallation(jdwpInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""));
   }
   
@@ -149,6 +219,9 @@ public class JPFDebugTab extends JPFCommonTab {
         }
 
         String v = config.getString(projId);
+        if (v == null) {
+        	continue;
+        }
         File projDir = new File(v);
 
         if (projDir.isDirectory()) {
@@ -207,6 +280,8 @@ public class JPFDebugTab extends JPFCommonTab {
     JPFCommonTab.initDefaultConfiguration(configuration, projectName, jpfFile);
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, false);
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
+    
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.DEFAULT_INSTALLATION_INDEX);
   }
 
   public void initializeFrom(ILaunchConfiguration configuration) {
@@ -221,6 +296,12 @@ public class JPFDebugTab extends JPFCommonTab {
       boolean readioChoicesEnabled = !btnDebugBothTargets.getSelection();
       btnDebugJpfItself.setEnabled(readioChoicesEnabled);
       btnDebugTheProgram.setEnabled(readioChoicesEnabled);
+      
+      String[] jdwps = (String[]) jdwpInstallations.toStringArray(new String[jdwpInstallations.size()]);
+      fCombo.setItems(jdwps);
+      fCombo.setVisibleItemCount(Math.min(jdwps.length, 20));
+      fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.DEFAULT_INSTALLATION_INDEX));
+      
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
     }
@@ -233,10 +314,12 @@ public class JPFDebugTab extends JPFCommonTab {
     super.performApply(configuration);
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, btnDebugBothTargets.getSelection());
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, btnDebugJpfItself.getSelection());
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, fCombo.getSelectionIndex());
   }
   
   @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+    initDefaultConfiguration(configuration, null, null);
     super.setDefaults(configuration);
   }
 }
