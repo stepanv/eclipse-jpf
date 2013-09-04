@@ -106,19 +106,6 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
       List<String> classpath = new LinkedList<>();
       classpath.add(jpfRunPath);
-      
-      if (ILaunchManager.DEBUG_MODE.equals(mode)) {
-        int selectedJdwpInstallation = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
-        
-        if (selectedJdwpInstallation == -1) {
-          throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JDWP was not selected - this shouldn't happended"));
-        }
-        
-        if (selectedJdwpInstallation == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
-          // using embedded jdwp
-          classpath.add(JDWPInstallation.EMBEDDED.getClasspathFile().getAbsolutePath());
-        } // else JPF will resolve jpf-jdwp by itself 
-      } 
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));

@@ -9,8 +9,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
@@ -19,8 +22,10 @@ import gov.nasa.runjpf.EclipseJPFLauncher;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
@@ -104,12 +109,23 @@ public class JPFDebugTab extends JPFCommonTab {
   }
   
   public static class JDWPInstallation {
-    public static final JDWPInstallation EMBEDDED = new JDWPInstallation("Embedded", locateEmbeddedJdwpInstallation());
+    public static final JDWPInstallation EMBEDDED = new JDWPInstallation("Embedded", generateClasspathEmbedded());
     
-    private static File locateEmbeddedJdwpInstallation() {
+    private static List<File> generateClasspathEmbedded() {
+      List<File> requiredFiles = new LinkedList<>();
+      String requiredClasspath = "";
+      for (String relativePath : new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" }) {
+        File embeddedFile = locateEmbeddedFile(relativePath);
+        requiredFiles.add(embeddedFile);
+        requiredClasspath += embeddedFile.getAbsolutePath() + ";";
+      }
+      return requiredFiles;
+    }
+    
+    private static File locateEmbeddedFile(String relativePath) {
       try {
         Bundle bundle = Platform.getBundle(EclipseJPF.BUNDLE_SYMBOLIC);
-        Path path = new Path("lib/jpf-jdwp.jar");
+        Path path = new Path(relativePath);
         URL clientFileURL = FileLocator.find(bundle, path, null);
         URL fileURL = FileLocator.resolve(clientFileURL);
         return new File(fileURL.toURI());
@@ -119,34 +135,40 @@ public class JPFDebugTab extends JPFCommonTab {
       }
     }
     
-    private String friendlyName;
-    private String pseudoPath;
-    private File classpathFile;
+    private String friendlyName = null;
+    private String pseudoPath = "";
+    private List<File> classpathFiles = Collections.EMPTY_LIST;
     
     JDWPInstallation(String friendlyName, String pseudoPath) {
       this.friendlyName = friendlyName;
       this.pseudoPath = pseudoPath;
     }
     
-    JDWPInstallation(String friendlyName, File classpathFile) {
+    JDWPInstallation(String friendlyName, List<File> classpathFiles) {
       this.friendlyName = friendlyName;
-      this.classpathFile = classpathFile;
+      this.classpathFiles = classpathFiles;
       
-      String path = classpathFile.getAbsolutePath();
-      int trimLength = 50;
-      if (path.length() - trimLength >= 0) {
-        path = ".." + path.substring(path.length() - trimLength, path.length());
+      if (classpathFiles.size() > 0) {
+        String path = classpathFiles.get(0).getAbsolutePath();
+        int trimLength = 70;
+        if (path.length() - trimLength >= 0) {
+          path = "... " + path.substring(path.length() - trimLength, path.length());
+        }
+        this.pseudoPath = path;
       }
-      this.pseudoPath = path;
     }
 
   	@Override
   	public String toString() {
-  		return new StringBuilder(friendlyName).append(" (location:").append(pseudoPath).append(")").toString();
+  		return new StringBuilder(friendlyName).append(" (location: ").append(pseudoPath).append(")").toString();
   	}
 
-    public File getClasspathFile() {
-      return classpathFile;
+    public String classpath(String delimiter) {
+      String classpath = "";
+      for (File file : classpathFiles) {
+        classpath += file.getAbsolutePath() + delimiter;
+      }
+      return classpath;
     }
   }
   
@@ -315,6 +337,27 @@ public class JPFDebugTab extends JPFCommonTab {
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, btnDebugBothTargets.getSelection());
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, btnDebugJpfItself.getSelection());
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, fCombo.getSelectionIndex());
+    
+    try {
+      Map<String, String> dynMapConfig = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+      // we're using +jpf-core.native_classpath only here so we can safely remove it
+      // TODO move this to JPFSettings and wipe it always
+      dynMapConfig.remove("+jpf-core.native_classpath");
+      
+      int selectedJdwpInstallation = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
+      
+      if (selectedJdwpInstallation == -1) {
+        EclipseJPF.logError("Obtained incorret jdwp installation index");
+      } else if (selectedJdwpInstallation == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
+        // using embedded jdwp
+        dynMapConfig.put("+jpf-core.native_classpath", JDWPInstallation.EMBEDDED.classpath(File.pathSeparator));
+      } // nothing changes
+      
+    } catch (CoreException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
   }
   
   @Override
