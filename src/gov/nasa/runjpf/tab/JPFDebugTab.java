@@ -101,6 +101,7 @@ public class JPFDebugTab extends JPFCommonTab {
     fCombo.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
 //        setStatus(OK_STATUS);
 //        firePropertyChange();
       }
@@ -113,11 +114,8 @@ public class JPFDebugTab extends JPFCommonTab {
     
     private static List<File> generateClasspathEmbedded() {
       List<File> requiredFiles = new LinkedList<>();
-      String requiredClasspath = "";
       for (String relativePath : new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" }) {
-        File embeddedFile = locateEmbeddedFile(relativePath);
-        requiredFiles.add(embeddedFile);
-        requiredClasspath += embeddedFile.getAbsolutePath() + ";";
+        requiredFiles.add(locateEmbeddedFile(relativePath));
       }
       return requiredFiles;
     }
@@ -170,6 +168,32 @@ public class JPFDebugTab extends JPFCommonTab {
       }
       return classpath;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof JDWPInstallation)) {
+        return false;
+      }
+      JDWPInstallation other = (JDWPInstallation)obj;
+      if (!other.pseudoPath.equals(pseudoPath)) {
+        return false;
+      }
+      if (!other.friendlyName.equals(friendlyName)) {
+        return false;
+      }
+      if (classpathFiles != null && other.classpathFiles == null) {
+        return false;
+      }
+      if (classpathFiles == null && other.classpathFiles != null) {
+        return false;
+      }
+      if (classpathFiles == null && other.classpathFiles == null) {
+        return true;
+      }
+      return true;
+    }
+    
+    
   }
   
   public static class JDWPInstallations extends ArrayList<JDWPInstallation> implements List<JDWPInstallation> {
@@ -221,7 +245,10 @@ public class JPFDebugTab extends JPFCommonTab {
     Map<String, File> projects = getSiteProjects(config);
     if (projects.containsKey("jpf-jdwp")) {
       String pseudoPath = projects.get("jpf-jdwp").getAbsolutePath();
-      jdwpInstallations.add(new JDWPInstallation("Locally installed as an Extension", pseudoPath));
+      JDWPInstallation localJdwpInstallation = new JDWPInstallation("Locally installed as jpf-jdwp extension", pseudoPath);
+      if (!jdwpInstallations.contains(localJdwpInstallation)) {
+        jdwpInstallations.add(localJdwpInstallation);
+      }
     }
   }
   
@@ -303,6 +330,7 @@ public class JPFDebugTab extends JPFCommonTab {
     configuration.setAttribute(JPF_DEBUG_BOTHVMS, false);
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
     
+    // TODO it's better to not use the embedded one if normal extension is detected
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.DEFAULT_INSTALLATION_INDEX);
   }
 
@@ -364,5 +392,22 @@ public class JPFDebugTab extends JPFCommonTab {
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
     initDefaultConfiguration(configuration, null, null);
     super.setDefaults(configuration);
+  }
+
+  @Override
+  public boolean isValid(ILaunchConfiguration config) {
+    setWarningMessage(null);
+    if (fCombo.getSelectionIndex() == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
+      // selected embedded
+      if (jdwpInstallations.size() > 1) {
+        // we have other than embedded jdwps
+        setWarningMessage("If embedded JDWP is used it is likely, it will interfere with locally installed jpf-jdwp extension.");
+      }
+    }
+    if (jdwpInstallations.size() > 2) {
+      // we have other than embedded jdwps
+      setWarningMessage("Multiple JDWP extensions found. It is likely, there will be some classpath issues.");
+    }
+    return super.isValid(config);
   }
 }
