@@ -59,3 +59,4 @@ Import-Package: com.sun.jdi,
  org.eclipse.ui.plugin,
  org.eclipse.ui.texteditor,
  org.osgi.framework;version="1.6.0"
+Eclipse-BundleShape: dir

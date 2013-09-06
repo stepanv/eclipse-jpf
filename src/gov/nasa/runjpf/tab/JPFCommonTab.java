@@ -8,26 +8,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import junit.framework.Assert;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -42,7 +34,6 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.junit.Test;
 
 public class JPFCommonTab extends AbstractJPFTab {
 
@@ -515,21 +506,6 @@ public class JPFCommonTab extends AbstractJPFTab {
       return result;
     }
     return originalListener;
-  }
-  
-  @Test
-  public void testRemove() {
-    Assert.assertEquals("foo,ooo", removeListener("foo,bar,ooo", "bar"));
-    Assert.assertEquals("foo,bar", removeListener("foo,bar,ooo", "ooo"));
-    Assert.assertEquals("bar,ooo", removeListener("foo,bar,ooo", "foo"));
-    Assert.assertEquals("bar,ooo", removeListener("bar,ooo", "foo"));
-  }
-  
-  @Test
-  public void testAdd() {
-    Assert.assertEquals("bar,ooo,foo", addListener("bar,ooo", "foo"));
-    Assert.assertEquals("bar,ooo", addListener("bar,ooo", "bar"));
-    Assert.assertEquals("bar,ooo", addListener("bar,ooo", "ooo"));
   }
   
   public boolean attributeEquals(String attributeName, ILaunchConfiguration configuration, String valueCandidate) throws CoreException {
