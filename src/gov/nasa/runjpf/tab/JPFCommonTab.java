@@ -441,7 +441,13 @@ public class JPFCommonTab extends AbstractJPFTab {
   protected void runtimeAppend(Composite parent) {
     // empty implementation for subclasses;
   }
+  
+  protected void runtimePrepend(Composite parent) {
+ // empty implementation for subclasses;
+  }
   private void runtime(Composite parent) {
+    runtimePrepend(parent);
+    
     groupRuntime = new Group(parent, SWT.NONE);
     groupRuntime.setLayout(new GridLayout(3, false));
     groupRuntime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));

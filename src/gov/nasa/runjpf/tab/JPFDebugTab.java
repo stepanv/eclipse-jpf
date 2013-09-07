@@ -69,8 +69,6 @@ public class JPFDebugTab extends JPFCommonTab {
 
     super.createControl(comp2);
 
-    postCreateControl(comp2);
-
     setControl(comp2);
    
   }
@@ -108,9 +106,12 @@ public class JPFDebugTab extends JPFCommonTab {
     return EclipseJPF.getDefault().getPluginPreferences().getString(EclipseJPFLauncher.SITE_PROPERTIES_PATH);
   }
 
-  public void postCreateControl(Composite comp3) {
-
-    Group grpExperimentalSetting = new Group(comp3, SWT.NONE);
+  
+  
+  @Override
+  protected void runtimePrepend(Composite parent) {
+  
+    Group grpExperimentalSetting = new Group(parent, SWT.NONE);
     grpExperimentalSetting.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     grpExperimentalSetting.setText("Experimental settings");
     grpExperimentalSetting.setLayout(new GridLayout(2, false));
