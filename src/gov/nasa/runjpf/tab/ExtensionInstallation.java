@@ -15,7 +15,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 
-public class JDWPInstallation {
+public class ExtensionInstallation {
   
   
   public static List<File> generateClasspathEmbedded(String[] classpathElements) {
@@ -43,12 +43,12 @@ public class JDWPInstallation {
   private String pseudoPath = "";
   private List<File> classpathFiles = Collections.EMPTY_LIST;
   
-  JDWPInstallation(String friendlyName, String pseudoPath) {
+  ExtensionInstallation(String friendlyName, String pseudoPath) {
     this.friendlyName = friendlyName;
     this.pseudoPath = pseudoPath;
   }
   
-  JDWPInstallation(String friendlyName, List<File> classpathFiles) {
+  ExtensionInstallation(String friendlyName, List<File> classpathFiles) {
     this.friendlyName = friendlyName;
     this.classpathFiles = classpathFiles;
     
@@ -77,10 +77,10 @@ public class JDWPInstallation {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof JDWPInstallation)) {
+    if (!(obj instanceof ExtensionInstallation)) {
       return false;
     }
-    JDWPInstallation other = (JDWPInstallation)obj;
+    ExtensionInstallation other = (ExtensionInstallation)obj;
     if (!other.pseudoPath.equals(pseudoPath)) {
       return false;
     }

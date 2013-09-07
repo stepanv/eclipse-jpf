@@ -146,7 +146,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
     return projects;
 }
 
-protected void lookupLocalInstallation(List<JDWPInstallation> jdwpInstallations, String appJpfFile, String extension) {
+protected void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallations, String appJpfFile, String extension) {
   Config config;
   if (appJpfFile != null) {
     config = new Config(new String[] {appJpfFile});
@@ -165,7 +165,7 @@ protected void lookupLocalInstallation(List<JDWPInstallation> jdwpInstallations,
   Map<String, File> projects = getSiteProjects(config);
   if (projects.containsKey(extension)) {
     String pseudoPath = projects.get(extension).getAbsolutePath();
-    JDWPInstallation localJdwpInstallation = new JDWPInstallation("Locally installed as "+extension+" extension", pseudoPath);
+    ExtensionInstallation localJdwpInstallation = new ExtensionInstallation("Locally installed as "+extension+" extension", pseudoPath);
     if (!jdwpInstallations.contains(localJdwpInstallation)) {
       jdwpInstallations.add(localJdwpInstallation);
     }

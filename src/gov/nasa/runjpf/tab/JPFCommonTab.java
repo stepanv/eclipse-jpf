@@ -96,7 +96,7 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button btnJpfConfigure;
 
-  public static final JDWPInstallations jpfInstallations = new JDWPInstallations(new JDWPInstallation("Embedded", JDWPInstallation.generateClasspathEmbedded(new String[] { "lib/jpf.jar" })));
+  public static final ExtensionInstallations jpfInstallations = new ExtensionInstallations(new ExtensionInstallation("Embedded", ExtensionInstallation.generateClasspathEmbedded(new String[] { "lib/jpf.jar" })));
   
   private static final String TEMP_DIR_PATH;
   
@@ -566,7 +566,7 @@ public class JPFCommonTab extends AbstractJPFTab {
         // this is the first initialization ever
         jpfCombo.select(jpfInstallations.getDefaultInstallationIndex());
       } else {
-        jpfCombo.select(configuration.getAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX));
+        jpfCombo.select(configuration.getAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
       }
       
     } catch (CoreException e) {
@@ -673,7 +673,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       int selectedJpfInstallation = jpfCombo.getSelectionIndex();
       configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, selectedJpfInstallation);
       
-      if (selectedJpfInstallation == JDWPInstallations.EMBEDDED_INSTALLATION_INDEX) {
+      if (selectedJpfInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
         // using embedded JPF
         
         // using embedded jdwp
@@ -772,7 +772,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       setErrorMessage("JPF File (*.jpf) must end with .jpf extension!");
     }
 
-    if (jpfCombo.getSelectionIndex() == JDWPInstallations.EMBEDDED_INSTALLATION_INDEX) {
+    if (jpfCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
       // selected embedded
       if (jpfInstallations.size() > 1) {
         // we have other than embedded jdwps

@@ -3,7 +3,7 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
-import gov.nasa.runjpf.tab.JDWPInstallations;
+import gov.nasa.runjpf.tab.ExtensionInstallations;
 import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFSettings;
 

@@ -3,18 +3,18 @@ package gov.nasa.runjpf.tab;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JDWPInstallations extends ArrayList<JDWPInstallation> implements List<JDWPInstallation> {
+public class ExtensionInstallations extends ArrayList<ExtensionInstallation> implements List<ExtensionInstallation> {
   /**	 */
   private static final long serialVersionUID = 1L;
   
   public static final int EMBEDDED_INSTALLATION_INDEX = 0;
   public static final int NONEMBEDDED_INSTALLATION_INDEX = 1;
   
-  public JDWPInstallations(JDWPInstallation embedded) {
+  public ExtensionInstallations(ExtensionInstallation embedded) {
     add(EMBEDDED_INSTALLATION_INDEX, embedded);
   }
   
-  public JDWPInstallation getEmbedded() {
+  public ExtensionInstallation getEmbedded() {
     return get(EMBEDDED_INSTALLATION_INDEX);
   }
 
@@ -23,8 +23,8 @@ public class JDWPInstallations extends ArrayList<JDWPInstallation> implements Li
       throw new UnsupportedOperationException("The array specified must have a good size!");
     }
     int i = 0;
-    for (JDWPInstallation jdwpInstallation : this) {
-      array[i++] = jdwpInstallation.toString();
+    for (ExtensionInstallation extensionInstallation : this) {
+      array[i++] = extensionInstallation.toString();
     }
     return array;
   }

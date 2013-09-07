@@ -98,7 +98,7 @@ public class JPFDebugTab extends JPFCommonTab {
   }
   
   // TODO put them to an appropriate place
-  public static final JDWPInstallations jdwpInstallations = new JDWPInstallations(new JDWPInstallation("Embedded", JDWPInstallation.generateClasspathEmbedded(new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" })));
+  public static final ExtensionInstallations jdwpInstallations = new ExtensionInstallations(new ExtensionInstallation("Embedded", ExtensionInstallation.generateClasspathEmbedded(new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" })));
   
   private Label lblJdwp;
   private Button btnConfigure;
@@ -181,7 +181,7 @@ public class JPFDebugTab extends JPFCommonTab {
         // this is the first initialization ever
         fCombo.select(jdwpInstallations.getDefaultInstallationIndex());
       } else {
-        fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX));
+        fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
       }
       
     } catch (CoreException e) {
@@ -216,7 +216,7 @@ public class JPFDebugTab extends JPFCommonTab {
 
         if (selectedJdwpInstallation == -1) {
           EclipseJPF.logError("Obtained incorret jdwp installation index");
-        } else if (selectedJdwpInstallation == JDWPInstallations.EMBEDDED_INSTALLATION_INDEX) {
+        } else if (selectedJdwpInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
           // using embedded jdwp
           String classpath = jdwpInstallations.getEmbedded().classpath(File.pathSeparator);
           dynMapConfig.put("+jpf-core.native_classpath", classpath);
@@ -240,7 +240,7 @@ public class JPFDebugTab extends JPFCommonTab {
     setErrorMessage(null);
     setMessage(null);
     setWarningMessage(null);
-    if (fCombo.getSelectionIndex() == JDWPInstallations.EMBEDDED_INSTALLATION_INDEX) {
+    if (fCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
       // selected embedded
       if (jdwpInstallations.size() > 1) {
         // we have other than embedded jdwps
