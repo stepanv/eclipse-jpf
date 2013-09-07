@@ -362,8 +362,12 @@ public class JPFDebugTab extends JPFCommonTab {
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     super.performApply(configuration);
-    configuration.setAttribute(JPF_DEBUG_BOTHVMS, btnDebugBothTargets.getSelection());
-    configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, btnDebugJpfItself.getSelection());
+    
+    boolean debugBothVms = btnDebugBothTargets.getSelection();
+    boolean debugJpfItself = btnDebugJpfItself.getSelection();
+    
+    configuration.setAttribute(JPF_DEBUG_BOTHVMS, debugBothVms);
+    configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, debugJpfItself);
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, fCombo.getSelectionIndex());
     
     try {
@@ -372,15 +376,20 @@ public class JPFDebugTab extends JPFCommonTab {
       // TODO move this to JPFSettings and wipe it always
       dynMapConfig.remove("+jpf-core.native_classpath");
       
-      int selectedJdwpInstallation = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
-      
-      if (selectedJdwpInstallation == -1) {
-        EclipseJPF.logError("Obtained incorret jdwp installation index");
-      } else if (selectedJdwpInstallation == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
-        // using embedded jdwp
-        dynMapConfig.put("+jpf-core.native_classpath", JDWPInstallation.EMBEDDED.classpath(File.pathSeparator));
-      } // nothing changes
-      
+      if (!debugJpfItself || debugBothVms) {
+        // we're debugging the program itself
+        
+        int selectedJdwpInstallation = configuration.getAttribute(
+            JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
+
+        if (selectedJdwpInstallation == -1) {
+          EclipseJPF.logError("Obtained incorret jdwp installation index");
+        } else if (selectedJdwpInstallation == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
+          // using embedded jdwp
+          dynMapConfig.put("+jpf-core.native_classpath",
+              JDWPInstallation.EMBEDDED.classpath(File.pathSeparator));
+        } // nothing changes
+      }
     } catch (CoreException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

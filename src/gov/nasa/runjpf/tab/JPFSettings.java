@@ -1,8 +1,8 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.runjpf.EclipseJPF;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,10 +12,10 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.DebugPluginImages;
@@ -23,17 +23,7 @@ import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationsMessages;
 import org.eclipse.debug.ui.IDebugUIConstants;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModel;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
-import org.eclipse.jdt.internal.debug.ui.launcher.DebugTypeSelectionDialog;
-import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
-import org.eclipse.jdt.internal.debug.ui.launcher.MainMethodSearchEngine;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -44,7 +34,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -71,14 +60,17 @@ public class JPFSettings extends AbstractJPFTab {
   public static final String ATTR_JPF_DEFAULTCONFIG = "ATTR_JPF_CONFIG";
   public static final String ATTR_JPF_APPCONFIG = "ATTR_JPF_APPCONFIG";
   public static final String ATTR_JPF_DYNAMICCONFIG = "ATTR_JPF_DYNAMICCONFIG";
+  public static final String ATTR_JPF_CMDARGSCONFIG = "ATTR_JPF_CMDARGSCONFIG";
   
   @SuppressWarnings("unchecked")
   private static final Map<String, String> CONFIG_TO_NAME_MAP = new HashMap<String, String>();
+  
   
   static {
     CONFIG_TO_NAME_MAP.put(ATTR_JPF_DEFAULTCONFIG, "Default properties");
     CONFIG_TO_NAME_MAP.put(ATTR_JPF_APPCONFIG, "Application properties");
     CONFIG_TO_NAME_MAP.put(ATTR_JPF_DYNAMICCONFIG, "Dynamic properties");
+    CONFIG_TO_NAME_MAP.put(ATTR_JPF_CMDARGSCONFIG, "Command line arguments properties");
   }
 
   private Text jpfFileLocationText;
@@ -96,7 +88,7 @@ public class JPFSettings extends AbstractJPFTab {
   private Text text_1;
  // private Table table;
   private Table table_1;
-  private TableViewer environmentTable;
+  private TableViewer configTable;
   private Button envAddButton;
   private Button envSelectButton;
   private Button envEditButton;
@@ -108,8 +100,7 @@ public class JPFSettings extends AbstractJPFTab {
   private Button checkDynamicProperties;
 
   private Button checkDefaultProperties;
-
-  private Button checkSiteProperties;
+  private Button checkCmdargsProperties;
   
   /**
    * @wbp.parser.entryPoint
@@ -121,215 +112,87 @@ public class JPFSettings extends AbstractJPFTab {
     mainComposite = SWTFactory.createComposite(parent, 2, 1, GridData.FILL_HORIZONTAL);
     setControl(mainComposite);
     
-    createEnvironmentTable(mainComposite);
+    createConfigTable(mainComposite);
     createTableButtons(mainComposite);
-
-//    Group grpSettings = new Group(mainComposit, SWT.NONE);
-//    grpSettings.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-//    grpSettings.setText("Settings");
-//    grpSettings.setLayout(new GridLayout(2, false));
     
-//    Composite composite_2 = new Composite(grpSettings, SWT.NONE);
-//    RowLayout rl_composite_2 = new RowLayout(SWT.HORIZONTAL);
-//    rl_composite_2.spacing = 8;
-//    composite_2.setLayout(rl_composite_2);
-//    
-//    Button btnShowDefaultProperties = new Button(composite_2, SWT.CHECK);
-//    btnShowDefaultProperties.setText("Show default properties");
-//    
-//    Button btnShowSiteProperties = new Button(composite_2, SWT.CHECK);
-//    btnShowSiteProperties.setText("Show site properties");
-//    
-//    Button btnShowAppProperties = new Button(composite_2, SWT.CHECK);
-//    btnShowAppProperties.setText("Show app properties");
-//    
-//    Button btnShowDynamicProperties = new Button(composite_2, SWT.CHECK);
-//    btnShowDynamicProperties.setText("Show dynamic properties");
-//    
-//    Composite composite_1 = new Composite(grpSettings, SWT.NONE);
-//    composite_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-//    composite_1.setLayout(new GridLayout(2, false));
-//    composite_1.setBounds(0, 0, 64, 64);
-//    
-//    Composite composite = new Composite(composite_1, SWT.V_SCROLL);
-//    composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 3));
-//    composite.setLayout(new GridLayout(1, false));
-//    
-//    table = new Table(composite, SWT.BORDER | SWT.FULL_SELECTION);
-//    table.setHeaderVisible(true);
-//    table.setLinesVisible(true);
-//    
-//    TableColumn tblclmnProperty = new TableColumn(table, SWT.NONE);
-//    tblclmnProperty.setWidth(200);
-//    tblclmnProperty.setText("Property");
-//    
-//    TableColumn tblclmnValue = new TableColumn(table, SWT.NONE);
-//    tblclmnValue.setWidth(200);
-//    tblclmnValue.setText("Value");
-//    
-//    TableItem tableItem = new TableItem(table, SWT.NONE);
-//    tableItem.setText(new String[] {"foo","ar"});
-//    
-//    TableItem tableItem_1 = new TableItem(table, SWT.NONE);
-//    tableItem_1.setText("New TableItem");
-//    
-//    TableColumn tblclmnPropertyLocation = new TableColumn(table, SWT.NONE);
-//    tblclmnPropertyLocation.setWidth(100);
-//    tblclmnPropertyLocation.setText("Property location");
-//    
-//    ScrolledComposite scrolledComposite = new ScrolledComposite(composite, SWT.BORDER | SWT.V_SCROLL);
-//    scrolledComposite.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false, 1, 4));
-//    scrolledComposite.setExpandVertical(true);
-//    scrolledComposite.setAlwaysShowScrollBars(true);
-//    scrolledComposite.setMinHeight(200);
-//    scrolledComposite.setExpandHorizontal(true);
-//    
-//    table_1 = new Table(scrolledComposite, SWT.BORDER | SWT.FULL_SELECTION);
-//    table_1.setHeaderVisible(true);
-//    table_1.setLinesVisible(true);
-//    
-//    TableColumn tblclmnFoo = new TableColumn(table_1, SWT.NONE);
-//    tblclmnFoo.setWidth(100);
-//    tblclmnFoo.setText("foo");
-//    
-//    TableColumn tblclmnBar = new TableColumn(table_1, SWT.NONE);
-//    tblclmnBar.setWidth(100);
-//    tblclmnBar.setText("bar");
-//    
-//    TableItem tableItem_2 = new TableItem(table_1, SWT.NONE);
-//    tableItem_2.setText("New TableItem");
-//    
-//    TableItem tableItem_3 = new TableItem(table_1, SWT.NONE);
-//    tableItem_3.setText("New TableItem");
-//    
-//    TableItem tableItem_4 = new TableItem(table_1, SWT.NONE);
-//    tableItem_4.setText("New TableItem");
-//    scrolledComposite.setContent(table_1);
-//    scrolledComposite.setMinSize(table_1.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-//    
-//    Button btnAdd = new Button(composite_1, SWT.NONE);
-//    btnAdd.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-//    btnAdd.setText("Add");
-//    
-//    Button btnNewButton = new Button(composite_1, SWT.NONE);
-//    btnNewButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-//    btnNewButton.addSelectionListener(new SelectionAdapter() {
-//      @Override
-//      public void widgetSelected(SelectionEvent e) {
-//      }
-//    });
-//    btnNewButton.setText("Delete");
-//    
-//    Button btnEdit = new Button(composite_1, SWT.NONE);
-//    btnEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-//    btnEdit.setText("Edit");
+    checkDynamicProperties.setSelection(true);
+    checkCmdargsProperties.setSelection(true);
 
-   
-    
-//    Button btnFoo = new Button(grpSettings, SWT.NONE);
-//    btnFoo.setText("foo");
-//    
-//    Button btnBar = new Button(grpSettings, SWT.NONE);
-//    btnBar.setText("bar");
   }
   
   /**
    * Creates and configures the table that displayed the key/value
-   * pairs that comprise the environment.
+   * pairs that comprise the config.
    * @param parent the composite in which the table should be created
    */
-  protected void createEnvironmentTable(Composite parent) {
+  protected void createConfigTable(Composite parent) {
     
-//    Composite comp2 = new Composite(parent, SWT.NONE);
-//    comp2.setFont(parent.getFont());
-//
-//    GridData gd = new GridData(1);
-//    gd.horizontalAlignment = SWT.FILL;
-//    gd.grabExcessHorizontalSpace = true;
-//    gd.horizontalSpan = GridData.FILL_BOTH;
-//    comp2.setLayoutData(gd);
-//
-//    GridLayout gl_comp2 = new GridLayout(1, false);
-//    gl_comp2.marginHeight = 0;
-//    gl_comp2.marginWidth = 0;
-//    comp2.setLayout(gl_comp2);
-    
-//    parent = comp2;
     SWTFactory.createLabel(parent, "JPF properties to &set:", 2);
     Font font = parent.getFont();
-    //    Composite mainComposit = new Composite(parent, SWT.NONE);
-    //    mainComposit.setFont(parent.getFont());
-    //
-    //    GridData gd = new GridData(1);
-    //    gd.horizontalAlignment = SWT.FILL;
-    //    gd.grabExcessHorizontalSpace = true;
-    //    gd.horizontalSpan = GridData.FILL_BOTH;
-    //    mainComposit.setLayoutData(gd);
-    //
-    //    
-    //
-    //    GridLayout glMainComposit = new GridLayout(1, false);
-    //    glMainComposit.marginHeight = 0;
-    //    glMainComposit.marginWidth = 0;
-    //    mainComposit.setLayout(glMainComposit);
         
         Composite checkComposite = SWTFactory.createComposite(mainComposite, mainComposite.getFont(), 1, 1, GridData.FILL_BOTH, 0, 0);
         checkComposite.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, 1, 1));
         GridLayout gridLayout = (GridLayout) checkComposite.getLayout();
         gridLayout.numColumns = 4;
         
-        checkDefaultProperties = new Button(checkComposite, SWT.CHECK);
-        checkDefaultProperties.addSelectionListener(new SelectionAdapter() {
-          @Override
-          public void widgetSelected(SelectionEvent e) {
-            updateEnvironment(getCurrentLaunchConfiguration());
-          }
-        });
-        checkDefaultProperties.setText("Show default properties");
-        
-        checkSiteProperties = new Button(checkComposite, SWT.CHECK);
-        checkSiteProperties.setText("Show site properties");
-        
-        checkAppProperties = new Button(checkComposite, SWT.CHECK);
-        checkAppProperties.addSelectionListener(new SelectionAdapter() {
-          @Override
-          public void widgetSelected(SelectionEvent e) {
-            updateEnvironment(getCurrentLaunchConfiguration());
-          }
-        });
-        checkAppProperties.setText("Show app properties");
-        
         checkDynamicProperties = new Button(checkComposite, SWT.CHECK);
         checkDynamicProperties.setText("Show dynamic properties");
         checkDynamicProperties.addSelectionListener(new SelectionAdapter() {
           @Override
           public void widgetSelected(SelectionEvent e) {
-            updateEnvironment(getCurrentLaunchConfiguration());
+            updateConfig(getCurrentLaunchConfiguration());
           }
         });
+        
+        checkCmdargsProperties = new Button(checkComposite, SWT.CHECK);
+        checkCmdargsProperties.addSelectionListener(new SelectionAdapter() {
+          @Override
+          public void widgetSelected(SelectionEvent e) {
+            updateConfig(getCurrentLaunchConfiguration());
+          }
+        });
+        checkCmdargsProperties.setText("Show cmd args properties");
+        
+        checkAppProperties = new Button(checkComposite, SWT.CHECK);
+        checkAppProperties.addSelectionListener(new SelectionAdapter() {
+          @Override
+          public void widgetSelected(SelectionEvent e) {
+            updateConfig(getCurrentLaunchConfiguration());
+          }
+        });
+        checkAppProperties.setText("Show app properties");
+        
+        checkDefaultProperties = new Button(checkComposite, SWT.CHECK);
+        checkDefaultProperties.addSelectionListener(new SelectionAdapter() {
+          @Override
+          public void widgetSelected(SelectionEvent e) {
+            updateConfig(getCurrentLaunchConfiguration());
+          }
+        });
+        checkDefaultProperties.setText("Show default properties");
     new Label(mainComposite, SWT.NONE);
     // Create table composite
     Composite tableComposite = SWTFactory.createComposite(parent, font, 1, 1, GridData.FILL_BOTH, 0, 0);
     tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2));
     // Create table
-    environmentTable = new TableViewer(tableComposite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION);
-    Table table = environmentTable.getTable();
+    configTable = new TableViewer(tableComposite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION);
+    Table table = configTable.getTable();
     table.setLayout(new GridLayout());
     table.setLayoutData(new GridData(GridData.FILL_BOTH));
     table.setHeaderVisible(true);
     table.setLinesVisible(true);
     table.setFont(font);
-   environmentTable.setContentProvider(new HierarchicalPropertyContentProvider());
-   environmentTable.setLabelProvider(new HierarchicalPropertyLabelProvider());
+   configTable.setContentProvider(new HierarchicalPropertyContentProvider());
+   configTable.setLabelProvider(new HierarchicalPropertyLabelProvider());
   //  environmentTable.setColumnProperties(new String[] {P_VARIABLE, P_VALUE});
-    environmentTable.addSelectionChangedListener(new ISelectionChangedListener() {
+    configTable.addSelectionChangedListener(new ISelectionChangedListener() {
       public void selectionChanged(SelectionChangedEvent event) {
         //handleTableSelectionChanged(event);
       }
     });
-    environmentTable.addDoubleClickListener(new IDoubleClickListener() {
+    configTable.addDoubleClickListener(new IDoubleClickListener() {
       public void doubleClick(DoubleClickEvent event) {
-        if (!environmentTable.getSelection().isEmpty()) {
+        if (!configTable.getSelection().isEmpty()) {
           //handleEnvEditButtonSelected();
         }
       }
@@ -411,77 +274,6 @@ public class JPFSettings extends AbstractJPFTab {
     envRemoveButton.setEnabled(false);
   }
 
-  abstract private class InlineSearcher {
-    abstract IType[] search() throws InvocationTargetException, InterruptedException;
-  }
-
-  protected IType handleSupertypeSearchButtonSelected(final String supertype, Text text, IType originalType) {
-    return handleSearchButtonSelected(new InlineSearcher() {
-      @Override
-      IType[] search() throws InvocationTargetException, InterruptedException {
-        ClassSearchEngine engine = new ClassSearchEngine();
-        return engine.searchClasses(getLaunchConfigurationDialog(), simpleSearchScope(), true, supertype);
-      }
-    }, text, originalType);
-  }
-
-  protected IType handleSearchMainClassButtonSelected(Text text, IType originalType) {
-    return handleSearchButtonSelected(new InlineSearcher() {
-      @Override
-      IType[] search() throws InvocationTargetException, InterruptedException {
-        MainMethodSearchEngine engine = new MainMethodSearchEngine();
-        return engine.searchMainMethods(getLaunchConfigurationDialog(), simpleSearchScope(), true);
-      }
-    }, text, originalType);
-  }
-
-  protected IJavaSearchScope simpleSearchScope() {
-    IJavaElement[] elements = null;
-    IJavaModel model = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot());
-    if (model != null) {
-      try {
-        elements = model.getJavaProjects();
-      } catch (JavaModelException e) {
-        JDIDebugUIPlugin.log(e);
-      }
-    }
-
-    if (elements == null) {
-      elements = new IJavaElement[] {};
-    }
-
-    return SearchEngine.createJavaSearchScope(elements, 1);
-  }
-
-  /**
-   * Show a dialog that lists all main types
-   */
-  protected IType handleSearchButtonSelected(InlineSearcher searcher, Text text, IType originalType) {
-
-    IType[] types = null;
-    try {
-      types = searcher.search();
-
-    } catch (InvocationTargetException e) {
-      setErrorMessage(e.getMessage());
-      return null;
-    } catch (InterruptedException e) {
-      setErrorMessage(e.getMessage());
-      return null;
-    }
-    DebugTypeSelectionDialog mmsd = new DebugTypeSelectionDialog(getShell(), types, LauncherMessages.JavaMainTab_Choose_Main_Type_11);
-    if (mmsd.open() == Window.CANCEL) {
-      return null;
-    }
-    Object[] results = mmsd.getResult();
-    IType type = (IType) results[0];
-    if (type != null) {
-      text.setText(type.getFullyQualifiedName());
-      return type;
-    }
-    return originalType;
-  }
-  
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
     
     Config config = new Config(new String[] {});
@@ -491,13 +283,54 @@ public class JPFSettings extends AbstractJPFTab {
     if (jpfFile != null) {
       appConfig = new Config(jpfFile.getLocation().toFile().getAbsolutePath());
     } else {
-      appConfig = new Config("");
+      // empty config
+      appConfig = new Config((String)null);
     }
     configuration.setAttribute(ATTR_JPF_APPCONFIG, appConfig);
     
-    Config dynamicConfig = new Config("");
+    // empty config
+    Config dynamicConfig = new Config((String)null);
     configuration.setAttribute(ATTR_JPF_DYNAMICCONFIG, dynamicConfig);
     
+    initializeCmdArgs(configuration);
+    
+  }
+
+  private static void initializeCmdArgs(ILaunchConfigurationWorkingCopy configuration) {
+    Config cmdArgsConfig = new ConfigCmdArgs().publicLoadArgs(ConfigCmdArgs.programArguments(configuration));
+    configuration.setAttribute(ATTR_JPF_CMDARGSCONFIG, cmdArgsConfig);
+  }
+  
+  private static class ConfigCmdArgs extends Config {
+    public ConfigCmdArgs() {
+      super((String)null);
+    }
+    
+    private static String programArguments(ILaunchConfiguration configuration) {
+      String programArguments = "";
+      try {
+        programArguments = configuration.getAttribute(
+            IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "");
+      } catch (CoreException e) {
+        // no program args .. we're fine with that
+      }
+      return programArguments;
+    }
+
+    public Config publicLoadArgs(String programArguments) {
+      String[] programArgumentsArray = DebugPlugin.parseArguments(programArguments);
+      loadArgs(programArgumentsArray);
+      return this;
+    }
+    public static void reloadArgs(ILaunchConfiguration configuration, Map<String, String> map) {
+      Config newConfig = new ConfigCmdArgs().publicLoadArgs(programArguments(configuration));
+      map.clear();
+      for (Object key : newConfig.keySet()) {
+        if (key instanceof String) {
+          map.put((String)key, (String)newConfig.get(key));
+        }
+      }
+    }
   }
 
   protected void setText(ILaunchConfiguration configuration, Text text, String attribute) throws CoreException {
@@ -508,22 +341,19 @@ public class JPFSettings extends AbstractJPFTab {
    * Updates the environment table for the given launch configuration
    * @param configuration the configuration to use as input for the backing table
    */
-  protected void updateEnvironment(ILaunchConfiguration configuration) {
-    environmentTable.setInput(configuration);
+  protected void updateConfig(ILaunchConfiguration configuration) {
+    configTable.setInput(configuration);
   }
   
   public void initializeFrom(ILaunchConfiguration configuration) {
-    updateEnvironment(configuration);
     
-//    environmentTable.getTable().clearAll();
-//    
-    
-
-//    try {
-//      
-//    } catch (CoreException e) {
-//      EclipseJPF.logError("Error during the JPF initialization form", e);
-//    }
+    try {
+      ConfigCmdArgs.reloadArgs(configuration, configuration.getAttribute(ATTR_JPF_CMDARGSCONFIG, Collections.EMPTY_MAP));
+    } catch (CoreException e) {
+      // if reload is not successful we don't care
+      EclipseJPF.logError("Config Command Arguments reload not successful", e);
+    }
+    updateConfig(configuration);
 
     super.initializeFrom(configuration);
   }
@@ -565,7 +395,7 @@ public class JPFSettings extends AbstractJPFTab {
   }
   
   /**
-   * Content provider for the environment table
+   * Content provider for the config table
    */
   protected class HierarchicalPropertyContentProvider implements IStructuredContentProvider {
     public Object[] getElements(Object inputElement) {
@@ -575,6 +405,9 @@ public class JPFSettings extends AbstractJPFTab {
       List<String> attributes = new LinkedList<String>();
       if (checkDefaultProperties.getSelection()) {
         attributes.add(ATTR_JPF_DEFAULTCONFIG);
+      }
+      if (checkCmdargsProperties.getSelection()) {
+        attributes.add(ATTR_JPF_CMDARGSCONFIG);
       }
       if (checkAppProperties.getSelection()) {
         attributes.add(ATTR_JPF_APPCONFIG);
@@ -627,7 +460,7 @@ public class JPFSettings extends AbstractJPFTab {
   }
   
   /**
-   * Label provider for the environment table
+   * Label provider for the config table
    */
   public class HierarchicalPropertyLabelProvider extends LabelProvider implements ITableLabelProvider {
     public String getColumnText(Object element, int columnIndex)  {

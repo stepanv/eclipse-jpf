@@ -26,6 +26,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.debug.ui,
  org.eclipse.jdt.launching
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Eclipse-BundleShape: dir
 Bundle-ActivationPolicy: lazy
 Import-Package: com.sun.jdi,
  com.sun.jdi.connect,
@@ -36,6 +37,7 @@ Import-Package: com.sun.jdi,
  org.eclipse.core.runtime.preferences;version="3.3.0",
  org.eclipse.jdt.core,
  org.eclipse.jdt.core.search,
+ org.eclipse.jdt.launching,
  org.eclipse.jface.action,
  org.eclipse.jface.dialogs,
  org.eclipse.jface.preference,
