@@ -1,6 +1,12 @@
 package gov.nasa.runjpf.tab;
 
+import gov.nasa.jpf.Config;
+
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.IJavaElement;
@@ -112,4 +118,57 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
     }
     return originalType;
   }
+  
+  protected Map<String, File> getSiteProjects(Config config) {
+    Map<String, File> projects = new HashMap<>();
+
+    for (String projId : config.getEntrySequence()) {
+      if ("extensions".equals(projId)) {
+        // we have to filter this out in case there is only a single project
+        // in
+        // the list, in which case we find a jpf.properties under its value
+        continue;
+      }
+
+      String v = config.getString(projId);
+      if (v == null) {
+        continue;
+      }
+      File projDir = new File(v);
+
+      if (projDir.isDirectory()) {
+        File propFile = new File(projDir, "jpf.properties");
+        if (propFile.isFile()) {
+          projects.put(projId, propFile);
+        }
+      }
+    }
+    return projects;
+}
+
+protected void lookupLocalInstallation(List<JDWPInstallation> jdwpInstallations, String appJpfFile, String extension) {
+  Config config;
+  if (appJpfFile != null) {
+    config = new Config(new String[] {appJpfFile});
+  } else {
+    config = new Config(new String[] {});
+  }
+  
+//  String sitePath = getSitePropertiesPath();
+//  if (sitePath == null) {
+//    setErrorMessage("no site.properties");
+//    return null;
+//  }
+//
+//  File file = new File(sitePath);
+  
+  Map<String, File> projects = getSiteProjects(config);
+  if (projects.containsKey(extension)) {
+    String pseudoPath = projects.get(extension).getAbsolutePath();
+    JDWPInstallation localJdwpInstallation = new JDWPInstallation("Locally installed as "+extension+" extension", pseudoPath);
+    if (!jdwpInstallations.contains(localJdwpInstallation)) {
+      jdwpInstallations.add(localJdwpInstallation);
+    }
+  }
+}
 }

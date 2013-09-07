@@ -35,13 +35,17 @@ public class VerifyActionDelegate implements IObjectActionDelegate {
   public void run(IAction action) {
     if (file == null)
       return;
-    RunJPFLaunchShortcut shortcut = new RunJPFLaunchShortcut();
-    ILaunchConfiguration configuration = shortcut.findLaunchConfiguration(file);
-    if (configuration == null) {
-      shortcut.setShowDialog(true);
-      configuration = shortcut.createConfiguration(file);
-    }
-    shortcut.launch(configuration, ILaunchManager.RUN_MODE);
+    new RunJPF(file).schedule();
+//    
+//    if (file == null)
+//      return;
+//    RunJPFLaunchShortcut shortcut = new RunJPFLaunchShortcut();
+//    ILaunchConfiguration configuration = shortcut.findLaunchConfiguration(file);
+//    if (configuration == null) {
+//      shortcut.setShowDialog(true);
+//      configuration = shortcut.createConfiguration(file);
+//    }
+//    shortcut.launch(configuration, ILaunchManager.RUN_MODE);
   }
 
   @Override
