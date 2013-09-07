@@ -52,6 +52,8 @@ public class JPFCommonTab extends AbstractJPFTab {
   public static final String JPF_ATTR_OPT_TARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_TARGET";
   
   public static final String JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX";
+  public static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
+  public static final String JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH";
 
   private Text jpfFileLocationText;
 
@@ -116,8 +118,6 @@ public class JPFCommonTab extends AbstractJPFTab {
   
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
 
-  private static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
-  
   public JPFCommonTab() {
     lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
   }
@@ -444,7 +444,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, false);
     
     // TODO it's better to not use the embedded one if normal extension is detected
-    configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX);
+    configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, -1);
     
     // TODO get the configuration from the JPF
     // listener, target .. and other stuff
@@ -513,7 +513,12 @@ public class JPFCommonTab extends AbstractJPFTab {
       String[] jpfs = (String[]) jpfInstallations.toStringArray(new String[jpfInstallations.size()]);
       jpfCombo.setItems(jpfs);
       jpfCombo.setVisibleItemCount(Math.min(jpfs.length, 20));
-      jpfCombo.select(jpfInstallations.getDefaultInstallationIndex());
+      if (configuration.getAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, -1) == -1) {
+        // this is the first initialization ever
+        jpfCombo.select(jpfInstallations.getDefaultInstallationIndex());
+      } else {
+        jpfCombo.select(configuration.getAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX));
+      }
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
@@ -615,6 +620,20 @@ public class JPFCommonTab extends AbstractJPFTab {
       configuration.setAttribute(JPF_ATTR_OPT_LISTENER, listenerText.getText().trim());
       configuration.setAttribute(JPF_ATTR_OPT_SEARCH, searchText.getText().trim());
       configuration.setAttribute(JPF_ATTR_OPT_TARGET, targetText.getText().trim());
+      
+      int selectedJpfInstallation = jpfCombo.getSelectionIndex();
+      configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, selectedJpfInstallation);
+      
+      if (selectedJpfInstallation == JDWPInstallations.EMBEDDED_INSTALLATION_INDEX) {
+        // using embedded JPF
+        
+        // using embedded jdwp
+        String classpath = jpfInstallations.getEmbedded().classpath(File.pathSeparator);
+        configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, classpath);
+      } else {
+        // clear it
+        configuration.removeAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH);
+      }
     
       @SuppressWarnings("unchecked")
       Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);

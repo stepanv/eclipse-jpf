@@ -156,7 +156,7 @@ public class JPFDebugTab extends JPFCommonTab {
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
     
     // TODO it's better to not use the embedded one if normal extension is detected
-    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX);
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
   }
 
   public void initializeFrom(ILaunchConfiguration configuration) {
@@ -176,6 +176,13 @@ public class JPFDebugTab extends JPFCommonTab {
       fCombo.setItems(jdwps);
       fCombo.setVisibleItemCount(Math.min(jdwps.length, 20));
       fCombo.select(jdwpInstallations.getDefaultInstallationIndex());
+      
+      if (configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1) == -1) {
+        // this is the first initialization ever
+        fCombo.select(jdwpInstallations.getDefaultInstallationIndex());
+      } else {
+        fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX));
+      }
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);

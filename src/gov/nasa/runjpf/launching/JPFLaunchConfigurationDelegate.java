@@ -3,6 +3,7 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
+import gov.nasa.runjpf.tab.JDWPInstallations;
 import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFSettings;
 
@@ -91,19 +92,26 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       // Program & VM arguments
       ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
 
-      String jpfRunPath;
-      try {
-        EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
-        File siteProperties = eclipseJpfLauncher.lookupSiteProperties();
-        File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
-        jpfRunPath = jpfRunJar.getAbsolutePath();
-      } catch (NullPointerException npe) {
-        EclipseJPF.logError("JPF was not sucessfully found.", npe);
-        throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
-      }
-
       List<String> classpath = new LinkedList<>();
-      classpath.add(jpfRunPath);
+      String embeddedJpfClasspath = configuration.getAttribute(JPFCommonTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String)null);
+      
+      if (embeddedJpfClasspath != null) {
+        // using embedded JPF
+        classpath.add(embeddedJpfClasspath);
+      } else {
+      
+        try {
+          EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
+          File siteProperties = eclipseJpfLauncher.lookupSiteProperties();
+          File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
+          
+          classpath.add(jpfRunJar.getAbsolutePath());
+        } catch (NullPointerException npe) {
+          EclipseJPF.logError("JPF was not sucessfully found.", npe);
+          throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
+        }
+      }
+      
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
