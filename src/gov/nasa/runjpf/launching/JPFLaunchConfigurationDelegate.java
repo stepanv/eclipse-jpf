@@ -4,8 +4,6 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.tab.JPFCommonTab;
-import gov.nasa.runjpf.tab.JPFDebugTab.JDWPInstallation;
-import gov.nasa.runjpf.tab.JPFDebugTab.JDWPInstallations;
 import gov.nasa.runjpf.tab.JPFSettings;
 
 import java.io.File;

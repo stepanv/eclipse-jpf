@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,6 +20,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.swt.SWT;
@@ -29,6 +32,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
@@ -74,6 +78,16 @@ public class JPFCommonTab extends AbstractJPFTab {
   private Button checkTraceFile;
 
   private Button buttonTraceBrowse;
+
+  private Group groupRuntime;
+
+  private Label lblJpf;
+
+  private Combo jpfCombo;
+
+  private Button btnJpfConfigure;
+
+  public static final JDWPInstallations jpfInstallations = new JDWPInstallations(new JDWPInstallation("Embedded", JDWPInstallation.generateClasspathEmbedded(new String[] { "lib/jpf.jar" })));
   
   private static final String TEMP_DIR_PATH;
   
@@ -101,6 +115,8 @@ public class JPFCommonTab extends AbstractJPFTab {
   }
   
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
+
+  private static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
   
   public JPFCommonTab() {
     lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
@@ -370,8 +386,39 @@ public class JPFCommonTab extends AbstractJPFTab {
       }
     });
 
+    runtime(comp2);
   }
-
+  
+  protected void runtimeAppend(Composite parent) {
+    // empty implementation for subclasses;
+  }
+  private void runtime(Composite parent) {
+    groupRuntime = new Group(parent, SWT.NONE);
+    groupRuntime.setLayout(new GridLayout(3, false));
+    groupRuntime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    groupRuntime.setText("Runtime");
+    
+    lblJpf = new Label(groupRuntime, SWT.NONE);
+    lblJpf.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+    lblJpf.setText("JPF:");
+    
+    
+    jpfCombo = SWTFactory.createCombo(groupRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
+    
+    btnJpfConfigure = new Button(groupRuntime, SWT.NONE);
+    btnJpfConfigure.setText("Configure");
+    //ControlAccessibleListener.addListener(fCombo, fSpecificButton.getText());
+    jpfCombo.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+//        setStatus(OK_STATUS);
+//        firePropertyChange();
+      }
+    });
+    
+    runtimeAppend(groupRuntime);
+  }
   private static String defaultProperty(Map<String,String> map, String property, String defValue) {
     if (map == null || !map.containsKey(property)) {
       return defValue;
@@ -396,6 +443,9 @@ public class JPFCommonTab extends AbstractJPFTab {
     configuration.setAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false);
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, false);
     
+    // TODO it's better to not use the embedded one if normal extension is detected
+    configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, JDWPInstallations.EMBEDDED_INSTALLATION_INDEX);
+    
     // TODO get the configuration from the JPF
     // listener, target .. and other stuff
 //    Config config = new Config(new String[] {jpfFileAbsolutePath});
@@ -409,6 +459,8 @@ public class JPFCommonTab extends AbstractJPFTab {
     configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_SEARCH, defaultProperty(map, "search.class", ""));
     configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_TARGET, defaultProperty(map, "target", ""));
     
+    
+    
     } catch (CoreException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -420,9 +472,13 @@ public class JPFCommonTab extends AbstractJPFTab {
     text.setText(configuration.getAttribute(attributeName, ""));
   }
   
+
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
+      
+      lookupLocalInstallation(jpfInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""), "jpf-core");
+      
       jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
       setText(configuration, listenerText, JPFCommonTab.JPF_ATTR_OPT_LISTENER);
       setText(configuration, searchText, JPFCommonTab.JPF_ATTR_OPT_SEARCH);
@@ -454,6 +510,10 @@ public class JPFCommonTab extends AbstractJPFTab {
       }
       textTraceFile.setText(configuration.getAttribute(JPF_ATTR_TRACE_FILE, defaultFileText));
       
+      String[] jpfs = (String[]) jpfInstallations.toStringArray(new String[jpfInstallations.size()]);
+      jpfCombo.setItems(jpfs);
+      jpfCombo.setVisibleItemCount(Math.min(jpfs.length, 20));
+      jpfCombo.select(jpfInstallations.getDefaultInstallationIndex());
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
@@ -634,8 +694,6 @@ public class JPFCommonTab extends AbstractJPFTab {
    */
   @Override
   public boolean isValid(ILaunchConfiguration config) {
-    setErrorMessage(null);
-    setMessage(null);
     String jpfFileString = jpfFileLocationText.getText();
     String targetString = targetText.getText();
     if (Objects.equals("", jpfFileString) && Objects.equals("", targetString)) {
@@ -645,7 +703,19 @@ public class JPFCommonTab extends AbstractJPFTab {
     if (!"".equals(jpfFileString) && !jpfFileString.toLowerCase().endsWith(".jpf")) {
       setErrorMessage("JPF File (*.jpf) must end with .jpf extension!");
     }
-    return true;
+
+    if (jpfCombo.getSelectionIndex() == JDWPInstallations.EMBEDDED_INSTALLATION_INDEX) {
+      // selected embedded
+      if (jpfInstallations.size() > 1) {
+        // we have other than embedded jdwps
+        setWarningMessage("If embedded JPF is used it is likely, it will interfere with locally installed jpf-core extension.");
+      }
+    }
+    if (jpfInstallations.size() > 2) {
+      // we have other than embedded jdwps
+      setWarningMessage("Multiple JPF extensions found. It is likely, there will be some classpath issues.");
+    }
+    return super.isValid(config);
   }
   
   @Override
