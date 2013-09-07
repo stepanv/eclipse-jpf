@@ -7,9 +7,7 @@ Bundle-ClassPath: lib/antlr-runtime-3.4.jar,
  lib/ST-4.0.4.jar,
  lib/jpf-template.jar,
  lib/RunJPF.jar,
- .,
- swing2swt.jar,
- swing2swt.jar
+ .
 Bundle-Activator: gov.nasa.runjpf.EclipseJPF
 Export-Package: gov.nasa.runjpf,
  gov.nasa.runjpf.options,
@@ -35,6 +33,7 @@ Import-Package: com.sun.jdi,
  org.eclipse.core.runtime;version="3.4.0",
  org.eclipse.core.runtime.jobs,
  org.eclipse.core.runtime.preferences;version="3.3.0",
+ org.eclipse.core.variables,
  org.eclipse.jdt.core,
  org.eclipse.jdt.core.search,
  org.eclipse.jdt.launching,

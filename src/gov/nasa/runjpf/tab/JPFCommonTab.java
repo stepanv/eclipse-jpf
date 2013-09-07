@@ -2,6 +2,7 @@ package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.internal.resources.FilteredFileSelectionDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,12 +22,15 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -42,6 +46,9 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.dialogs.ContainerSelectionDialog;
+import org.eclipse.ui.dialogs.ElementListSelectionDialog;
+import org.eclipse.ui.dialogs.ResourceSelectionDialog;
 import org.junit.Test;
 
 public class JPFCommonTab extends AbstractJPFTab {
@@ -140,17 +147,18 @@ public class JPFCommonTab extends AbstractJPFTab {
     Group basicConfiguraionGroup = new Group(comp, SWT.NONE);
     basicConfiguraionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     basicConfiguraionGroup.setText("JPF &File to execute (*.jpf):");
-    basicConfiguraionGroup.setLayout(new GridLayout(4, false));
+    basicConfiguraionGroup.setLayout(new GridLayout(7, false));
     basicConfiguraionGroup.setFont(comp.getFont());
-
-    jpfFileLocationText = new Text(basicConfiguraionGroup, SWT.BORDER);
-    jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 3, 1));
-    jpfFileLocationText.addModifyListener(updatedListener);
-    jpfFileLocationText.setBounds(10, 35, 524, 21);
-
-    Button button = new Button(basicConfiguraionGroup, SWT.NONE);
-    button.setText("&Browse...");
-    button.setBounds(540, 33, 71, 25);
+        
+        Label lblFile = new Label(basicConfiguraionGroup, SWT.NONE);
+        lblFile.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        lblFile.setText("File:");
+    
+        jpfFileLocationText = new Text(basicConfiguraionGroup, SWT.BORDER);
+        jpfFileLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 6, 1));
+        jpfFileLocationText.addModifyListener(updatedListener);
+        jpfFileLocationText.setBounds(10, 35, 524, 21);
+    new Label(basicConfiguraionGroup, SWT.NONE);
     
     Button btnReload = new Button(basicConfiguraionGroup, SWT.NONE);
     btnReload.setText("Reload");
@@ -162,26 +170,67 @@ public class JPFCommonTab extends AbstractJPFTab {
       }
     });
     button_1.setText("Store");
-    new Label(basicConfiguraionGroup, SWT.NONE);
-    new Label(basicConfiguraionGroup, SWT.NONE);
+        new Label(basicConfiguraionGroup, SWT.NONE);
+        new Label(basicConfiguraionGroup, SWT.NONE);
+        new Label(basicConfiguraionGroup, SWT.NONE);
+        
+        Composite composite_1 = new Composite(basicConfiguraionGroup, SWT.NONE);
+        composite_1.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        GridLayout gl_composite_1 = new GridLayout(2, false);
+        gl_composite_1.marginHeight = 0;
+        gl_composite_1.marginWidth = 0;
+        composite_1.setLayout(gl_composite_1);
+        
+        Button btnBrowseWorkspace = new Button(composite_1, SWT.NONE);
+        btnBrowseWorkspace.setSize(109, 25);
+        btnBrowseWorkspace.addSelectionListener(new SelectionAdapter() {
+        	@Override
+        	public void widgetSelected(SelectionEvent e) {
+        	}
+        });
+        btnBrowseWorkspace.setText("Browse &workspace");
+            
+                Button btnbrowseFilesystem = new Button(composite_1, SWT.NONE);
+                btnbrowseFilesystem.setText("Browse &filesystem");
+                btnbrowseFilesystem.setBounds(540, 33, 106, 25);
+                
 
-    button.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
-        dialog.setFilterExtensions(new String[] { "*.jpf" });
-        if (getJpfFileLocation().length() > 0) {
-          dialog.setFileName(getJpfFileLocation());
-        }
-        String file = dialog.open();
-        if (file != null) {
-          file = file.trim();
-          if (file.length() > 0) {
-            jpfFileLocationText.setText(file);
-            setDirty(true);
-          }
-        }
-      }
-    });
+                btnbrowseFilesystem.addSelectionListener(new SelectionAdapter() {
+                  public void widgetSelected(SelectionEvent e) {
+                    FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+                    dialog.setFilterExtensions(new String[] { "*.jpf" });
+                    if (getJpfFileLocation().length() > 0) {
+                      dialog.setFileName(getJpfFileLocation());
+                    }
+                    String file = dialog.open();
+                    if (file != null) {
+                      file = file.trim();
+                      if (file.length() > 0) {
+                        jpfFileLocationText.setText(file);
+                        setDirty(true);
+                      }
+                    }
+                  }
+                });
+        btnBrowseWorkspace.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent e) {
+            	FilteredFileSelectionDialog dialog = new FilteredFileSelectionDialog("JPF File Selection","Choose a .jpf file", new String[] {"jpf"}); //$NON-NLS-1$
+
+              int buttonId = dialog.open();
+              if(buttonId == IDialogConstants.OK_ID) {
+                Object[] resource = dialog.getResult();
+                if(resource != null && resource.length > 0) {
+                	if (resource[0] instanceof IFile) {
+                	  String filePath = ((IFile) resource[0]).getLocation().toString();
+//                String fileLoc = VariablesPlugin.getDefault().getStringVariableManager()
+//                    .generateVariableExpression("workspace_loc", fileWorkspacePath); //$NON-NLS-1$
+                    jpfFileLocationText.setText(filePath);
+                    updateLaunchConfigurationDialog();
+                	}
+                }
+              }
+            }
+          });
 
     Group grpOverrideCommonJpf = new Group(comp, SWT.NONE);
     grpOverrideCommonJpf.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
