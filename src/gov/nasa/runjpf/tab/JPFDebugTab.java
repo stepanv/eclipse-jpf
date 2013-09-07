@@ -109,8 +109,8 @@ public class JPFDebugTab extends JPFCommonTab {
    
   }
   
-  public static class JDWPInstallation {
-    public static final JDWPInstallation EMBEDDED = new JDWPInstallation("Embedded", generateClasspathEmbedded());
+  public static class ExtensionInstallation {
+    public static final ExtensionInstallation EMBEDDED = new ExtensionInstallation("Embedded", generateClasspathEmbedded());
     
     private static List<File> generateClasspathEmbedded() {
       List<File> requiredFiles = new LinkedList<>();
@@ -137,12 +137,12 @@ public class JPFDebugTab extends JPFCommonTab {
     private String pseudoPath = "";
     private List<File> classpathFiles = Collections.EMPTY_LIST;
     
-    JDWPInstallation(String friendlyName, String pseudoPath) {
+    ExtensionInstallation(String friendlyName, String pseudoPath) {
       this.friendlyName = friendlyName;
       this.pseudoPath = pseudoPath;
     }
     
-    JDWPInstallation(String friendlyName, List<File> classpathFiles) {
+    ExtensionInstallation(String friendlyName, List<File> classpathFiles) {
       this.friendlyName = friendlyName;
       this.classpathFiles = classpathFiles;
       
@@ -171,10 +171,10 @@ public class JPFDebugTab extends JPFCommonTab {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof JDWPInstallation)) {
+      if (!(obj instanceof ExtensionInstallation)) {
         return false;
       }
-      JDWPInstallation other = (JDWPInstallation)obj;
+      ExtensionInstallation other = (ExtensionInstallation)obj;
       if (!other.pseudoPath.equals(pseudoPath)) {
         return false;
       }
@@ -196,13 +196,13 @@ public class JPFDebugTab extends JPFCommonTab {
     
   }
   
-  public static class JDWPInstallations extends ArrayList<JDWPInstallation> implements List<JDWPInstallation> {
+  public static class ExtensionInstallations extends ArrayList<ExtensionInstallation> implements List<ExtensionInstallation> {
     /**	 */
     private static final long serialVersionUID = 1L;
     
     public static final int DEFAULT_INSTALLATION_INDEX = 0;
-    public JDWPInstallations() {
-      add(DEFAULT_INSTALLATION_INDEX, JDWPInstallation.EMBEDDED);
+    public ExtensionInstallations() {
+      add(DEFAULT_INSTALLATION_INDEX, ExtensionInstallation.EMBEDDED);
     }
 
     public String[] toStringArray(String[] array) {
@@ -210,7 +210,7 @@ public class JPFDebugTab extends JPFCommonTab {
         throw new UnsupportedOperationException("The array specified must have a good size!");
       }
       int i = 0;
-      for (JDWPInstallation jdwpInstallation : this) {
+      for (ExtensionInstallation jdwpInstallation : this) {
         array[i++] = jdwpInstallation.toString();
       }
       return array;
@@ -218,7 +218,7 @@ public class JPFDebugTab extends JPFCommonTab {
   }
   
   // TODO put them to an appropriate place
-  public static final JDWPInstallations jdwpInstallations = new JDWPInstallations();
+  public static final ExtensionInstallations jdwpInstallations = new ExtensionInstallations();
   private Label lblJdwp;
   private Button btnConfigure;
   
@@ -226,7 +226,7 @@ public class JPFDebugTab extends JPFCommonTab {
     lookupLocalJdwpInstallation(jdwpInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""));
   }
   
-  private void lookupLocalJdwpInstallation(List<JDWPInstallation> jdwpInstallations, String appJpfFile) {
+  private void lookupLocalJdwpInstallation(List<ExtensionInstallation> jdwpInstallations, String appJpfFile) {
     Config config;
     if (appJpfFile != null) {
       config = new Config(new String[] {appJpfFile});
@@ -245,7 +245,7 @@ public class JPFDebugTab extends JPFCommonTab {
     Map<String, File> projects = getSiteProjects(config);
     if (projects.containsKey("jpf-jdwp")) {
       String pseudoPath = projects.get("jpf-jdwp").getAbsolutePath();
-      JDWPInstallation localJdwpInstallation = new JDWPInstallation("Locally installed as jpf-jdwp extension", pseudoPath);
+      ExtensionInstallation localJdwpInstallation = new ExtensionInstallation("Locally installed as jpf-jdwp extension", pseudoPath);
       if (!jdwpInstallations.contains(localJdwpInstallation)) {
         jdwpInstallations.add(localJdwpInstallation);
       }
@@ -331,7 +331,7 @@ public class JPFDebugTab extends JPFCommonTab {
     configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
     
     // TODO it's better to not use the embedded one if normal extension is detected
-    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.DEFAULT_INSTALLATION_INDEX);
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, ExtensionInstallations.DEFAULT_INSTALLATION_INDEX);
   }
 
   public void initializeFrom(ILaunchConfiguration configuration) {
@@ -350,7 +350,7 @@ public class JPFDebugTab extends JPFCommonTab {
       String[] jdwps = (String[]) jdwpInstallations.toStringArray(new String[jdwpInstallations.size()]);
       fCombo.setItems(jdwps);
       fCombo.setVisibleItemCount(Math.min(jdwps.length, 20));
-      fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWPInstallations.DEFAULT_INSTALLATION_INDEX));
+      fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, ExtensionInstallations.DEFAULT_INSTALLATION_INDEX));
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
@@ -384,10 +384,10 @@ public class JPFDebugTab extends JPFCommonTab {
 
         if (selectedJdwpInstallation == -1) {
           EclipseJPF.logError("Obtained incorret jdwp installation index");
-        } else if (selectedJdwpInstallation == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
+        } else if (selectedJdwpInstallation == ExtensionInstallations.DEFAULT_INSTALLATION_INDEX) {
           // using embedded jdwp
           dynMapConfig.put("+jpf-core.native_classpath",
-              JDWPInstallation.EMBEDDED.classpath(File.pathSeparator));
+              ExtensionInstallation.EMBEDDED.classpath(File.pathSeparator));
         } // nothing changes
       }
     } catch (CoreException e) {
@@ -406,7 +406,7 @@ public class JPFDebugTab extends JPFCommonTab {
   @Override
   public boolean isValid(ILaunchConfiguration config) {
     setWarningMessage(null);
-    if (fCombo.getSelectionIndex() == JDWPInstallations.DEFAULT_INSTALLATION_INDEX) {
+    if (fCombo.getSelectionIndex() == ExtensionInstallations.DEFAULT_INSTALLATION_INDEX) {
       // selected embedded
       if (jdwpInstallations.size() > 1) {
         // we have other than embedded jdwps
