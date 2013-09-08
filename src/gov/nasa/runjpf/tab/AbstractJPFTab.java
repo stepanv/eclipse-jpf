@@ -34,7 +34,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
 //  public static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
 //  public static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
 //  public static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
-  public static final String JPF_OPT_OVERRIDE_INSTEADOFADD = "JPF_OPT_OVERRIDE_INSTEADOFADD";
+//  public static final String JPF_OPT_OVERRIDE_INSTEADOFADD = "JPF_OPT_OVERRIDE_INSTEADOFADD";
   
   /**
    * If it's modified , just update the configuration directly.

@@ -1,10 +1,6 @@
 package gov.nasa.runjpf;
 
-import gov.nasa.runjpf.launching.RunJPFLaunchShortcut;
-
 import org.eclipse.core.resources.IFile;
-import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;

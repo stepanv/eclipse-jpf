@@ -57,7 +57,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 //    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
 //    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
 //    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
-    boolean override = configuration.getAttribute(JPFCommonTab.JPF_OPT_OVERRIDE_INSTEADOFADD, false);
+//    boolean override = configuration.getAttribute(JPFCommonTab.JPF_OPT_OVERRIDE_INSTEADOFADD, false);
     
     // /*
     // * for those terminate by our self .
