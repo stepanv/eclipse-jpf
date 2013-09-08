@@ -1,6 +1,7 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.internal.resources.FilteredFileSelectionDialog;
 
@@ -46,6 +47,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 import org.eclipse.ui.dialogs.ResourceSelectionDialog;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 
 public class JPFCommonTab extends AbstractJPFTab {
 
@@ -773,8 +776,13 @@ public class JPFCommonTab extends AbstractJPFTab {
         configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
         
         // reload app config
-        Config appConfig = new Config(jpfFileLocationText.getText());
-        configuration.setAttribute(JPFSettings.ATTR_JPF_APPCONFIG, appConfig);
+        try {
+          Config appConfig = new Config(jpfFileLocationText.getText());
+          configuration.setAttribute(JPFSettings.ATTR_JPF_APPCONFIG, appConfig);
+        } catch (JPFConfigException e) {
+          configuration.setAttribute(JPFSettings.ATTR_JPF_APPCONFIG, Collections.<String, String>emptyMap());
+        }
+        
       }
       
       
@@ -876,6 +884,11 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
   }
   
+  private static boolean testFileExists(String filename) {
+    File file = new File(filename);
+    return file.isFile();
+  }
+  
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.AbstractLaunchConfigurationTab#isValid(org.eclipse.debug.core.ILaunchConfiguration)
    */
@@ -884,11 +897,22 @@ public class JPFCommonTab extends AbstractJPFTab {
     String jpfFileString = jpfFileLocationText.getText();
     String targetString = targetText.getText();
     if (Objects.equals("", jpfFileString) && Objects.equals("", targetString)) {
-      setErrorMessage("Either JPF File (*.jpf) or Target class has to be specified");
+      setErrorMessage("Either JPF File (*.jpf) or Target class has to be specified!");
       return false;
     }
     if (!"".equals(jpfFileString) && !jpfFileString.toLowerCase().endsWith(".jpf")) {
+      // this is here because we provide just .jpf files in the workspace browser and as such we want to be consistent
       setErrorMessage("JPF File (*.jpf) must end with .jpf extension!");
+      return false;
+    }
+    if (radioJpfFileSelected.getSelection() && !testFileExists(jpfFileString)) {
+      setErrorMessage("Provided JPF file: '" + jpfFileString + "' doesn't exist!");
+      return false;
+    }
+    String traceFileString = radioTraceReplay.getText();
+    if (radioTraceReplay.getSelection() && !testFileExists(traceFileString)) {
+      setErrorMessage("Provided trace file: '" + traceFileString + "' doesn't exist!");
+      return false;
     }
 
     if (jpfCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
