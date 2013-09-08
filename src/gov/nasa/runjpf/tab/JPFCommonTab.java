@@ -5,6 +5,7 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.internal.resources.FilteredFileSelectionDialog;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -62,6 +63,8 @@ public class JPFCommonTab extends AbstractJPFTab {
   public static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
   public static final String JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH";
 
+
+  private static final String FLUSHED_COMMENT = "" + System.lineSeparator() + "# This is flushed dynamic configuration by the Eclipse-JPF plugin" + System.lineSeparator();
   private Text jpfFileLocationText;
 
   private Text listenerText;
@@ -106,6 +109,8 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button btnSearch;
 
+  private Button radioJpfFileSelected;
+
   public static final ExtensionInstallations jpfInstallations = new ExtensionInstallations(new ExtensionInstallation("Embedded", ExtensionInstallation.generateClasspathEmbedded(new String[] { "lib/jpf.jar" })));
   
   private static final String TEMP_DIR_PATH;
@@ -149,6 +154,8 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     targetText.setEnabled(!isJpfFile);
     btnSearch.setEnabled(!isJpfFile);
+    
+    updateLaunchConfigurationDialog();
   }
   
   /**
@@ -179,16 +186,16 @@ public class JPFCommonTab extends AbstractJPFTab {
     grpJpfExecution.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
     grpJpfExecution.setLayout(new GridLayout(5, false));
         
-        final Button btnRadioButton = new Button(grpJpfExecution, SWT.RADIO);
-        btnRadioButton.addSelectionListener(new SelectionAdapter() {
+        radioJpfFileSelected = new Button(grpJpfExecution, SWT.RADIO);
+        radioJpfFileSelected.addSelectionListener(new SelectionAdapter() {
           @Override
           public void widgetSelected(SelectionEvent e) {
-            runJpfSelected(btnRadioButton.getSelection());
+            runJpfSelected(radioJpfFileSelected.getSelection());
           }
           
         });
-        btnRadioButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        btnRadioButton.setText("Run a .jpf file:");
+        radioJpfFileSelected.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+        radioJpfFileSelected.setText("Run a .jpf file:");
         new Label(grpJpfExecution, SWT.NONE);
                     new Label(grpJpfExecution, SWT.NONE);
                     new Label(grpJpfExecution, SWT.NONE);
@@ -206,8 +213,32 @@ public class JPFCommonTab extends AbstractJPFTab {
                     btnAppendDynamicProperties = new Button(grpJpfExecution, SWT.NONE);
                     btnAppendDynamicProperties.addSelectionListener(new SelectionAdapter() {
                       @Override
-                      public void widgetSelected(SelectionEvent e) {
-                        
+                      public void widgetSelected(SelectionEvent selectionEvent) {
+                        ILaunchConfiguration configuration = getCurrentLaunchConfiguration();
+                        String fileString = jpfFileLocationText.getText();
+                        FileWriter fileWrite = null;
+                        try {
+                          Map<String, String> config = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+                          
+                          fileWrite = new FileWriter(fileString, true);
+                          
+                          fileWrite.append(FLUSHED_COMMENT);
+                          for (String key : config.keySet()) {
+                            fileWrite.append(new StringBuilder(key).append(" = ").append(config.get(key)).append(System.lineSeparator()));
+                          }
+                          fileWrite.close();
+                        } catch (CoreException | IOException e) {
+                          setErrorMessage("Cannot store dynamic properties in the file: '" + fileString +"'");
+                          EclipseJPF.logError("Error occurred while saving dynamic properties to the file '" + fileString + "'", e);
+                        } finally {
+                          if (fileWrite != null) {
+                            try {
+                              fileWrite.close();
+                            } catch (IOException e) {
+                              // we don't care ...
+                            }
+                          }
+                        }
                       }
                     });
                     btnAppendDynamicProperties.setText("&Append dynamic properties into this file");
@@ -632,6 +663,9 @@ public class JPFCommonTab extends AbstractJPFTab {
       
       boolean jpfFileSelected = configuration.getAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, true);
       runJpfSelected(jpfFileSelected);
+      radioMainMethodClass.setSelection(!jpfFileSelected);
+      radioJpfFileSelected.setSelection(jpfFileSelected);
+      
       
       String defaultFileText;
       if (checkTraceFile.getSelection()) {
@@ -766,6 +800,8 @@ public class JPFCommonTab extends AbstractJPFTab {
         // clear it
         configuration.removeAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH);
       }
+      
+      configuration.setAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, radioJpfFileSelected.getSelection());
     
       @SuppressWarnings("unchecked")
       Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
