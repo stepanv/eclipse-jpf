@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +39,7 @@ import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.connect.ListeningConnector;
 
+@SuppressWarnings("restriction")
 public class JPFDebugger extends StandardVMDebugger {
 
   private boolean debugVM;
@@ -153,7 +153,7 @@ public class JPFDebugger extends StandardVMDebugger {
     // format: <jdk path>/jre/bin
     String[] envp = prependJREPath(config.getEnvironment(), new Path(program));
 
-    String[] newenvp = checkClasspath(arguments, cp, envp);
+    String[] newenvp = checkClasspathPrivate(arguments, cp, envp);
     if (newenvp != null) {
       envp = newenvp;
       arguments.remove(cpidx);
@@ -431,7 +431,7 @@ public class JPFDebugger extends StandardVMDebugger {
    *         made
    * @sine 3.6.200
    */
-  String[] checkClasspath(List<String> args, String[] cp, String[] env) {
+  String[] checkClasspathPrivate(List<String> args, String[] cp, String[] env) {
     if (Platform.getOS().equals(Platform.OS_WIN32)) {
       // count the complete command length
       int size = 0;
@@ -452,6 +452,7 @@ public class JPFDebugger extends StandardVMDebugger {
         String[] newenvp = null;
         int index = -1;
         if (env == null) {
+          @SuppressWarnings("unchecked")
           Map<String, String> nenv = DebugPlugin.getDefault().getLaunchManager().getNativeEnvironment();
           Entry<String, String> entry = null;
           newenvp = new String[nenv.size()];
@@ -471,7 +472,7 @@ public class JPFDebugger extends StandardVMDebugger {
           }
         } else {
           newenvp = env;
-          index = getCPIndex(newenvp);
+          index = getCPIndexPrivate(newenvp);
         }
         if (index < 0) {
           String[] newenv = new String[newenvp.length + 1];
@@ -494,7 +495,7 @@ public class JPFDebugger extends StandardVMDebugger {
    * @return -1 or the index of the CLASSPATH variable
    * @since 3.6.200
    */
-  int getCPIndex(String[] env) {
+  int getCPIndexPrivate(String[] env) {
     if (env != null) {
       for (int i = 0; i < env.length; i++) {
         if (env[i].regionMatches(true, 0, "CLASSPATH=", 0, 10)) { //$NON-NLS-1$

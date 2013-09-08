@@ -4,6 +4,8 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.internal.resources.FilteredFileSelectionDialog;
+import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
+import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -11,8 +13,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -21,8 +21,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
@@ -44,12 +42,8 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.dialogs.ContainerSelectionDialog;
-import org.eclipse.ui.dialogs.ElementListSelectionDialog;
-import org.eclipse.ui.dialogs.ResourceSelectionDialog;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 
+@SuppressWarnings("restriction")
 public class JPFCommonTab extends AbstractJPFTab {
 
   private static final String ATTRIBUTE_UNIQUE_PREFIX = "gov.nasa.jpf.runjpf-attributeprefix-";
@@ -221,7 +215,8 @@ public class JPFCommonTab extends AbstractJPFTab {
                         String fileString = jpfFileLocationText.getText();
                         FileWriter fileWrite = null;
                         try {
-                          Map<String, String> config = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+                          @SuppressWarnings("unchecked")
+                          Map<String, String> config = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
                           
                           fileWrite = new FileWriter(fileString, true);
                           
@@ -614,7 +609,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
+      Map<String, String> map = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
     
     
     configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_LISTENER, defaultProperty(map, "listener", ""));
@@ -715,32 +710,32 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
     return originalListener + "," + newListener;
   }
-  private String removeListener(String originalListener, String removalListener) {
-    if (originalListener == null) {
-      return null;
-    }
-    if (originalListener.contains(removalListener)) {
-      // TODO this is completely wrong!!!
-      int startIndex = originalListener.indexOf(removalListener);
-      String result = originalListener.substring(0, startIndex);
-      int advancedIndex = startIndex + removalListener.length() + 1;
-      if (originalListener.length() >= advancedIndex) {
-        String append = originalListener.substring(startIndex + removalListener.length() + 1);
-        
-        if (result.endsWith(",") && append.startsWith(",")) {
-          result += append.substring(1);
-        } else {
-          result += append;
-        }
-      } else {
-        if (result.endsWith(",")) {
-          result = result.substring(0, result.length() - 1);
-        }
-      }
-      return result;
-    }
-    return originalListener;
-  }
+//  private String removeListener(String originalListener, String removalListener) {
+//    if (originalListener == null) {
+//      return null;
+//    }
+//    if (originalListener.contains(removalListener)) {
+//      // TODO this is completely wrong!!!
+//      int startIndex = originalListener.indexOf(removalListener);
+//      String result = originalListener.substring(0, startIndex);
+//      int advancedIndex = startIndex + removalListener.length() + 1;
+//      if (originalListener.length() >= advancedIndex) {
+//        String append = originalListener.substring(startIndex + removalListener.length() + 1);
+//        
+//        if (result.endsWith(",") && append.startsWith(",")) {
+//          result += append.substring(1);
+//        } else {
+//          result += append;
+//        }
+//      } else {
+//        if (result.endsWith(",")) {
+//          result = result.substring(0, result.length() - 1);
+//        }
+//      }
+//      return result;
+//    }
+//    return originalListener;
+//  }
   
   public boolean attributeEquals(String attributeName, ILaunchConfiguration configuration, String valueCandidate) throws CoreException {
     if (valueCandidate == null) {
@@ -778,9 +773,9 @@ public class JPFCommonTab extends AbstractJPFTab {
         // reload app config
         try {
           Config appConfig = new Config(jpfFileLocationText.getText());
-          configuration.setAttribute(JPFSettings.ATTR_JPF_APPCONFIG, appConfig);
+          configuration.setAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, appConfig);
         } catch (JPFConfigException e) {
-          configuration.setAttribute(JPFSettings.ATTR_JPF_APPCONFIG, Collections.<String, String>emptyMap());
+          configuration.setAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.<String, String>emptyMap());
         }
         
       }
@@ -812,7 +807,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       configuration.setAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, radioJpfFileSelected.getSelection());
     
       @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+      Map<String, String> map = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
     
       String listenerString = "";
       map.remove("trace.file");
@@ -870,7 +865,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     // TODO look at other configs too
     @SuppressWarnings("unchecked")
-    Map<String, String> appMap = configuration.getAttribute(JPFSettings.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
+    Map<String, String> appMap = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
     
     String appValue = (String) appMap.get(key);
     if (appValue != null && appValue.trim().equals(value.trim())) {

@@ -1,44 +1,31 @@
 package gov.nasa.runjpf.tab;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
+import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
+import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
-import org.eclipse.jdt.internal.debug.ui.actions.ControlAccessibleListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
-import org.eclipse.swt.widgets.CoolBar;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
 
+@SuppressWarnings("restriction")
 public class JPFDebugTab extends JPFCommonTab {
 
   
@@ -204,7 +191,8 @@ public class JPFDebugTab extends JPFCommonTab {
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, fCombo.getSelectionIndex());
     
     try {
-      Map<String, String> dynMapConfig = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+      @SuppressWarnings("unchecked")
+      Map<String, String> dynMapConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String,String>emptyMap());
       // we're using +jpf-core.native_classpath only here so we can safely remove it
       // TODO move this to JPFSettings and wipe it always
       dynMapConfig.remove("+jpf-core.native_classpath");

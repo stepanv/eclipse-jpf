@@ -55,7 +55,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
-public class JPFSettings extends AbstractJPFTab {
+@SuppressWarnings("restriction")
+public class JPFSettingsTab extends AbstractJPFTab {
   
   public static final String ATTR_JPF_DEFAULTCONFIG = "ATTR_JPF_CONFIG";
   public static final String ATTR_JPF_APPCONFIG = "ATTR_JPF_APPCONFIG";
@@ -345,10 +346,11 @@ public class JPFSettings extends AbstractJPFTab {
     configTable.setInput(configuration);
   }
   
+  @SuppressWarnings("unchecked")
   public void initializeFrom(ILaunchConfiguration configuration) {
     
     try {
-      ConfigCmdArgs.reloadArgs(configuration, configuration.getAttribute(ATTR_JPF_CMDARGSCONFIG, Collections.EMPTY_MAP));
+      ConfigCmdArgs.reloadArgs(configuration, configuration.getAttribute(ATTR_JPF_CMDARGSCONFIG, Collections.<String,String>emptyMap()));
     } catch (CoreException e) {
       // if reload is not successful we don't care
       EclipseJPF.logError("Config Command Arguments reload not successful", e);
@@ -401,7 +403,7 @@ public class JPFSettings extends AbstractJPFTab {
     public Object[] getElements(Object inputElement) {
       List<ExtendedProperty> elements = new ArrayList<ExtendedProperty>();
       ILaunchConfiguration config = (ILaunchConfiguration) inputElement;
-      Map<String, String> m;
+      
       List<String> attributes = new LinkedList<String>();
       if (checkDefaultProperties.getSelection()) {
         attributes.add(ATTR_JPF_DEFAULTCONFIG);
@@ -417,7 +419,8 @@ public class JPFSettings extends AbstractJPFTab {
       }
       for (String attribute : attributes) {
         try {
-          m = (Map<String, String>)config.getAttribute(attribute, (Map<String, String>) null);
+          @SuppressWarnings("unchecked")
+          Map<String, String> m = config.getAttribute(attribute, (Map<String, String>) Collections.<String, String>emptyMap());
         
           if (m != null && !m.isEmpty()) {
             String friendlyName = CONFIG_TO_NAME_MAP.get(attribute);
@@ -501,7 +504,7 @@ public class JPFSettings extends AbstractJPFTab {
 
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-    IProject implicitProject = null;
+//    IProject implicitProject = null;
     
 //    TableItem[] items = environmentTable.getTable().getItems();
 //    Map map = new HashMap(items.length);

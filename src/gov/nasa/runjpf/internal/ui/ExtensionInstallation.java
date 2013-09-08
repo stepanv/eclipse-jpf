@@ -1,4 +1,4 @@
-package gov.nasa.runjpf.tab;
+package gov.nasa.runjpf.internal.ui;
 
 import gov.nasa.runjpf.EclipseJPF;
 
@@ -41,14 +41,14 @@ public class ExtensionInstallation {
   
   private String friendlyName = null;
   private String pseudoPath = "";
-  private List<File> classpathFiles = Collections.EMPTY_LIST;
+  private List<File> classpathFiles = Collections.<File>emptyList();
   
-  ExtensionInstallation(String friendlyName, String pseudoPath) {
+  public ExtensionInstallation(String friendlyName, String pseudoPath) {
     this.friendlyName = friendlyName;
     this.pseudoPath = pseudoPath;
   }
   
-  ExtensionInstallation(String friendlyName, List<File> classpathFiles) {
+  public ExtensionInstallation(String friendlyName, List<File> classpathFiles) {
     this.friendlyName = friendlyName;
     this.classpathFiles = classpathFiles;
     

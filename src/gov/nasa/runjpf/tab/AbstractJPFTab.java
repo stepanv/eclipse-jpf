@@ -1,6 +1,8 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.runjpf.internal.ui.ClassSearchEngine;
+import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -26,6 +28,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Text;
 
+@SuppressWarnings("restriction")
 public abstract class AbstractJPFTab extends JavaLaunchTab {
   
   public static class Foo { 

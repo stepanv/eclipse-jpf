@@ -1,11 +1,10 @@
-package gov.nasa.runjpf.tab;
+package gov.nasa.runjpf.internal.ui;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.util.JPFSiteUtils;
 
 import java.io.File;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
@@ -35,7 +34,7 @@ public class HierarchicalConfig extends Config {
       return configName;
     }
     
-    String getSitePropertiesLocation(String[] args, String appPropPath){
+    protected String getSitePropertiesLocationPrivate(String[] args, String appPropPath){
       String path = getPathArg(args, "site");
 
       if (path == null){
@@ -104,7 +103,7 @@ public class HierarchicalConfig extends Config {
     }
   }
   
-  String getAppPropertiesLocation(String[] args){
+  protected String getAppPropertiesLocationPrivate(String[] args){
     String path = null;
 
     path = getPathArg(args, "app");
@@ -124,7 +123,7 @@ public class HierarchicalConfig extends Config {
   HierarchicalConfig(String appPropertiesInput) {
     super((String)null);
     final String[] a = new String[]{appPropertiesInput};
-    final String appProperties = getAppPropertiesLocation(a);
+    final String appProperties = getAppPropertiesLocationPrivate(a);
     
     configList.add(new InnerHiararchicalConfig("Properties as Arguments") {
 
@@ -181,10 +180,10 @@ public class HierarchicalConfig extends Config {
 
       @Override
       public void initialize() {
-        String appProperties = getAppPropertiesLocation(a);
+        String appProperties = getAppPropertiesLocationPrivate(a);
 
         //--- the site properties
-        String siteProperties = getSitePropertiesLocation( a, appProperties);
+        String siteProperties = getSitePropertiesLocationPrivate( a, appProperties);
         if (siteProperties != null){
           loadProperties( siteProperties);
         }
@@ -207,7 +206,6 @@ public class HierarchicalConfig extends Config {
   }
   
   public HierarchicalProperty getHierarchicalProperty(String key) {
-    HierarchicalProperty result = null;
     for (InnerHiararchicalConfig config : configList) {
       String value = config.getProperty(key);
       if (value != null) {

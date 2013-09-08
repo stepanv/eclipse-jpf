@@ -1,12 +1,9 @@
 package gov.nasa.runjpf.launching;
 
-import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
-import gov.nasa.runjpf.internal.launching.JPFDebugger;
-import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
-import gov.nasa.runjpf.tab.JPFSettings;
+import gov.nasa.runjpf.tab.JPFSettingsTab;
 import gov.nasa.runjpf.util.ProjectUtil;
 
 import java.io.File;
@@ -39,6 +36,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
 
+@SuppressWarnings("restriction")
 public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtension {
 
   private static final String JPF_CONFIGURATION_TYPE_STRING = "eclipse-jpf.launching.runJpf";
@@ -199,7 +197,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
         wc = configType.newInstance(null, launchConfigName);
         
-        JPFSettings.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
+        JPFSettingsTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
 

@@ -1,4 +1,6 @@
-package gov.nasa.runjpf.tab;
+package gov.nasa.runjpf.internal.ui;
+
+import gov.nasa.runjpf.EclipseJPF;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -12,11 +14,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -29,7 +29,6 @@ import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.ui.dialogs.TypeFilteringDialog;
 
 public class ClassSearchEngine {
     
@@ -68,7 +67,7 @@ public class ClassSearchEngine {
             }
             typesList.add(curr);
           } catch (JavaModelException e) {
-            JDIDebugUIPlugin.log(e.getStatus());
+            EclipseJPF.logError("Error while matching with: " + match, e);
           }
         }
       }

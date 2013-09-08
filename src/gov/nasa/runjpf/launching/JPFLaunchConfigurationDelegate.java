@@ -3,16 +3,14 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
-import gov.nasa.runjpf.tab.ExtensionInstallations;
 import gov.nasa.runjpf.tab.JPFCommonTab;
-import gov.nasa.runjpf.tab.JPFSettings;
+import gov.nasa.runjpf.tab.JPFSettingsTab;
 
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,22 +31,9 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
-import com.sun.jdi.connect.Connector.Argument;
-
 public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
     ILaunchConfigurationDelegate {
 
-  private void conditionallyAddOrOverride(List<String> programArgs, boolean override, String param, String value) {
-    if (value == null || "".equals(value)) {
-      return;
-    }
-    if (override) {
-      programArgs.add(new StringBuilder("+").append(param).append("=").append(value).toString());
-    } else {
-      programArgs.add(new StringBuilder("++").append(param).append("=").append(value).append(",").toString());
-    }
-  }
-  
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
     String jpfFile = configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "");
@@ -118,7 +103,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       
       @SuppressWarnings({ "unchecked" })
-      Map<String, String> dynamicMap = configuration.getAttribute(JPFSettings.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
+      Map<String, String> dynamicMap = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
       
       for (String key : dynamicMap.keySet()) {
         String value = dynamicMap.get(key);

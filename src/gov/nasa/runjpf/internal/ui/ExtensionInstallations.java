@@ -1,4 +1,4 @@
-package gov.nasa.runjpf.tab;
+package gov.nasa.runjpf.internal.ui;
 
 import java.util.ArrayList;
 import java.util.List;
