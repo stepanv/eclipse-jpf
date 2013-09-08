@@ -96,6 +96,16 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button buttonTraceBrowseWorkspace;
 
+  private Button btnAppendDynamicProperties;
+
+  private Button btnBrowseWorkspace;
+
+  private Button btnbrowseFilesystem;
+
+  private Button radioMainMethodClass;
+
+  private Button btnSearch;
+
   public static final ExtensionInstallations jpfInstallations = new ExtensionInstallations(new ExtensionInstallation("Embedded", ExtensionInstallation.generateClasspathEmbedded(new String[] { "lib/jpf.jar" })));
   
   private static final String TEMP_DIR_PATH;
@@ -125,9 +135,22 @@ public class JPFCommonTab extends AbstractJPFTab {
   
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
 
+  private static final String JPF_ATTR_RUNTIME_JPFFILESELECTED = "JPF_ATTR_RUNTIME_JPFFILESELECTED";
+
   public JPFCommonTab() {
     lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
   }
+  
+  private void runJpfSelected(boolean isJpfFile) {
+    btnAppendDynamicProperties.setEnabled(isJpfFile);
+    btnbrowseFilesystem.setEnabled(isJpfFile);
+    btnBrowseWorkspace.setEnabled(isJpfFile);
+    jpfFileLocationText.setEnabled(isJpfFile);
+    
+    targetText.setEnabled(!isJpfFile);
+    btnSearch.setEnabled(!isJpfFile);
+  }
+  
   /**
    * @wbp.parser.entryPoint
    */
@@ -156,7 +179,14 @@ public class JPFCommonTab extends AbstractJPFTab {
     grpJpfExecution.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
     grpJpfExecution.setLayout(new GridLayout(5, false));
         
-        Button btnRadioButton = new Button(grpJpfExecution, SWT.RADIO);
+        final Button btnRadioButton = new Button(grpJpfExecution, SWT.RADIO);
+        btnRadioButton.addSelectionListener(new SelectionAdapter() {
+          @Override
+          public void widgetSelected(SelectionEvent e) {
+            runJpfSelected(btnRadioButton.getSelection());
+          }
+          
+        });
         btnRadioButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
         btnRadioButton.setText("Run a .jpf file:");
         new Label(grpJpfExecution, SWT.NONE);
@@ -173,10 +203,11 @@ public class JPFCommonTab extends AbstractJPFTab {
                     new Label(grpJpfExecution, SWT.NONE);
                     new Label(grpJpfExecution, SWT.NONE);
                     
-                    Button btnAppendDynamicProperties = new Button(grpJpfExecution, SWT.NONE);
+                    btnAppendDynamicProperties = new Button(grpJpfExecution, SWT.NONE);
                     btnAppendDynamicProperties.addSelectionListener(new SelectionAdapter() {
                       @Override
                       public void widgetSelected(SelectionEvent e) {
+                        
                       }
                     });
                     btnAppendDynamicProperties.setText("&Append dynamic properties into this file");
@@ -197,16 +228,11 @@ public class JPFCommonTab extends AbstractJPFTab {
                         gl_composite_1.marginWidth = 0;
                         composite_1.setLayout(gl_composite_1);
                         
-                        Button btnBrowseWorkspace = new Button(composite_1, SWT.NONE);
+                        btnBrowseWorkspace = new Button(composite_1, SWT.NONE);
                         btnBrowseWorkspace.setSize(109, 25);
-                        btnBrowseWorkspace.addSelectionListener(new SelectionAdapter() {
-                        	@Override
-                        	public void widgetSelected(SelectionEvent e) {
-                        	}
-                        });
                         btnBrowseWorkspace.setText("Browse &workspace");
                         
-                            Button btnbrowseFilesystem = new Button(composite_1, SWT.NONE);
+                            btnbrowseFilesystem = new Button(composite_1, SWT.NONE);
                             btnbrowseFilesystem.setText("Browse &filesystem");
                             btnbrowseFilesystem.setBounds(540, 33, 106, 25);
                             
@@ -248,9 +274,15 @@ public class JPFCommonTab extends AbstractJPFTab {
                                 }
                               });
                     
-                    Button btnRunAMain = new Button(grpJpfExecution, SWT.RADIO);
-                    btnRunAMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-                    btnRunAMain.setText("Run a main class:");
+                    radioMainMethodClass = new Button(grpJpfExecution, SWT.RADIO);
+                    radioMainMethodClass.addSelectionListener(new SelectionAdapter() {
+                      @Override
+                      public void widgetSelected(SelectionEvent e) {
+                        runJpfSelected(!radioMainMethodClass.getSelection());
+                      }
+                    });
+                    radioMainMethodClass.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+                    radioMainMethodClass.setText("Run a main class:");
                 new Label(grpJpfExecution, SWT.NONE);
                 new Label(grpJpfExecution, SWT.NONE);
                 new Label(grpJpfExecution, SWT.NONE);
@@ -277,7 +309,7 @@ public class JPFCommonTab extends AbstractJPFTab {
                                         gl_composite_2.marginWidth = 0;
                                         composite_2.setLayout(gl_composite_2);
                                         
-                                            Button btnSearch = new Button(composite_2, SWT.NONE);
+                                            btnSearch = new Button(composite_2, SWT.NONE);
                                             btnSearch.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
                                             btnSearch.setText("Search...");
                                             btnSearch.addSelectionListener(new SelectionListener() {
@@ -597,6 +629,9 @@ public class JPFCommonTab extends AbstractJPFTab {
       textTraceFile.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
       buttonTraceBrowse.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
       buttonTraceBrowseWorkspace.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
+      
+      boolean jpfFileSelected = configuration.getAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, true);
+      runJpfSelected(jpfFileSelected);
       
       String defaultFileText;
       if (checkTraceFile.getSelection()) {
