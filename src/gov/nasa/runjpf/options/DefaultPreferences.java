@@ -19,5 +19,6 @@ public class DefaultPreferences extends AbstractPreferenceInitializer {
     IPreferenceStore store = EclipseJPF.getDefault().getPreferenceStore();
     store.setDefault(EclipseJPFLauncher.SITE_PROPERTIES_PATH, EclipseJPFLauncher.DEFAULT_SITE_PROPERTIES_PATH);
     store.setDefault(EclipseJPFLauncher.PORT, EclipseJPFLauncher.DEFAULT_PORT);
+    store.setDefault(EclipseJPFLauncher.COMMON_DIR, EclipseJPFLauncher.COMMON_DIR_PATH);
   }
 }

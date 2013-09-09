@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 /**
@@ -49,6 +50,43 @@ public abstract class JPFLauncher {
    * The value is 4242
    */
   public static final int DEFAULT_PORT = 4242;
+  
+  public static final String COMMON_DIR_PATH = getDefaultWorkingDirectory();
+
+  static String getDefaultWorkingDirectory() {
+    String tmpDirString;
+    java.nio.file.Path tmpPath = null;
+    try {
+      tmpPath = Files.createTempFile("tmpdirlookup", ".tmp");
+      File tmpDir = tmpPath.getParent().toFile();
+
+      tmpDirString = tmpDir.getAbsolutePath();
+
+    } catch (IOException e) {
+
+      tmpDirString = System.getProperty("java.io.tmpdir");
+      if (tmpDirString == null) {
+        File[] roots = File.listRoots();
+        if (roots != null && roots.length > 0) {
+          tmpDirString = roots[0].getAbsolutePath();
+        } else {
+          throw new IllegalStateException("Unable to determine any directory as a temporary direcotyr");
+        }
+      }
+    } finally {
+      if (tmpPath != null) {
+        File tmpFile = tmpPath.toFile();
+        if (tmpFile != null && tmpFile.exists()) {
+          try {
+            Files.delete(tmpPath);
+          } catch (IOException e) {
+            // we don't care
+          }
+        }
+      }
+    }
+    return tmpDirString;
+  }
 
   /**
    * Saved Site Core directory

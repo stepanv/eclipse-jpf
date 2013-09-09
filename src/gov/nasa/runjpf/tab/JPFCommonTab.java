@@ -3,6 +3,7 @@ package gov.nasa.runjpf.tab;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.resources.FilteredFileSelectionDialog;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
@@ -10,22 +11,26 @@ import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.launching.SocketUtil;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -43,6 +48,8 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import com.sun.jdi.IntegerValue;
+
 @SuppressWarnings("restriction")
 public class JPFCommonTab extends AbstractJPFTab {
 
@@ -51,7 +58,6 @@ public class JPFCommonTab extends AbstractJPFTab {
   public static final String JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_STORE";
   public static final String JPF_ATTR_TRACE_FILE = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_FILE";
   public static final String JPF_ATTR_TRACE_ENABLED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_ENABLED";
-  public static final String JPF_ATTR_TRACE_CUSTOMFILECHECKED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_CUSTOMFILE";
   public static final String JPF_ATTR_OPT_LISTENER = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_LISTENER";
   public static final String JPF_ATTR_OPT_SEARCH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_SEARCH";
   public static final String JPF_ATTR_OPT_TARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_TARGET";
@@ -76,13 +82,9 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button radioTraceReplay;
 
-  // TODO should use a string only - not to create the whole file
-  private String lastTmpTraceFile;
-  private String lastUserTraceFile = "";
-
   private Button radioTraceNoTrace;
 
-  private Button checkTraceFile;
+  private Label lblTraceFile;
 
   private Button buttonTraceBrowse;
 
@@ -112,37 +114,19 @@ public class JPFCommonTab extends AbstractJPFTab {
   private static final String EXTENSION_PROJECT = "jpf-core";
   public static final ExtensionInstallations jpfInstallations = ExtensionInstallations.factory(REQUIRED_LIBRARY);
       
-  private static final String TEMP_DIR_PATH;
-  
-  static {
-    String tmpDirString;
-    try {
-      java.nio.file.Path tmpPath = Files.createTempFile("tmpdirlookup", ".tmp");
-      File tmpDir = tmpPath.getParent().toFile();
-      
-      tmpDirString = tmpDir.getAbsolutePath();
-      
-    } catch (IOException e) {
-      
-      tmpDirString = System.getProperty("java.io.tmpdir");
-      if (tmpDirString == null) {
-        File[] roots = File.listRoots();
-        if (roots != null && roots.length > 0) {
-          tmpDirString = roots[0].getAbsolutePath();
-        } else {
-          throw new IllegalStateException("Unable to determine any directory as a temporary direcotyr");
-        }
-      }
-    }
-    TEMP_DIR_PATH = tmpDirString;
-  }
-  
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
 
   private static final String JPF_ATTR_RUNTIME_JPFFILESELECTED = "JPF_ATTR_RUNTIME_JPFFILESELECTED";
 
-  public JPFCommonTab() {
-    lastTmpTraceFile = TEMP_DIR_PATH + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
+  private static final String JPF_ATTR_SHELL_ENABLED = "JPF_ATTR_SHELL_ENABLED";
+
+  private static final String JPF_ATTR_SHELL_PORT = "JPR_ATTR_SHELL_PORT";
+  private Button checkShellEnabled;
+  private Text textShellPort;
+
+  private String createPlaceholderedTraceFile() {
+    String commonDir = Platform.getPreferencesService().getString(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.COMMON_DIR, "", null);;
+    return commonDir + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
   }
   
   private void runJpfSelected(boolean isJpfFile) {
@@ -154,6 +138,14 @@ public class JPFCommonTab extends AbstractJPFTab {
     targetText.setEnabled(!isJpfFile);
     btnSearch.setEnabled(!isJpfFile);
     
+    updateLaunchConfigurationDialog();
+  }
+  
+  private void traceChanged() {
+    boolean isNoTrace = radioTraceNoTrace.getSelection();
+    textTraceFile.setEnabled(!isNoTrace);
+    buttonTraceBrowse.setEnabled(!isNoTrace);
+    buttonTraceBrowseWorkspace.setEnabled(!isNoTrace);
     updateLaunchConfigurationDialog();
   }
   
@@ -355,19 +347,18 @@ public class JPFCommonTab extends AbstractJPFTab {
     Group grpOverrideCommonJpf = new Group(comp, SWT.NONE);
     grpOverrideCommonJpf.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     grpOverrideCommonJpf.setText("Common JPF settings");
-    grpOverrideCommonJpf.setLayout(new GridLayout(4, false));
+    grpOverrideCommonJpf.setLayout(new GridLayout(5, false));
         
             Label lblListener = new Label(grpOverrideCommonJpf, SWT.NONE);
-            lblListener.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
             lblListener.setText("Listener:");
-
-    listenerText = new Text(grpOverrideCommonJpf, SWT.BORDER);
-    listenerText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    listenerText.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+        
+            listenerText = new Text(grpOverrideCommonJpf, SWT.BORDER);
+            listenerText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+            listenerText.addModifyListener(new ModifyListener() {
+              public void modifyText(ModifyEvent e) {
+                updateLaunchConfigurationDialog();
+              }
+            });
 
     Button searchListenerButton = new Button(grpOverrideCommonJpf, SWT.NONE);
     searchListenerButton.setText("Search...");
@@ -382,19 +373,35 @@ public class JPFCommonTab extends AbstractJPFTab {
     });
 
     Label lblSearch = new Label(grpOverrideCommonJpf, SWT.NONE);
-    lblSearch.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
     lblSearch.setText("Search:");
-
-    searchText = new Text(grpOverrideCommonJpf, SWT.BORDER);
-    searchText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    searchText.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+        
+            searchText = new Text(grpOverrideCommonJpf, SWT.BORDER);
+            searchText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+            searchText.addModifyListener(new ModifyListener() {
+              public void modifyText(ModifyEvent e) {
+                updateLaunchConfigurationDialog();
+              }
+            });
 
     Button searchSearchButton = new Button(grpOverrideCommonJpf, SWT.NONE);
     searchSearchButton.setText("Search...");
+    
+    checkShellEnabled = new Button(grpOverrideCommonJpf, SWT.CHECK);
+    checkShellEnabled.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+    checkShellEnabled.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        boolean isShellEnabled = checkShellEnabled.getSelection();
+        textShellPort.setEnabled(isShellEnabled);
+        updateLaunchConfigurationDialog();
+      }
+    });
+    checkShellEnabled.setText("Enable shell on port:");
+    
+    textShellPort = new Text(grpOverrideCommonJpf, SWT.BORDER);
+    textShellPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+    new Label(grpOverrideCommonJpf, SWT.NONE);
+    new Label(grpOverrideCommonJpf, SWT.NONE);
     searchSearchButton.addSelectionListener(new SelectionListener() {
       public void widgetDefaultSelected(SelectionEvent e) {
       }
@@ -420,15 +427,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     radioTraceStore.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-        if (checkTraceFile.getSelection()) {
-          textTraceFile.setText(lastUserTraceFile);
-        } else {
-          textTraceFile.setText(lastTmpTraceFile);
-        }
-        textTraceFile.setEnabled(checkTraceFile.getSelection());
-        buttonTraceBrowse.setEnabled(checkTraceFile.getSelection());
-        buttonTraceBrowseWorkspace.setEnabled(checkTraceFile.getSelection());
-        updateLaunchConfigurationDialog();
+        traceChanged();
       }
     });
     radioTraceStore.setBounds(0, 0, 90, 16);
@@ -438,21 +437,13 @@ public class JPFCommonTab extends AbstractJPFTab {
     radioTraceReplay.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-        if (checkTraceFile.getSelection()) {
-          textTraceFile.setText(lastUserTraceFile);
-        } else {
-          textTraceFile.setText(lastTmpTraceFile);
-        }
-        textTraceFile.setEnabled(checkTraceFile.getSelection());
-        buttonTraceBrowse.setEnabled(checkTraceFile.getSelection());
-        buttonTraceBrowseWorkspace.setEnabled(checkTraceFile.getSelection());
-        updateLaunchConfigurationDialog();
+        traceChanged();
       }
     });
     radioTraceReplay.setText("Replay");
     
-    checkTraceFile = new Button(grpTrace, SWT.CHECK);
-    checkTraceFile.setText("Trace File:");
+    lblTraceFile = new Label(grpTrace, SWT.CHECK);
+    lblTraceFile.setText("Trace File:");
     
     textTraceFile = new Text(grpTrace, SWT.BORDER);
     textTraceFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -505,7 +496,6 @@ public class JPFCommonTab extends AbstractJPFTab {
         if (file != null) {
           file = file.trim();
           if (file.length() > 0) {
-            lastUserTraceFile = file;
             textTraceFile.setText(file);
           }
         }
@@ -518,23 +508,8 @@ public class JPFCommonTab extends AbstractJPFTab {
         boolean traceEnabled = !radioTraceNoTrace.getSelection();
         buttonTraceBrowse.setEnabled(traceEnabled);
         buttonTraceBrowseWorkspace.setEnabled(traceEnabled);
-        checkTraceFile.setEnabled(traceEnabled);
+        lblTraceFile.setEnabled(traceEnabled);
         textTraceFile.setEnabled(traceEnabled);
-        updateLaunchConfigurationDialog();
-      }
-    });
-    
-    checkTraceFile.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        textTraceFile.setEnabled(checkTraceFile.getSelection());
-        buttonTraceBrowse.setEnabled(checkTraceFile.getSelection());
-        buttonTraceBrowseWorkspace.setEnabled(checkTraceFile.getSelection());
-        if (checkTraceFile.getSelection()) {
-          textTraceFile.setText(lastUserTraceFile);
-        } else {
-          textTraceFile.setText(lastTmpTraceFile);
-        }
         updateLaunchConfigurationDialog();
       }
     });
@@ -609,9 +584,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       configuration.setAttribute(JPF_FILE_LOCATION, "");
     }
     
-    configuration.setAttribute(JPF_ATTR_TRACE_FILE, "");
     configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false);
-    configuration.setAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false);
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, false);
     
     // TODO it's better to not use the embedded one if normal extension is detected
@@ -657,33 +630,25 @@ public class JPFCommonTab extends AbstractJPFTab {
 //      radioAppend.setSelection(!override);
 //      
       
-      
+      checkShellEnabled.setSelection(configuration.getAttribute(JPF_ATTR_SHELL_ENABLED, true));
+      int defaultShellPort = Platform.getPreferencesService().getInt(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.PORT, EclipseJPFLauncher.DEFAULT_PORT, null);
+      textShellPort.setText(String.valueOf(configuration.getAttribute(JPF_ATTR_SHELL_PORT, defaultShellPort)));
+      textShellPort.setEnabled(configuration.getAttribute(JPF_ATTR_SHELL_ENABLED, true));
       
       boolean traceEnabled = configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false);
       
       radioTraceNoTrace.setSelection(!traceEnabled);
       radioTraceReplay.setSelection(traceEnabled && !configuration.getAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false));
       radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false));
-      checkTraceFile.setSelection(configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
-      checkTraceFile.setEnabled(traceEnabled);
-      textTraceFile.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
-      buttonTraceBrowse.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
-      buttonTraceBrowseWorkspace.setEnabled(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, false));
+      textTraceFile.setEnabled(traceEnabled);
+      buttonTraceBrowse.setEnabled(traceEnabled);
+      buttonTraceBrowseWorkspace.setEnabled(traceEnabled);
+      textTraceFile.setText(configuration.getAttribute(JPF_ATTR_TRACE_FILE, createPlaceholderedTraceFile()));
       
       boolean jpfFileSelected = configuration.getAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, true);
       runJpfSelected(jpfFileSelected);
       radioMainMethodClass.setSelection(!jpfFileSelected);
       radioJpfFileSelected.setSelection(jpfFileSelected);
-      
-      
-      String defaultFileText;
-      if (checkTraceFile.getSelection()) {
-        defaultFileText = "";
-      } else {
-        // TODO this should be generated right here
-        defaultFileText = lastTmpTraceFile;
-      }
-      textTraceFile.setText(configuration.getAttribute(JPF_ATTR_TRACE_FILE, defaultFileText));
       
       initializeExtensionInstallations(configuration, jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
       
@@ -769,6 +734,12 @@ public class JPFCommonTab extends AbstractJPFTab {
       }
       implicitProject = iFiles[i].getProject();
     }
+    
+    configuration.setAttribute(JPF_ATTR_SHELL_ENABLED, checkShellEnabled.getSelection());
+    // port is already validated
+    int portShell = Integer.parseInt(textShellPort.getText());
+    configuration.setAttribute(JPF_ATTR_SHELL_PORT, portShell);
+    
     try {
       if (!attributeEquals(JPF_FILE_LOCATION, configuration, jpfFileLocationText.getText())) {
         configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
@@ -786,9 +757,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       
       configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
       configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, radioTraceStore.getSelection());
-      configuration.setAttribute(JPF_ATTR_TRACE_FILE, textTraceFile.getText());
-      configuration.setAttribute(JPF_ATTR_TRACE_CUSTOMFILECHECKED, checkTraceFile.getSelection());
-      
+
       configuration.setAttribute(JPF_ATTR_OPT_LISTENER, listenerText.getText().trim());
       configuration.setAttribute(JPF_ATTR_OPT_SEARCH, searchText.getText().trim());
       configuration.setAttribute(JPF_ATTR_OPT_TARGET, targetText.getText().trim());
@@ -818,24 +787,38 @@ public class JPFCommonTab extends AbstractJPFTab {
       map.remove("listener");
       map.remove("search.class");
       map.remove("target");
+      map.remove("shell.port");
       
       if (!radioTraceNoTrace.getSelection()) {
         // we're tracing
+        String traceFileName = textTraceFile.getText().trim();
         if (radioTraceStore.getSelection()) {
           // we're storing a trace
-          map.put("trace.file", textTraceFile.getText().trim());
+          
+          // let's substitute the generated random string into the unique placeholder
+          if (traceFileName.contains(JPFCommonTab.UNIQUE_ID_PLACEHOLDER)) {
+            String uniqueId = UUID.randomUUID().toString();
+            traceFileName = traceFileName.replace(JPFCommonTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
+            textTraceFile.setText(traceFileName);
+          }
+          map.put("trace.file", traceFileName);
           
           listenerString = addListener(listenerString, ".listener.TraceStorer");
           
         } else if (radioTraceReplay.getSelection()) {
-          map.put("choice.use_trace", textTraceFile.getText().trim());
+          // we're replaying a trace
+          map.put("choice.use_trace", traceFileName);
           
           listenerString = addListener(listenerString, ".listener.ChoiceSelector");
         } else {
           throw new IllegalStateException("Shouldn't occur");
         }
+        configuration.setAttribute(JPF_ATTR_TRACE_FILE, traceFileName);
       }
       
+      if (checkShellEnabled.getSelection()) {
+        map.put("shell.port", String.valueOf(portShell));
+      }
       
       if (isDynamic(configuration, "listener", listenerText.getText())) {
         listenerString = addListener(listenerString, listenerText.getText().trim());
@@ -907,10 +890,24 @@ public class JPFCommonTab extends AbstractJPFTab {
       setErrorMessage("Provided JPF file: '" + jpfFileString + "' doesn't exist!");
       return false;
     }
-    String traceFileString = radioTraceReplay.getText();
+    String traceFileString = textTraceFile.getText();
     if (radioTraceReplay.getSelection() && !testFileExists(traceFileString)) {
       setErrorMessage("Provided trace file: '" + traceFileString + "' doesn't exist!");
       return false;
+    }
+    if (checkShellEnabled.getSelection()) {
+      int port;
+      try {
+        port = Integer.parseInt(textShellPort.getText());
+      } catch (NumberFormatException e) {
+        setErrorMessage("Provided port number cannot be converted to integer: " + e.getMessage());
+        return false;
+      }
+      if (port < 0) {
+        // let's do not care about the upper bound cause I don't know if there are platforms that support different number than the normal one
+        setErrorMessage("Provided port is invalid");
+        return false;
+      }
     }
 
     if (jpfCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {

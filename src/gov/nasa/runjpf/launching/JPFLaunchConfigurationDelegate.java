@@ -100,7 +100,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
-      List<String> programArgs = new ArrayList<String>(Arrays.asList("+shell.port=4242", jpfFile));
+      List<String> programArgs = new ArrayList<String>();
+      programArgs.add(jpfFile);
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       
       @SuppressWarnings({ "unchecked" })
@@ -108,12 +109,6 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       
       for (String key : dynamicMap.keySet()) {
         String value = dynamicMap.get(key);
-        
-        if (value.contains(JPFCommonTab.UNIQUE_ID_PLACEHOLDER)) {
-          String uniqueId = UUID.randomUUID().toString();
-          value = value.replace(JPFCommonTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
-        }
-        
         programArgs.add(new StringBuilder("+").append(key).append("=").append(value).toString());
       }
       // TODO

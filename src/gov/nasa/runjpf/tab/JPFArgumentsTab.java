@@ -26,6 +26,4 @@ public class JPFArgumentsTab extends JavaArgumentsTab {
   public String getName() {
     return "JPF Arguments";
   }
-  
-
 }

@@ -58,6 +58,8 @@ public class EclipseJPFLauncher extends JPFLauncher {
    */
   public static final String PORT = "jpf.port";
 
+  public static final String COMMON_DIR = "jpf.common_dir";
+
   private PrintWriter out;
   private Process jpf;
   private JPFKiller killer;

@@ -38,6 +38,8 @@ public class Preferences extends FieldEditorPreferencePage implements IWorkbench
     addField(sitePropertiesPath);
     addField(args);
     addField(vm_args);
+    
+    addField(new StringFieldEditor(EclipseJPFLauncher.COMMON_DIR, "Common dir for traces", getFieldEditorParent()));
   }
 
   @Override
