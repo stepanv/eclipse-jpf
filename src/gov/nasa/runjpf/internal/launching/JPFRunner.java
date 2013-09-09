@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.jdt.internal.launching.StandardVMRunner;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMInstall;
 
 @SuppressWarnings("restriction")

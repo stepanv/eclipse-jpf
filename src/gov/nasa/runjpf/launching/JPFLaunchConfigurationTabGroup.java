@@ -1,5 +1,6 @@
 package gov.nasa.runjpf.launching;
 
+import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
@@ -12,7 +13,6 @@ import org.eclipse.debug.ui.EnvironmentTab;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
 import org.eclipse.debug.ui.sourcelookup.SourceLookupTab;
-import org.eclipse.jdt.debug.ui.launchConfigurations.JavaArgumentsTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaJRETab;
 
 public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup implements
@@ -27,7 +27,7 @@ public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationT
     } else {
       jpfTab = new JPFRunTab();
     }
-    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { jpfTab, new JPFSettingsTab(), new JavaArgumentsTab(), new JavaJRETab(),
+    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { jpfTab, new JPFSettingsTab(), new JPFArgumentsTab(), new JavaJRETab(),
         new SourceLookupTab(), new EnvironmentTab(), new CommonTab() };
     setTabs(tabs);
   }
