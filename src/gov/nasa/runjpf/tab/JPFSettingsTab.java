@@ -2,47 +2,31 @@ package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.tab.internal.ConfigCmdArgs;
+import gov.nasa.runjpf.tab.internal.ExtendedPropertyContentProvider;
+import gov.nasa.runjpf.tab.internal.ExtendedPropertyLabelProvider;
+import gov.nasa.runjpf.tab.internal.TableSorter;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.internal.ui.DebugPluginImages;
-import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.SWTFactory;
-import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationsMessages;
-import org.eclipse.debug.ui.IDebugUIConstants;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -63,8 +47,11 @@ public class JPFSettingsTab extends AbstractJPFTab {
   public static final String ATTR_JPF_DYNAMICCONFIG = "ATTR_JPF_DYNAMICCONFIG";
   public static final String ATTR_JPF_CMDARGSCONFIG = "ATTR_JPF_CMDARGSCONFIG";
   
-  @SuppressWarnings("unchecked")
-  private static final Map<String, String> CONFIG_TO_NAME_MAP = new HashMap<String, String>();
+  static final Map<String, String> CONFIG_TO_NAME_MAP = new HashMap<String, String>();
+  private static final String ATTR_JPF_SETTINGS_DYNAMICSELECTED = "ATTR_JPF_SETTINGS_DYNAMICSELECTED";
+  private static final String ATTR_JPF_SETTINGS_CMDARGSSELECTED = "ATTR_JPF_SETTINGS_CMDARGSSELECTED";
+  private static final String ATTR_JPF_SETTINGS_DEFAULTSELECTED = "ATTR_JPF_SETTINGS_DEFAULTSELECTED";
+  private static final String ATTR_JPF_SETTINGS_APPPROPSSELECTED = "ATTR_JPF_SETTINGS_APPPROPSSELECTED";
   
   
   static {
@@ -76,32 +63,16 @@ public class JPFSettingsTab extends AbstractJPFTab {
 
   private Text jpfFileLocationText;
 
-  /**
-   * If it's modified , just update the configuration directly.
-   */
-  private class UpdateModfiyListener implements ModifyListener {
-    public void modifyText(ModifyEvent e) {
-      updateLaunchConfigurationDialog();
-    }
-  }
-
-  private UpdateModfiyListener updatedListener = new UpdateModfiyListener();
-  private Text text_1;
  // private Table table;
-  private Table table_1;
   private TableViewer configTable;
-  private Button envAddButton;
-  private Button envSelectButton;
-  private Button envEditButton;
-  private Button envRemoveButton;
   private Composite mainComposite;
 
-  private Button checkAppProperties;
+  Button checkAppProperties;
 
-  private Button checkDynamicProperties;
+  Button checkDynamicProperties;
 
-  private Button checkDefaultProperties;
-  private Button checkCmdargsProperties;
+  Button checkDefaultProperties;
+  Button checkCmdargsProperties;
   
   /**
    * @wbp.parser.entryPoint
@@ -114,11 +85,6 @@ public class JPFSettingsTab extends AbstractJPFTab {
     setControl(mainComposite);
     
     createConfigTable(mainComposite);
-    createTableButtons(mainComposite);
-    
-    checkDynamicProperties.setSelection(true);
-    checkCmdargsProperties.setSelection(true);
-
   }
   
   /**
@@ -183,8 +149,8 @@ public class JPFSettingsTab extends AbstractJPFTab {
     table.setHeaderVisible(true);
     table.setLinesVisible(true);
     table.setFont(font);
-   configTable.setContentProvider(new HierarchicalPropertyContentProvider());
-   configTable.setLabelProvider(new HierarchicalPropertyLabelProvider());
+   configTable.setContentProvider(new ExtendedPropertyContentProvider(checkAppProperties, checkCmdargsProperties, checkDefaultProperties, checkDynamicProperties, CONFIG_TO_NAME_MAP));
+   configTable.setLabelProvider(new ExtendedPropertyLabelProvider());
   //  environmentTable.setColumnProperties(new String[] {P_VARIABLE, P_VALUE});
     configTable.addSelectionChangedListener(new ISelectionChangedListener() {
       public void selectionChanged(SelectionChangedEvent event) {
@@ -236,45 +202,10 @@ public class JPFSettingsTab extends AbstractJPFTab {
         }
       }
     });
+    
+    new TableSorter(configTable);
   }
   
-  /**
-   * Creates the add/edit/remove buttons for the environment table
-   * @param parent the composite in which the buttons should be created
-   */
-  protected void createTableButtons(Composite parent) {
-    // Create button composite
-    Composite buttonComposite = SWTFactory.createComposite(parent, parent.getFont(), 1, 1, GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_END, 0, 0);
-
-    // Create buttons
-    envAddButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_New_4, null); 
-    envAddButton.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent event) {
-        //handleEnvAddButtonSelected();
-      }
-    });
-    envSelectButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_18, null); 
-    envSelectButton.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent event) {
-        //handleEnvSelectButtonSelected();
-      }
-    });
-    envEditButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_Edit_5, null); 
-    envEditButton.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent event) {
-        //handleEnvEditButtonSelected();
-      }
-    });
-    envEditButton.setEnabled(false);
-    envRemoveButton = createPushButton(buttonComposite, LaunchConfigurationsMessages.EnvironmentTab_Remove_6, null); 
-    envRemoveButton.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent event) {
-        //handleEnvRemoveButtonSelected();
-      }
-    });
-    envRemoveButton.setEnabled(false);
-  }
-
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
     
     Config config = new Config(new String[] {});
@@ -302,38 +233,6 @@ public class JPFSettingsTab extends AbstractJPFTab {
     configuration.setAttribute(ATTR_JPF_CMDARGSCONFIG, cmdArgsConfig);
   }
   
-  private static class ConfigCmdArgs extends Config {
-    public ConfigCmdArgs() {
-      super((String)null);
-    }
-    
-    private static String programArguments(ILaunchConfiguration configuration) {
-      String programArguments = "";
-      try {
-        programArguments = configuration.getAttribute(
-            IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "");
-      } catch (CoreException e) {
-        // no program args .. we're fine with that
-      }
-      return programArguments;
-    }
-
-    public Config publicLoadArgs(String programArguments) {
-      String[] programArgumentsArray = DebugPlugin.parseArguments(programArguments);
-      loadArgs(programArgumentsArray);
-      return this;
-    }
-    public static void reloadArgs(ILaunchConfiguration configuration, Map<String, String> map) {
-      Config newConfig = new ConfigCmdArgs().publicLoadArgs(programArguments(configuration));
-      map.clear();
-      for (Object key : newConfig.keySet()) {
-        if (key instanceof String) {
-          map.put((String)key, (String)newConfig.get(key));
-        }
-      }
-    }
-  }
-
   protected void setText(ILaunchConfiguration configuration, Text text, String attribute) throws CoreException {
     text.setText(configuration.getAttribute(attribute, ""));
   }
@@ -344,10 +243,21 @@ public class JPFSettingsTab extends AbstractJPFTab {
    */
   protected void updateConfig(ILaunchConfiguration configuration) {
     configTable.setInput(configuration);
+    updateLaunchConfigurationDialog();
   }
   
   @SuppressWarnings("unchecked")
   public void initializeFrom(ILaunchConfiguration configuration) {
+    
+    try {
+      checkDynamicProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_DYNAMICSELECTED, true));
+      checkCmdargsProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_CMDARGSSELECTED, true));
+      checkDefaultProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_DEFAULTSELECTED, false));
+      checkAppProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, false));
+    } catch (CoreException e1) {
+      // this should not happened
+      throw new IllegalStateException("Programmers fatal error...", e1);
+    }
     
     try {
       ConfigCmdArgs.reloadArgs(configuration, configuration.getAttribute(ATTR_JPF_CMDARGSCONFIG, Collections.<String,String>emptyMap()));
@@ -356,143 +266,12 @@ public class JPFSettingsTab extends AbstractJPFTab {
       EclipseJPF.logError("Config Command Arguments reload not successful", e);
     }
     updateConfig(configuration);
+    
+    
 
     super.initializeFrom(configuration);
   }
   
-  private static class ExtendedProperty {
-    private String property;
-    public String getProperty() {
-      return property;
-    }
-
-    public void setProperty(String property) {
-      this.property = property;
-    }
-
-    public String getConfigName() {
-      return configName;
-    }
-
-    public void setConfigName(String configName) {
-      this.configName = configName;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
-
-    private String configName;
-    private String value;
-    
-    public ExtendedProperty(String property, String value, String configName) {
-      this.property = property;
-      this.configName = configName;
-      this.value = value;
-    }
-  }
-  
-  /**
-   * Content provider for the config table
-   */
-  protected class HierarchicalPropertyContentProvider implements IStructuredContentProvider {
-    public Object[] getElements(Object inputElement) {
-      List<ExtendedProperty> elements = new ArrayList<ExtendedProperty>();
-      ILaunchConfiguration config = (ILaunchConfiguration) inputElement;
-      
-      List<String> attributes = new LinkedList<String>();
-      if (checkDefaultProperties.getSelection()) {
-        attributes.add(ATTR_JPF_DEFAULTCONFIG);
-      }
-      if (checkCmdargsProperties.getSelection()) {
-        attributes.add(ATTR_JPF_CMDARGSCONFIG);
-      }
-      if (checkAppProperties.getSelection()) {
-        attributes.add(ATTR_JPF_APPCONFIG);
-      }
-      if (checkDynamicProperties.getSelection()) {
-        attributes.add(ATTR_JPF_DYNAMICCONFIG);
-      }
-      for (String attribute : attributes) {
-        try {
-          @SuppressWarnings("unchecked")
-          Map<String, String> m = config.getAttribute(attribute, (Map<String, String>) Collections.<String, String>emptyMap());
-        
-          if (m != null && !m.isEmpty()) {
-            String friendlyName = CONFIG_TO_NAME_MAP.get(attribute);
-            for (String key : m.keySet()) {
-              elements.add(new ExtendedProperty(key, m.get(key), friendlyName));
-            }
-          }
-        
-        } catch (CoreException e) {
-          DebugUIPlugin.log(new Status(IStatus.ERROR, DebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, "Error reading configuration", e)); //$NON-NLS-1$
-        }
-      }
-      
-      return elements.toArray();
-    }
-    public void dispose() {
-    }
-    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-      if (newInput == null){
-        return;
-      }
-      if (viewer instanceof TableViewer){
-        TableViewer tableViewer= (TableViewer) viewer;
-        if (tableViewer.getTable().isDisposed()) {
-          return;
-        }
-        tableViewer.setComparator(new ViewerComparator() {
-          public int compare(Viewer iviewer, Object e1, Object e2) {
-            if (e1 == null) {
-              return -1;
-            } else if (e2 == null) {
-              return 1;
-            } else {
-              return ((ExtendedProperty)e1).getProperty().compareToIgnoreCase(((ExtendedProperty)e2).getProperty());
-            }
-          }
-        });
-      }
-    }
-  }
-  
-  /**
-   * Label provider for the config table
-   */
-  public class HierarchicalPropertyLabelProvider extends LabelProvider implements ITableLabelProvider {
-    public String getColumnText(Object element, int columnIndex)  {
-      String result = null;
-      if (element != null) {
-        ExtendedProperty var = (ExtendedProperty) element;
-        switch (columnIndex) {
-          case 0: // variable
-            result = var.getProperty();
-            break;
-          case 1: // value
-            result = var.getValue();
-            break;
-          case 2: // location
-            result = var.getConfigName();
-            break;
-        }
-      }
-      return result;
-    }
-    
-    public Image getColumnImage(Object element, int columnIndex) {
-      if (columnIndex == 0) {
-        return DebugPluginImages.getImage(IDebugUIConstants.IMG_OBJS_ENV_VAR);
-      }
-      return null;
-    }
-  }
-
   String getJpfFileLocation() {
     return jpfFileLocationText.getText().trim();
   }
@@ -504,6 +283,11 @@ public class JPFSettingsTab extends AbstractJPFTab {
 
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
+    configuration.setAttribute(ATTR_JPF_SETTINGS_DYNAMICSELECTED, checkDynamicProperties.getSelection());
+    configuration.setAttribute(ATTR_JPF_SETTINGS_CMDARGSSELECTED, checkCmdargsProperties.getSelection());
+    configuration.setAttribute(ATTR_JPF_SETTINGS_DEFAULTSELECTED, checkDefaultProperties.getSelection());
+    configuration.setAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, checkAppProperties.getSelection());
+    
 //    IProject implicitProject = null;
     
 //    TableItem[] items = environmentTable.getTable().getItems();
