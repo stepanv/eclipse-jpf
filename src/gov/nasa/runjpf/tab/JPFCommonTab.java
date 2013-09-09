@@ -92,7 +92,7 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Combo jpfCombo;
 
-  private Button btnJpfConfigure;
+  private Button btnJpfReset;
 
   private Button buttonTraceBrowseWorkspace;
 
@@ -108,8 +108,10 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button radioJpfFileSelected;
 
-  public static final ExtensionInstallations jpfInstallations = new ExtensionInstallations(ExtensionInstallation.embeddedExtensionFactory(new String[] { "lib/jpf.jar" }));
-  
+  private static final String REQUIRED_LIBRARY = "lib/jpf.jar";
+  private static final String EXTENSION_PROJECT = "jpf-core";
+  public static final ExtensionInstallations jpfInstallations = ExtensionInstallations.factory(REQUIRED_LIBRARY);
+      
   private static final String TEMP_DIR_PATH;
   
   static {
@@ -562,8 +564,20 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     jpfCombo = SWTFactory.createCombo(groupRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
     
-    btnJpfConfigure = new Button(groupRuntime, SWT.NONE);
-    btnJpfConfigure.setText("Configure");
+    btnJpfReset = new Button(groupRuntime, SWT.NONE);
+    btnJpfReset.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        jpfInstallations.reset(REQUIRED_LIBRARY);
+        try {
+          initializeExtensionInstallations(getCurrentLaunchConfiguration(), jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
+        } catch (CoreException e1) {
+          // we don't care
+        }
+        updateLaunchConfigurationDialog();
+      }
+    });
+    btnJpfReset.setText("Reset");
     //ControlAccessibleListener.addListener(fCombo, fSpecificButton.getText());
     jpfCombo.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -633,9 +647,6 @@ public class JPFCommonTab extends AbstractJPFTab {
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
-      
-      lookupLocalInstallation(jpfInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""), "jpf-core");
-      
       jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
       setText(configuration, listenerText, JPFCommonTab.JPF_ATTR_OPT_LISTENER);
       setText(configuration, searchText, JPFCommonTab.JPF_ATTR_OPT_SEARCH);
@@ -674,15 +685,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       }
       textTraceFile.setText(configuration.getAttribute(JPF_ATTR_TRACE_FILE, defaultFileText));
       
-      String[] jpfs = (String[]) jpfInstallations.toStringArray(new String[jpfInstallations.size()]);
-      jpfCombo.setItems(jpfs);
-      jpfCombo.setVisibleItemCount(Math.min(jpfs.length, 20));
-      if (configuration.getAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, -1) == -1) {
-        // this is the first initialization ever
-        jpfCombo.select(jpfInstallations.getDefaultInstallationIndex());
-      } else {
-        jpfCombo.select(configuration.getAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
-      }
+      initializeExtensionInstallations(configuration, jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);

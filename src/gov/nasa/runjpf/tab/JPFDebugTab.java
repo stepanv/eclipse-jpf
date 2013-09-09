@@ -69,8 +69,20 @@ public class JPFDebugTab extends JPFCommonTab {
     
     fCombo = SWTFactory.createCombo(comp2, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
     
-    btnConfigure = new Button(comp2, SWT.NONE);
-    btnConfigure.setText("Configure");
+    buttonJdwpReset = new Button(comp2, SWT.NONE);
+    buttonJdwpReset.setText("Reset");
+    buttonJdwpReset.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        jdwpInstallations.reset(REQUIRED_LIBRARIES);
+        try {
+          initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
+        } catch (CoreException e1) {
+          // we don't care
+        }
+        updateLaunchConfigurationDialog();
+      }
+    });
     //ControlAccessibleListener.addListener(fCombo, fSpecificButton.getText());
     fCombo.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -82,11 +94,13 @@ public class JPFDebugTab extends JPFCommonTab {
     });
   }
   
+  private static final String[] REQUIRED_LIBRARIES = new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" };
+  private static final String EXTENSION_STRING = "jpf-jdwp";
   // TODO put them to an appropriate place
-  public static final ExtensionInstallations jdwpInstallations = new ExtensionInstallations(ExtensionInstallation.embeddedExtensionFactory(new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" }));
+  public static final ExtensionInstallations jdwpInstallations = ExtensionInstallations.factory(REQUIRED_LIBRARIES);
   
   private Label lblJdwp;
-  private Button btnConfigure;
+  private Button buttonJdwpReset;
   
   
   protected String getSitePropertiesPath() {
@@ -160,17 +174,7 @@ public class JPFDebugTab extends JPFCommonTab {
       btnDebugJpfItself.setEnabled(readioChoicesEnabled);
       btnDebugTheProgram.setEnabled(readioChoicesEnabled);
       
-      String[] jdwps = (String[]) jdwpInstallations.toStringArray(new String[jdwpInstallations.size()]);
-      fCombo.setItems(jdwps);
-      fCombo.setVisibleItemCount(Math.min(jdwps.length, 20));
-      fCombo.select(jdwpInstallations.getDefaultInstallationIndex());
-      
-      if (configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1) == -1) {
-        // this is the first initialization ever
-        fCombo.select(jdwpInstallations.getDefaultInstallationIndex());
-      } else {
-        fCombo.select(configuration.getAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
-      }
+      initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);

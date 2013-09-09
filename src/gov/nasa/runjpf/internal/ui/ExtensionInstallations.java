@@ -10,6 +10,21 @@ public class ExtensionInstallations extends ArrayList<ExtensionInstallation> imp
   public static final int EMBEDDED_INSTALLATION_INDEX = 0;
   public static final int NONEMBEDDED_INSTALLATION_INDEX = 1;
   
+  public static ExtensionInstallations factory(String library) {
+    return factory(new String[] {library});
+  }
+  public static ExtensionInstallations factory(String[] libraries) {
+    return new ExtensionInstallations(ExtensionInstallation.embeddedExtensionFactory(libraries));
+  }
+  
+  public void reset(String library) {
+    reset(new String[] {library});
+  }
+  public void reset(String[] libraries) {
+    clear();
+    add(EMBEDDED_INSTALLATION_INDEX, ExtensionInstallation.embeddedExtensionFactory(libraries));
+  }
+  
   public ExtensionInstallations(ExtensionInstallation embedded) {
     add(EMBEDDED_INSTALLATION_INDEX, embedded);
   }

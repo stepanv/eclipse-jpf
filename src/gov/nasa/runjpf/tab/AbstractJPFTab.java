@@ -3,6 +3,7 @@ package gov.nasa.runjpf.tab;
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.internal.ui.ClassSearchEngine;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
+import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IType;
@@ -26,6 +29,7 @@ import org.eclipse.jdt.internal.debug.ui.launcher.MainMethodSearchEngine;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Text;
 
 @SuppressWarnings("restriction")
@@ -123,7 +127,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
     return originalType;
   }
   
-  protected Map<String, File> getSiteProjects(Config config) {
+  protected static Map<String, File> getSiteProjects(Config config) {
     Map<String, File> projects = new HashMap<>();
 
     for (String projId : config.getEntrySequence()) {
@@ -150,7 +154,10 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
     return projects;
 }
 
-protected void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallations, String appJpfFile, String extension) {
+ protected static void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallations, String extension) {
+   lookupLocalInstallation(jdwpInstallations, null, extension);
+ }
+protected static void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallations, String appJpfFile, String extension) {
   Config config;
   if (appJpfFile != null) {
     config = new Config(new String[] {appJpfFile});
@@ -169,10 +176,29 @@ protected void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallat
   Map<String, File> projects = getSiteProjects(config);
   if (projects.containsKey(extension)) {
     String pseudoPath = projects.get(extension).getAbsolutePath();
-    ExtensionInstallation localJdwpInstallation = new ExtensionInstallation("Locally installed as "+extension+" extension", pseudoPath);
+    ExtensionInstallation localJdwpInstallation = new ExtensionInstallation("Locally installed as " + extension + " extension", pseudoPath);
     if (!jdwpInstallations.contains(localJdwpInstallation)) {
       jdwpInstallations.add(localJdwpInstallation);
     }
+  }
+}
+
+protected void initializeExtensionInstallations(ILaunchConfiguration configuration, ExtensionInstallations extensionInstallations, Combo installationCombo, String installationIndexAttribute, String extension) throws CoreException {
+  String appJpfFile = null;
+  if (configuration != null) {
+    lookupLocalInstallation(extensionInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""), extension);
+  } else {
+    lookupLocalInstallation(extensionInstallations, extension);
+  }
+  
+  String[] jpfs = (String[]) extensionInstallations.toStringArray(new String[extensionInstallations.size()]);
+  installationCombo.setItems(jpfs);
+  installationCombo.setVisibleItemCount(Math.min(jpfs.length, 20));
+  if (configuration == null || configuration.getAttribute(installationIndexAttribute, -1) == -1) {
+    // this is the first initialization ever
+    installationCombo.select(extensionInstallations.getDefaultInstallationIndex());
+  } else {
+    installationCombo.select(configuration.getAttribute(installationIndexAttribute, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
   }
 }
 }
