@@ -48,6 +48,11 @@ public class JPFDebugger extends StandardVMDebugger {
     super(vmInstance);
     this.debugVM = debugVM;
   }
+  
+  @Override
+  protected Map<String, String> getDefaultProcessMap() {
+    return JPFRunner.jpfProcessDefaultMap();
+  }
 
   /*
    * (non-Javadoc)

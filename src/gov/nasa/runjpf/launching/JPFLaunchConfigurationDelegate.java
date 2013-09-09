@@ -3,6 +3,7 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
+import gov.nasa.runjpf.internal.launching.JPFRunner;
 import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
 
@@ -159,11 +160,11 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         // getVMRunner(configuration, mode)
         // .run(runConfig, launch, monitor);
         IVMRunner runner;
+        IVMInstall vm = verifyVMInstall(configuration);
         if (ILaunchManager.DEBUG_MODE.equals(mode) && (debugBothVMs || !debugJPFInsteadOfTheProgram)) {
-          IVMInstall vm = verifyVMInstall(configuration);
           runner = new JPFDebugger(vm, debugBothVMs);
         } else {
-          runner = getVMRunner(configuration, mode);
+          runner = new JPFRunner(vm);
         }
         runner.run(runConfig, launch, monitor);
 

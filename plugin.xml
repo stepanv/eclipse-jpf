@@ -126,7 +126,54 @@
       </description>
     </shortcut>
   </extension>
-
+  
+<extension
+         point="org.eclipse.ui.console.consolePatternMatchListeners">
+      <consolePatternMatchListener
+            class="org.eclipse.jdt.internal.debug.ui.console.JavaConsoleTracker"
+            regex="\(\S*${java_extensions_regex}\S*\)"
+            qualifier="${java_extensions_regex}"
+            id="org.eclipse.jdt.debug.ui.JavaConsoleTracker">
+         <enablement>
+            <or>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="gov.nasa.jpf.ui.jpfProcess"/>
+            </or>
+         </enablement>
+      </consolePatternMatchListener>
+      <consolePatternMatchListener
+            class="org.eclipse.jdt.internal.debug.ui.console.JavaNativeConsoleTracker"
+            regex="\(Native Method\)"
+            qualifier="Native Method"
+            id="org.eclipse.jdt.debug.ui.JavaNativeConsoleTracker">
+         <enablement>
+            <or>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="gov.nasa.jpf.ui.jpfProcess"/>
+            </or>
+         </enablement>
+      </consolePatternMatchListener>
+            <consolePatternMatchListener
+            class="org.eclipse.jdt.internal.debug.ui.console.JavaExceptionConsoleTracker"
+            regex="\w[^\(\s]+Exception[\s|:]"
+            qualifier="Exception"
+            id="org.eclipse.jdt.debug.ui.JavaExceptionConsoleTracker">
+         <enablement>
+            <or>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="gov.nasa.jpf.ui.jpfProcess"/>
+            </or>
+         </enablement>
+      </consolePatternMatchListener>
+      <consolePatternMatchListener
+            class="gov.nasa.runjpf.JPFProcessPatternMatcher"
+            regex="([\w\\/]+\.java)(?::(\d+))?"
+            qualifier="java"
+            id="gov.nasa.runjpf.JPFProcessPatternMatcher">
+         <enablement>
+            <or>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="gov.nasa.jpf.ui.jpfProcess"/>
+            </or>
+         </enablement>
+      </consolePatternMatchListener>
+   </extension> 
 
   <extension point="org.eclipse.ui.preferencePages">
     <page class="gov.nasa.runjpf.options.Preferences" id="eclipse-jpf.preferences"
