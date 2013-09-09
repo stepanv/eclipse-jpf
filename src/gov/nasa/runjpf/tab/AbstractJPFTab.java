@@ -31,17 +31,6 @@ import org.eclipse.swt.widgets.Text;
 @SuppressWarnings("restriction")
 public abstract class AbstractJPFTab extends JavaLaunchTab {
   
-  public static class Foo { 
-    Foo() {
-      System.out.println("hello");
-      for (StackTraceElement stack : Thread.currentThread().getStackTrace()) {
-        System.out.println(stack);
-      }
-    }
-  }
-  
-  Foo f = new Foo();
-  
   public static final String JPF_FILE_LOCATION = "JPF_FILE";
   public static final String JPF_DEBUG_BOTHVMS = "JPF_DEBUG_VM";
   public static final String JPF_DEBUG_JPF_INSTEADOFPROGRAM = "JPF_DEBUG_JPF_INSTEADOFPROGRAM";

@@ -83,7 +83,7 @@ public class JPFDebugTab extends JPFCommonTab {
   }
   
   // TODO put them to an appropriate place
-  public static final ExtensionInstallations jdwpInstallations = new ExtensionInstallations(new ExtensionInstallation("Embedded", ExtensionInstallation.generateClasspathEmbedded(new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" })));
+  public static final ExtensionInstallations jdwpInstallations = new ExtensionInstallations(ExtensionInstallation.embeddedExtensionFactory(new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" }));
   
   private Label lblJdwp;
   private Button btnConfigure;
@@ -230,6 +230,10 @@ public class JPFDebugTab extends JPFCommonTab {
     setMessage(null);
     setWarningMessage(null);
     if (fCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
+      if (!jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).isValid()) {
+        setErrorMessage("Embedded JDWP installation in error due to: " + jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).toString());
+        return false;
+      }
       // selected embedded
       if (jdwpInstallations.size() > 1) {
         // we have other than embedded jdwps

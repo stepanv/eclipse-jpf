@@ -108,7 +108,7 @@ public class JPFCommonTab extends AbstractJPFTab {
 
   private Button radioJpfFileSelected;
 
-  public static final ExtensionInstallations jpfInstallations = new ExtensionInstallations(new ExtensionInstallation("Embedded", ExtensionInstallation.generateClasspathEmbedded(new String[] { "lib/jpf.jar" })));
+  public static final ExtensionInstallations jpfInstallations = new ExtensionInstallations(ExtensionInstallation.embeddedExtensionFactory(new String[] { "lib/jpf.jar" }));
   
   private static final String TEMP_DIR_PATH;
   
@@ -912,6 +912,12 @@ public class JPFCommonTab extends AbstractJPFTab {
 
     if (jpfCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
       // selected embedded
+      
+      if (!jpfInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).isValid()) {
+        setErrorMessage("Embedded JPF installation in error due to: " + jpfInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).toString());
+        return false;
+      }
+      
       if (jpfInstallations.size() > 1) {
         // we have other than embedded jdwps
         setWarningMessage("If embedded JPF is used it is likely, it will interfere with locally installed jpf-core extension.");
