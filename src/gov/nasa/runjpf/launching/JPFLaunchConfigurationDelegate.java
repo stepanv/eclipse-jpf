@@ -101,6 +101,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         }
       }
       
+
+      // Create VM config
+      
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>();
