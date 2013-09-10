@@ -11,23 +11,10 @@ import org.eclipse.swt.graphics.Image;
  */
 @SuppressWarnings("restriction")
 public class ExtendedPropertyLabelProvider extends LabelProvider implements ITableLabelProvider {
+ 
+  @Override
   public String getColumnText(Object element, int columnIndex)  {
-    String result = null;
-    if (element != null) {
-      ExtendedProperty var = (ExtendedProperty) element;
-      switch (columnIndex) {
-        case 0: // variable
-          result = var.getProperty();
-          break;
-        case 1: // value
-          result = var.getValue();
-          break;
-        case 2: // location
-          result = var.getConfigName();
-          break;
-      }
-    }
-    return result;
+    return ((ExtendedProperty)element).get(columnIndex);
   }
   
   public Image getColumnImage(Object element, int columnIndex) {

@@ -34,4 +34,18 @@ class ExtendedProperty {
     this.configName = configName;
     this.value = value;
   }
+
+  public String get(int column) {
+    switch (column) {
+    case 0:
+      return property;
+    case 1:
+      return value;
+    case 2:
+      return configName;
+    default:
+      throw new IllegalStateException("Implementation error! Wrong number of columns!");
+    }
+    
+  }
 }

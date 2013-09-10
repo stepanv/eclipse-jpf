@@ -2,6 +2,7 @@ package gov.nasa.runjpf.tab.internal;
 
 import java.util.Arrays;
 
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -58,13 +59,13 @@ public class TableSorter {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private int  compareElements(Object e1, Object e2) {
-    IColumnContentProvider columnValueProvider = (IColumnContentProvider) tableViewer.getContentProvider();
+    ITableLabelProvider columnValueProvider = (ITableLabelProvider) tableViewer.getLabelProvider();
     Table table = tableViewer.getTable();
     int index = Arrays.asList(table.getColumns()).indexOf(table.getSortColumn());
     int result = 0;
     if (index != -1) {
-      Comparable c1 = columnValueProvider.getValue(e1, index);
-      Comparable c2 = columnValueProvider.getValue(e2, index);
+      Comparable c1 = columnValueProvider.getColumnText(e1, index);
+      Comparable c2 = columnValueProvider.getColumnText(e2, index);
       result = c1.compareTo(c2);
     }
     return table.getSortDirection() == SWT.UP ? result : -result;

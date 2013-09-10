@@ -19,7 +19,7 @@ import org.eclipse.swt.widgets.Button;
 /**
  * Content provider for the config table
  */
-public class ExtendedPropertyContentProvider implements IStructuredContentProvider, IColumnContentProvider {
+public class ExtendedPropertyContentProvider implements IStructuredContentProvider {
   /**
    * 
    */
@@ -92,18 +92,4 @@ public class ExtendedPropertyContentProvider implements IStructuredContentProvid
     }
   }
 
-  @Override
-  public Comparable<?> getValue(Object element, int column) {
-    ExtendedProperty extendedProperty = (ExtendedProperty) element;
-    switch (column) {
-    case 0:
-      return extendedProperty.getProperty();
-    case 1:
-      return extendedProperty.getValue();
-    case 2:
-      return extendedProperty.getConfigName();
-    default:
-      throw new IllegalStateException("Implementation error! Wrong number of columns!");
-    }
-  }
 }
