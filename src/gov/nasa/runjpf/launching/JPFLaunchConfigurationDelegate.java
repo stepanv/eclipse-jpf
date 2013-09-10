@@ -1,11 +1,13 @@
 package gov.nasa.runjpf.launching;
 
+import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.internal.launching.JPFRunner;
 import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
+import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
 import java.io.File;
 import java.text.MessageFormat;
@@ -87,8 +89,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       } else {
       
         try {
+          Config config = LookupConfigHelper.defaultConfigFactory(configuration);
           EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
-          File siteProperties = eclipseJpfLauncher.lookupSiteProperties();
+          File siteProperties = new File(config.getString("jpf.site"));
           File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
           
           classpath.add(jpfRunJar.getAbsolutePath());
