@@ -3,6 +3,9 @@ package gov.nasa.runjpf.options;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 
+import java.io.File;
+
+import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.IntegerFieldEditor;
@@ -39,12 +42,20 @@ public class Preferences extends FieldEditorPreferencePage implements IWorkbench
     addField(args);
     addField(vm_args);
     
-    addField(new StringFieldEditor(EclipseJPFLauncher.COMMON_DIR, "Common dir for traces", getFieldEditorParent()));
+    addField(new DirectoryFieldEditor(EclipseJPFLauncher.COMMON_DIR, "Common dir for traces", getFieldEditorParent()));
   }
 
   @Override
   public void init(IWorkbench workbench) {
 
   }
+
+  @Override
+  public boolean isValid() {
+    // TODO Auto-generated method stub
+    return super.isValid();
+  }
+  
+  
 
 }

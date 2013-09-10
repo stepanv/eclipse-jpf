@@ -57,15 +57,14 @@ public class TableSorter {
     tableViewer.refresh();
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   private int  compareElements(Object e1, Object e2) {
     ITableLabelProvider columnValueProvider = (ITableLabelProvider) tableViewer.getLabelProvider();
     Table table = tableViewer.getTable();
     int index = Arrays.asList(table.getColumns()).indexOf(table.getSortColumn());
     int result = 0;
     if (index != -1) {
-      Comparable c1 = columnValueProvider.getColumnText(e1, index);
-      Comparable c2 = columnValueProvider.getColumnText(e2, index);
+      String c1 = columnValueProvider.getColumnText(e1, index);
+      String c2 = columnValueProvider.getColumnText(e2, index);
       result = c1.compareTo(c2);
     }
     return table.getSortDirection() == SWT.UP ? result : -result;

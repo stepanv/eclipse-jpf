@@ -106,8 +106,6 @@ public class JPFDebugTab extends JPFCommonTab {
   protected String getSitePropertiesPath() {
     return EclipseJPF.getDefault().getPluginPreferences().getString(EclipseJPFLauncher.SITE_PROPERTIES_PATH);
   }
-
-  
   
   @Override
   protected void runtimePrepend(Composite parent) {

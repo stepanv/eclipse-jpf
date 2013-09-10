@@ -51,38 +51,16 @@ public abstract class JPFLauncher {
    */
   public static final int DEFAULT_PORT = 4242;
   
-  public static final String COMMON_DIR_PATH = getDefaultWorkingDirectory();
+  public static final String COMMON_DIR_PATH = getDefaultCommonDirectory();
 
-  static String getDefaultWorkingDirectory() {
-    String tmpDirString;
-    java.nio.file.Path tmpPath = null;
-    try {
-      tmpPath = Files.createTempFile("tmpdirlookup", ".tmp");
-      File tmpDir = tmpPath.getParent().toFile();
-
-      tmpDirString = tmpDir.getAbsolutePath();
-
-    } catch (IOException e) {
-
-      tmpDirString = System.getProperty("java.io.tmpdir");
-      if (tmpDirString == null) {
-        File[] roots = File.listRoots();
-        if (roots != null && roots.length > 0) {
-          tmpDirString = roots[0].getAbsolutePath();
-        } else {
-          throw new IllegalStateException("Unable to determine any directory as a temporary direcotyr");
-        }
-      }
-    } finally {
-      if (tmpPath != null) {
-        File tmpFile = tmpPath.toFile();
-        if (tmpFile != null && tmpFile.exists()) {
-          try {
-            Files.delete(tmpPath);
-          } catch (IOException e) {
-            // we don't care
-          }
-        }
+  private static String getDefaultCommonDirectory() {
+    String tmpDirString = System.getProperty("java.io.tmpdir");
+    if (tmpDirString == null) {
+      File[] roots = File.listRoots();
+      if (roots != null && roots.length > 0) {
+        tmpDirString = roots[0].getAbsolutePath();
+      } else {
+        throw new IllegalStateException("Unable to determine any directory as a temporary direcotyr");
       }
     }
     return tmpDirString;
