@@ -3,7 +3,7 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
-import gov.nasa.runjpf.tab.JPFCommonTab;
+import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
 import gov.nasa.runjpf.tab.JPFSourceLookupTab;
@@ -95,7 +95,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         for (ILaunchConfiguration config : configs) {
 
           if (isJpfRunConfiguration(config)) {
-            String currentProejctName = config.getAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFFILELOCATION, "");
+            String currentProejctName = config.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "");
             File foundFile = new File(currentProejctName);
             if (foundFile.equals(selectedFile)) {
               return config;
@@ -203,7 +203,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, launchConfigName);
         
         JPFSettingsTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
-        JPFCommonTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
+        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFArgumentsTab.defaults(wc);
         

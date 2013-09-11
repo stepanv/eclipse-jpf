@@ -5,7 +5,7 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.internal.launching.JPFRunner;
-import gov.nasa.runjpf.tab.JPFCommonTab;
+import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
 import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
@@ -39,8 +39,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_DEBUGBOTHVMS, false);
-    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
+    boolean debugBothVMs = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGBOTHVMS, false);
+    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
 //    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
 //    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
 //    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
@@ -80,7 +80,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
 
       List<String> classpath = new LinkedList<>();
-      String embeddedJpfClasspath = configuration.getAttribute(JPFCommonTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String)null);
+      String embeddedJpfClasspath = configuration.getAttribute(JPFRunTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String)null);
       
       if (embeddedJpfClasspath != null) {
         // using embedded JPF
@@ -106,8 +106,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>();
-      if (configuration.getAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
-        programArgs.add(configuration.getAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
+      if (configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
+        programArgs.add(configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
       } // else +target=some.Class is used
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       

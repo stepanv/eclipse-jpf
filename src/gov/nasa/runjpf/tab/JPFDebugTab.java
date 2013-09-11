@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 
 @SuppressWarnings("restriction")
-public class JPFDebugTab extends JPFCommonTab {
+public class JPFDebugTab extends JPFRunTab {
 
   private Button checkDebugBothTargets;
   private Button radioDebugJpfItself;
@@ -125,7 +125,7 @@ public class JPFDebugTab extends JPFCommonTab {
    *          APF Application properties file (*.jpf)
    */
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
-    JPFCommonTab.initDefaultConfiguration(configuration, projectName, jpfFile);
+    JPFRunTab.initDefaultConfiguration(configuration, projectName, jpfFile);
 
     // it's better to not use the embedded one if normal extension is detected
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
@@ -177,7 +177,7 @@ public class JPFDebugTab extends JPFCommonTab {
       if (!debugJpfItself || debugBothVms) {
         // we're debugging the program itself
 
-        int selectedJdwpInstallation = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
+        int selectedJdwpInstallation = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
 
         if (selectedJdwpInstallation == -1) {
           EclipseJPF.logError("Obtained incorret jdwp installation index");
