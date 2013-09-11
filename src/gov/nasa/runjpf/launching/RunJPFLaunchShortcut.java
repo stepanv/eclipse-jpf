@@ -1,6 +1,7 @@
 package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
@@ -195,25 +196,19 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
   }
 
   public ILaunchConfiguration createConfiguration(IResource type) {
-    if (type == null)
-      return null;
+    ILaunchConfiguration config = null;
 
-    if (type instanceof IFile) {
-      String typeName = ((IFile) type).getName();
-
-      ILaunchConfiguration config = null;
-      ILaunchConfigurationWorkingCopy wc = null;
+    if (type != null && type instanceof IFile) {
       try {
         ILaunchConfigurationType configType = getConfigurationType();
-
-        String launchConfigName = getLaunchManager().generateLaunchConfigurationName(typeName);
-
-        wc = configType.newInstance(null, launchConfigName);
+        String launchConfigName = getLaunchManager().generateLaunchConfigurationName(((IFile)type).getName());
+        ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, launchConfigName);
         
         JPFSettingsTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
-
+        JPFArgumentsTab.defaults(wc);
+        
         addProjectAsSourceLookupAndSourcepath(type.getProject(), wc);
         addProjectToClasspath(wc);
         
@@ -224,9 +219,8 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       } catch (CoreException exception) {
         showError(exception.getStatus().getMessage());
       }
-      return config;
     }
-    return null;
+    return config;
   }
 
   private void addProjectToClasspath(ILaunchConfigurationWorkingCopy wc) {

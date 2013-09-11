@@ -14,6 +14,10 @@ public class JPFArgumentsTab extends JavaArgumentsTab {
   public void setDefaults(ILaunchConfigurationWorkingCopy config) {
     super.setDefaults(config);
     
+    defaults(config);
+  }
+  
+  public static void defaults(ILaunchConfigurationWorkingCopy config) {
     String vmArgs = Platform.getPreferencesService().getString(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.VM_ARGS, "", null);
     config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);
     
