@@ -1,13 +1,18 @@
 package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.tab.JPFClasspathTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
+import gov.nasa.runjpf.tab.JPFSourceLookupTab;
 import gov.nasa.runjpf.util.ProjectUtil;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -27,8 +32,11 @@ import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.debug.ui.ILaunchGroup;
 import org.eclipse.debug.ui.ILaunchShortcut;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.debug.ui.classpath.ClasspathModel;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -122,11 +130,11 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
    * @param workingCopy
    *          Where to add the given project.
    */
-  private void addProjectAsSourceLookup(IProject project, ILaunchConfigurationWorkingCopy workingCopy) {
+  private void addProjectAsSourceLookupAndSourcepath(IProject project, ILaunchConfigurationWorkingCopy workingCopy) {
     try {
       ISourceLookupDirector sourceLookupDirector = new JavaSourceLookupDirector();
-      String initMemento = workingCopy.getAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_MEMENTO, "");
-      if (initMemento != null && !initMemento.trim().equals("")) {
+      String initMemento = workingCopy.getAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_MEMENTO, (String)null);
+      if (initMemento != null) {
         sourceLookupDirector.initializeFromMemento(initMemento);
       }
 
@@ -139,6 +147,11 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
       sourceLookupDirector.setSourceContainers(existingContainers);
       workingCopy.setAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_MEMENTO, sourceLookupDirector.getMemento());
+      
+      // add the result to the dynamic config
+      @SuppressWarnings("unchecked")
+      Map<String, String> dynamicConfig = workingCopy.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
+      dynamicConfig.put("sourcepath", JPFSourceLookupTab.generateSourcepath(existingContainers));
 
     } catch (Exception e) {
       EclipseJPF.logError("Cannot add resources", e);
@@ -201,7 +214,8 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
 
-        addProjectAsSourceLookup(type.getProject(), wc);
+        addProjectAsSourceLookupAndSourcepath(type.getProject(), wc);
+        addProjectToClasspath(wc);
         
         // set mapped resource , let next time we could execute this
         // directly from menuitem.
@@ -213,6 +227,19 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       return config;
     }
     return null;
+  }
+
+  private void addProjectToClasspath(ILaunchConfigurationWorkingCopy wc) {
+
+    try {
+      IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(wc);
+      entries = JavaRuntime.resolveRuntimeClasspath(entries, wc);
+      JPFClasspathTab.generateClasspath(wc, entries);
+    } catch (CoreException e) {
+      EclipseJPF.logError("A problem occurred while generating the JPF classpath!", e);
+      // we don't have to propagate the problem further
+    }
+
   }
 
   private void showError(String message) {

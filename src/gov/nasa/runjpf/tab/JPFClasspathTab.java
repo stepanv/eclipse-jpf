@@ -26,54 +26,59 @@ public class JPFClasspathTab extends JavaClasspathTab {
     IRuntimeClasspathEntry entry;
     IClasspathEntry userEntry;
     for (int i = 0; i < user.length; i++) {
-      userEntry= user[i];
+      userEntry = user[i];
       entry = null;
       if (userEntry instanceof ClasspathEntry) {
-        entry = ((ClasspathEntry)userEntry).getDelegate();
+        entry = ((ClasspathEntry) userEntry).getDelegate();
       } else if (userEntry instanceof IRuntimeClasspathEntry) {
-        entry= (IRuntimeClasspathEntry) user[i];
+        entry = (IRuntimeClasspathEntry) user[i];
       }
       if (entry != null) {
         entry.setClasspathProperty(IRuntimeClasspathEntry.USER_CLASSES);
         entries.add(entry);
       }
-    }     
+    }
     return entries.toArray(new IRuntimeClasspathEntry[entries.size()]);
   }
-  
+
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     super.performApply(configuration);
-    
+
     // we also want to put classpath entries to the dynamic config
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> dynamicConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, (Map<String, String>)null);
-      
+      Map<String, String> dynamicConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, (Map<String, String>) null);
+
       if (dynamicConfig != null) {
-        StringBuilder classpathFlattened = new StringBuilder();
         IRuntimeClasspathEntry[] entries = JavaRuntime.resolveRuntimeClasspath(getUserClasspath(), configuration);
-        List<String> userEntries = new ArrayList<String>(entries.length);
-        Set<String> set = new HashSet<String>(entries.length);
-       
-        for (int i = 0; i < entries.length; i++) {
-          if (entries[i].getClasspathProperty() == IRuntimeClasspathEntry.USER_CLASSES) {
-            String location = entries[i].getLocation();
-            if (location != null) {
-              if (!set.contains(location)) {
-                classpathFlattened.append(location).append(",");
-                userEntries.add(location);
-                set.add(location);
-              }
-            }
-          }
-        }
-        dynamicConfig.put("classpath", classpathFlattened.toString());
+        dynamicConfig.put("classpath", generateClasspath(configuration, entries));
       }
     } catch (CoreException e) {
       EclipseJPF.logError("Cannot store classpath entries into the dynamic config!", e);
     }
   }
-  
+
+  public static String generateClasspath(ILaunchConfigurationWorkingCopy configuration, IRuntimeClasspathEntry[] entries) {
+    StringBuilder classpathFlattened = new StringBuilder("");
+
+    Set<String> set = new HashSet<String>(entries.length);
+
+    for (int i = 0; i < entries.length; i++) {
+      if (entries[i].getClasspathProperty() == IRuntimeClasspathEntry.USER_CLASSES) {
+        String location = entries[i].getLocation();
+        if (location != null) {
+          if (!set.contains(location)) {
+            classpathFlattened.append(location).append(",");
+            set.add(location);
+          }
+        }
+      }
+    }
+    if (classpathFlattened.length() > 0) {
+      return classpathFlattened.substring(0, classpathFlattened.length() - 1);
+    }
+    return null;
+  }
 
 }

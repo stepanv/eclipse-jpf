@@ -1,26 +1,21 @@
 package gov.nasa.runjpf.tab;
 
-import java.io.File;
-import java.net.URI;
+import gov.nasa.runjpf.EclipseJPF;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import gov.nasa.runjpf.EclipseJPF;
-
-import org.eclipse.core.filesystem.EFS;
-import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
-import org.eclipse.debug.core.sourcelookup.containers.CompositeSourceContainer;
+import org.eclipse.debug.core.sourcelookup.containers.AbstractSourceContainer;
 import org.eclipse.debug.core.sourcelookup.containers.ContainerSourceContainer;
 import org.eclipse.debug.ui.sourcelookup.SourceLookupTab;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
-import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 
 @SuppressWarnings("restriction")
 public class JPFSourceLookupTab extends SourceLookupTab {
@@ -41,11 +36,7 @@ public class JPFSourceLookupTab extends SourceLookupTab {
         JavaSourceLookupDirector director = new JavaSourceLookupDirector();
         director.initializeFromMemento(memento, configuration);
         
-        StringBuilder sourceLookupPathsFlattened = new StringBuilder();
-        Set<IPath> sourceLookupPaths = new HashSet<>();
-        lookupDirectories(director.getSourceContainers(), sourceLookupPaths, sourceLookupPathsFlattened);
-      
-        dynamicConfig.put("sourcepath", sourceLookupPathsFlattened.toString());
+        dynamicConfig.put("sourcepath", generateSourcepath(director.getSourceContainers()));
       }
     } catch (CoreException e) {
       EclipseJPF.logError("Cannot get sources!", e);
@@ -53,17 +44,27 @@ public class JPFSourceLookupTab extends SourceLookupTab {
     }
     
   }
+  
+  public static String generateSourcepath(ISourceContainer[] sourceContainers) throws CoreException {
+    StringBuilder sourceLookupPathsFlattened = new StringBuilder();
+    Set<IPath> sourceLookupPaths = new HashSet<>();
+    
+    generateSourcepathRecursively(sourceContainers, sourceLookupPaths, sourceLookupPathsFlattened);
+    
+    if (sourceLookupPathsFlattened.length() > 0) {
+      return sourceLookupPathsFlattened.substring(0, sourceLookupPathsFlattened.length() - 1);
+    }
+    return null;
+  }
 
-  private void lookupDirectories(ISourceContainer[] sourceContainers, Set<IPath> sourceLookupPaths, StringBuilder sourceLookupPathsFlattened) throws CoreException {
-    for (ISourceContainer container : sourceContainers) {
-      System.out.println(container);
-      if (container instanceof JavaProjectSourceContainer) {
-        JavaProjectSourceContainer javaContainer = (JavaProjectSourceContainer)container;
-        lookupDirectories(javaContainer.getSourceContainers(), sourceLookupPaths, sourceLookupPathsFlattened);
+  private static void generateSourcepathRecursively(ISourceContainer[] sourceContainers, Set<IPath> sourceLookupPaths, StringBuilder sourceLookupPathsFlattened) throws CoreException {
+    for (ISourceContainer sourceContainer : sourceContainers) {
+      if (sourceContainer instanceof AbstractSourceContainer) {
+        generateSourcepathRecursively(((AbstractSourceContainer)sourceContainer).getSourceContainers(), sourceLookupPaths, sourceLookupPathsFlattened);
       }
-      if (container instanceof ContainerSourceContainer) {
-        IContainer container2 = ((ContainerSourceContainer)container).getContainer();
-        IPath path = container2.getLocation();
+      if (sourceContainer instanceof ContainerSourceContainer) {
+        IContainer container = ((ContainerSourceContainer)sourceContainer).getContainer();
+        IPath path = container.getLocation();
         if (path != null && !sourceLookupPaths.contains(path)) {
           sourceLookupPaths.add(path);
           sourceLookupPathsFlattened.append(path.toOSString()).append(",");
@@ -71,6 +72,5 @@ public class JPFSourceLookupTab extends SourceLookupTab {
       }
     }
   }
-  
 
 }
