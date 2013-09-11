@@ -25,6 +25,7 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -241,6 +242,13 @@ public class JPFSettingsTab extends AbstractJPFTab {
     configuration.setAttribute(ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration, appPropPath));
     configuration.setAttribute(ATTR_JPF_CMDARGSCONFIG, LookupConfigHelper.programArgumentsConfigFactory(configuration));
 
+  }
+  
+  private static final Image icon = createImage("icons/search.png");
+  
+  @Override
+  public Image getImage() {
+    return icon;
   }
 
   protected void setText(ILaunchConfiguration configuration, Text text, String attribute) throws CoreException {

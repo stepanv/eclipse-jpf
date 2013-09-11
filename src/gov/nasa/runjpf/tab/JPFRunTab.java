@@ -46,12 +46,6 @@ public class JPFRunTab extends JPFCommonTab {
   }
 
   public void initializeFrom(ILaunchConfiguration configuration) {
-
-//    try {
-//    } catch (CoreException e) {
-//      EclipseJPF.logError("Error during the JPF initialization form", e);
-//    }
-
     super.initializeFrom(configuration);
   }
 
@@ -64,6 +58,14 @@ public class JPFRunTab extends JPFCommonTab {
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
     super.setDefaults(configuration);
     initDefaultConfiguration(configuration, null, null);
+  }
+  
+  @Override
+  public boolean isValid(ILaunchConfiguration config) {
+    setErrorMessage(null);
+    setMessage(null);
+    setWarningMessage(null);
+    return super.isValid(config);
   }
 
 }

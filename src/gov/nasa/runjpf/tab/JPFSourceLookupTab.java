@@ -32,11 +32,12 @@ public class JPFSourceLookupTab extends SourceLookupTab {
         
         // we cannot get this directly from this objects because it's too much encapsulated
         String memento = configuration.getAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_MEMENTO, (String)null);
-        
-        JavaSourceLookupDirector director = new JavaSourceLookupDirector();
-        director.initializeFromMemento(memento, configuration);
-        
-        dynamicConfig.put("sourcepath", generateSourcepath(director.getSourceContainers()));
+        if (memento != null) {
+          JavaSourceLookupDirector director = new JavaSourceLookupDirector();
+          director.initializeFromMemento(memento, configuration);
+          
+          dynamicConfig.put("sourcepath", generateSourcepath(director.getSourceContainers()));
+        } // if memento is null we cannot generate the sourcepath
       }
     } catch (CoreException e) {
       EclipseJPF.logError("Cannot get sources!", e);

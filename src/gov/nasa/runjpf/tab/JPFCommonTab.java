@@ -33,6 +33,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -265,6 +266,7 @@ public class JPFCommonTab extends AbstractJPFTab {
                                   file = file.trim();
                                   if (file.length() > 0) {
                                     jpfFileLocationText.setText(file);
+                                    updateLaunchConfigurationDialog();
                                     setDirty(true);
                                   }
                                 }
@@ -283,6 +285,7 @@ public class JPFCommonTab extends AbstractJPFTab {
 //                String fileLoc = VariablesPlugin.getDefault().getStringVariableManager()
 //                    .generateVariableExpression("workspace_loc", fileWorkspacePath); //$NON-NLS-1$
                                         jpfFileLocationText.setText(filePath);
+                                        setDirty(true);
                                         updateLaunchConfigurationDialog();
                                     	}
                                     }
@@ -694,13 +697,6 @@ public class JPFCommonTab extends AbstractJPFTab {
 //    return originalListener;
 //  }
   
-  /**
-   * @deprecated Use {@link #attributeEquals(ILaunchConfiguration,String,String)} instead
-   */
-  public boolean attributeEquals(String attributeName, ILaunchConfiguration configuration, String valueCandidate) throws CoreException {
-    return attributeEquals(configuration, attributeName, valueCandidate);
-  }
-
   public boolean attributeEquals(ILaunchConfiguration configuration, String stringAttributeName, String valueCandidate) {
     if (valueCandidate == null) {
       return false;
@@ -867,6 +863,13 @@ public class JPFCommonTab extends AbstractJPFTab {
     return file.isFile();
   }
   
+  private static final Image icon = createImage("icons/service_manager.png");
+  
+  @Override
+  public Image getImage() {
+    return icon;
+  }
+
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.AbstractLaunchConfigurationTab#isValid(org.eclipse.debug.core.ILaunchConfiguration)
    */

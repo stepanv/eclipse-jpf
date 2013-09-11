@@ -107,6 +107,13 @@ public class LookupConfigHelper extends Config {
     return appConfigFactory(configuration, appPropPath(configuration));
   }
   public static Config appConfigFactory(ILaunchConfiguration configuration, String appPropPath) {
-    return new Config(appPropPath);
+    if (appPropPath != null) {
+      File appProp = new File(appPropPath);
+      if (appProp.exists() && appProp.isFile() && appProp.canRead()) {
+        return new Config(appPropPath);
+      }
+    }
+    // behave as though no application property file was provided
+    return new Config((String)null);
   }
 }

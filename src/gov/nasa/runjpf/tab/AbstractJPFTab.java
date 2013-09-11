@@ -9,12 +9,15 @@ import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
@@ -28,11 +31,14 @@ import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
 import org.eclipse.jdt.internal.debug.ui.launcher.DebugTypeSelectionDialog;
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jdt.internal.debug.ui.launcher.MainMethodSearchEngine;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Text;
+import org.osgi.framework.Bundle;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractJPFTab extends JavaLaunchTab {
@@ -40,12 +46,6 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
   public static final String JPF_FILE_LOCATION = "JPF_FILE";
   public static final String JPF_DEBUG_BOTHVMS = "JPF_DEBUG_VM";
   public static final String JPF_DEBUG_JPF_INSTEADOFPROGRAM = "JPF_DEBUG_JPF_INSTEADOFPROGRAM";
-
-  // public static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
-  // public static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
-  // public static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
-  // public static final String JPF_OPT_OVERRIDE_INSTEADOFADD =
-  // "JPF_OPT_OVERRIDE_INSTEADOFADD";
 
   /**
    * If it's modified , just update the configuration directly.
@@ -194,5 +194,18 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
     } catch (CoreException e) {
       EclipseJPF.logError("Error occurred while getting the selected extension installation: " + extension, e);
     }
+  }
+  
+  protected static Image createImage(String relativeImagePath) {
+    ImageDescriptor desc = ImageDescriptor.getMissingImageDescriptor();
+    Bundle bundle = Platform.getBundle(EclipseJPF.BUNDLE_SYMBOLIC);
+    URL url = null;
+    if (bundle != null){
+        url = FileLocator.find(bundle, new Path(relativeImagePath), null);
+        if(url != null) {
+          desc = ImageDescriptor.createFromURL(url);
+        }
+    }
+    return desc.createImage();
   }
 }
