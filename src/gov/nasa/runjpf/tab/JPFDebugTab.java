@@ -75,11 +75,7 @@ public class JPFDebugTab extends JPFCommonTab {
       @Override
       public void widgetSelected(SelectionEvent e) {
         jdwpInstallations.reset(REQUIRED_LIBRARIES);
-        try {
-          initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
-        } catch (CoreException e1) {
-          // we don't care
-        }
+        initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
         updateLaunchConfigurationDialog();
       }
     });
@@ -162,7 +158,7 @@ public class JPFDebugTab extends JPFCommonTab {
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
-      lookupLocalInstallation(jdwpInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""), "jpf-jdwp");
+      lookupLocalInstallation(configuration, jdwpInstallations, "jpf-jdwp");
       
       btnDebugBothTargets.setSelection(configuration.getAttribute(JPF_DEBUG_BOTHVMS, false));
       btnDebugJpfItself.setSelection(configuration.getAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false));
@@ -172,7 +168,7 @@ public class JPFDebugTab extends JPFCommonTab {
       btnDebugJpfItself.setEnabled(readioChoicesEnabled);
       btnDebugTheProgram.setEnabled(readioChoicesEnabled);
       
-      initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
+      initializeExtensionInstallations(configuration, jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
       
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);

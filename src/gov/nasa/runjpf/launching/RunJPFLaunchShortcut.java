@@ -234,7 +234,12 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
     try {
       IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(wc);
       entries = JavaRuntime.resolveRuntimeClasspath(entries, wc);
-      JPFClasspathTab.generateClasspath(wc, entries);
+      
+   // add the result to the dynamic config
+      @SuppressWarnings("unchecked")
+      Map<String, String> dynamicConfig = wc.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
+      dynamicConfig.put("classpath", JPFClasspathTab.generateClasspath(wc, entries));
+      
     } catch (CoreException e) {
       EclipseJPF.logError("A problem occurred while generating the JPF classpath!", e);
       // we don't have to propagate the problem further

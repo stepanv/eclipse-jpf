@@ -1,19 +1,15 @@
 package gov.nasa.runjpf.tab;
 
-import gov.nasa.jpf.Config;
-import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.resources.FilteredFileSelectionDialog;
-import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
+import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.Socket;
 import java.net.URI;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +26,6 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.eclipse.jdt.launching.SocketUtil;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -47,8 +42,6 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-
-import com.sun.jdi.IntegerValue;
 
 @SuppressWarnings("restriction")
 public class JPFCommonTab extends AbstractJPFTab {
@@ -544,11 +537,7 @@ public class JPFCommonTab extends AbstractJPFTab {
       @Override
       public void widgetSelected(SelectionEvent e) {
         jpfInstallations.reset(REQUIRED_LIBRARY);
-        try {
-          initializeExtensionInstallations(getCurrentLaunchConfiguration(), jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
-        } catch (CoreException e1) {
-          // we don't care
-        }
+        initializeExtensionInstallations(getCurrentLaunchConfiguration(), jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
         updateLaunchConfigurationDialog();
       }
     });
@@ -705,12 +694,24 @@ public class JPFCommonTab extends AbstractJPFTab {
 //    return originalListener;
 //  }
   
+  /**
+   * @deprecated Use {@link #attributeEquals(ILaunchConfiguration,String,String)} instead
+   */
   public boolean attributeEquals(String attributeName, ILaunchConfiguration configuration, String valueCandidate) throws CoreException {
+    return attributeEquals(configuration, attributeName, valueCandidate);
+  }
+
+  public boolean attributeEquals(ILaunchConfiguration configuration, String stringAttributeName, String valueCandidate) {
     if (valueCandidate == null) {
       return false;
     }
-    String currentValue = configuration.getAttribute(attributeName, "");
-    return currentValue.trim().equals(valueCandidate.trim());
+    try {
+      String currentValue = configuration.getAttribute(stringAttributeName, "");
+      return currentValue.trim().equals(valueCandidate.trim());
+    } catch (CoreException e) {
+      EclipseJPF.logError("Accessing " + stringAttributeName + " triggered an error!", e);
+      return false;
+    }
   }
   
   @Override
@@ -740,21 +741,19 @@ public class JPFCommonTab extends AbstractJPFTab {
     int portShell = Integer.parseInt(textShellPort.getText());
     configuration.setAttribute(JPF_ATTR_SHELL_PORT, portShell);
     
-    try {
-      if (!attributeEquals(JPF_FILE_LOCATION, configuration, jpfFileLocationText.getText())) {
+    
+      if (!attributeEquals(configuration, JPF_FILE_LOCATION, jpfFileLocationText.getText())) {
+        // jpf file location has changed
         configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
         
         // reload app config
-        try {
-          Config appConfig = new Config(jpfFileLocationText.getText());
-          configuration.setAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, appConfig);
-        } catch (JPFConfigException e) {
-          configuration.setAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.<String, String>emptyMap());
-        }
+        LookupConfigHelper.reloadConfig(configuration, JPFSettingsTab.ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
         
+        // reload jpf installations
+        initializeExtensionInstallations(configuration, jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
       }
       
-      
+      try {
       configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
       configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, radioTraceStore.getSelection());
 
@@ -767,8 +766,6 @@ public class JPFCommonTab extends AbstractJPFTab {
       
       if (selectedJpfInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
         // using embedded JPF
-        
-        // using embedded jdwp
         String classpath = jpfInstallations.getEmbedded().classpath(File.pathSeparator);
         configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, classpath);
       } else {

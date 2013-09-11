@@ -1,9 +1,11 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.internal.ui.ClassSearchEngine;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
+import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -34,16 +36,17 @@ import org.eclipse.swt.widgets.Text;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractJPFTab extends JavaLaunchTab {
-  
+
   public static final String JPF_FILE_LOCATION = "JPF_FILE";
   public static final String JPF_DEBUG_BOTHVMS = "JPF_DEBUG_VM";
   public static final String JPF_DEBUG_JPF_INSTEADOFPROGRAM = "JPF_DEBUG_JPF_INSTEADOFPROGRAM";
-  
-//  public static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
-//  public static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
-//  public static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
-//  public static final String JPF_OPT_OVERRIDE_INSTEADOFADD = "JPF_OPT_OVERRIDE_INSTEADOFADD";
-  
+
+  // public static final String JPF_OPT_TARGET = "JPF_OPT_TARGET";
+  // public static final String JPF_OPT_SEARCH = "JPF_OPT_SEARCH";
+  // public static final String JPF_OPT_LISTENER = "JPF_OPT_LISTENER";
+  // public static final String JPF_OPT_OVERRIDE_INSTEADOFADD =
+  // "JPF_OPT_OVERRIDE_INSTEADOFADD";
+
   /**
    * If it's modified , just update the configuration directly.
    */
@@ -54,7 +57,6 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
   }
 
   protected UpdateModfiyListener updatedListener = new UpdateModfiyListener();
-  
 
   abstract private class InlineSearcher {
     abstract IType[] search() throws InvocationTargetException, InterruptedException;
@@ -126,7 +128,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
     }
     return originalType;
   }
-  
+
   protected static Map<String, File> getSiteProjects(Config config) {
     Map<String, File> projects = new HashMap<>();
 
@@ -152,53 +154,45 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
       }
     }
     return projects;
-}
-
- protected static void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallations, String extension) {
-   lookupLocalInstallation(jdwpInstallations, null, extension);
- }
-protected static void lookupLocalInstallation(List<ExtensionInstallation> jdwpInstallations, String appJpfFile, String extension) {
-  Config config;
-  if (appJpfFile != null) {
-    config = new Config(new String[] {appJpfFile});
-  } else {
-    config = new Config(new String[] {});
   }
-  
-//  String sitePath = getSitePropertiesPath();
-//  if (sitePath == null) {
-//    setErrorMessage("no site.properties");
-//    return null;
-//  }
-//
-//  File file = new File(sitePath);
-  
-  Map<String, File> projects = getSiteProjects(config);
-  if (projects.containsKey(extension)) {
-    String pseudoPath = projects.get(extension).getAbsolutePath();
-    ExtensionInstallation localJdwpInstallation = new ExtensionInstallation("Locally installed as " + extension + " extension", pseudoPath);
-    if (!jdwpInstallations.contains(localJdwpInstallation)) {
-      jdwpInstallations.add(localJdwpInstallation);
+
+  protected static void lookupLocalInstallation(ILaunchConfiguration configuration, ExtensionInstallations extensionInstallations,
+                                                String extension) {
+
+    // let's clear all non embedded installations
+    while (extensionInstallations.size() > 1) {
+      extensionInstallations.remove(1);
+    }
+    
+    Config config = LookupConfigHelper.defaultConfigFactory(configuration);
+
+    Map<String, File> projects = getSiteProjects(config);
+    if (projects.containsKey(extension)) {
+      String pseudoPath = projects.get(extension).getAbsolutePath();
+      ExtensionInstallation localJdwpInstallation = new ExtensionInstallation("Locally installed as " + extension + " extension",
+          pseudoPath);
+      if (!extensionInstallations.contains(localJdwpInstallation)) {
+        extensionInstallations.add(localJdwpInstallation);
+      }
     }
   }
-}
 
-protected void initializeExtensionInstallations(ILaunchConfiguration configuration, ExtensionInstallations extensionInstallations, Combo installationCombo, String installationIndexAttribute, String extension) throws CoreException {
-  String appJpfFile = null;
-  if (configuration != null) {
-    lookupLocalInstallation(extensionInstallations, configuration.getAttribute(JPF_FILE_LOCATION, ""), extension);
-  } else {
-    lookupLocalInstallation(extensionInstallations, extension);
+  protected void initializeExtensionInstallations(ILaunchConfiguration configuration, ExtensionInstallations extensionInstallations,
+                                                  Combo installationCombo, String installationIndexAttribute, String extension) {
+    lookupLocalInstallation(configuration, extensionInstallations, extension);
+
+    String[] jpfs = (String[]) extensionInstallations.toStringArray(new String[extensionInstallations.size()]);
+    installationCombo.setItems(jpfs);
+    installationCombo.setVisibleItemCount(Math.min(jpfs.length, 20));
+    try {
+      if (configuration == null || configuration.getAttribute(installationIndexAttribute, -1) == -1) {
+        // this is the first initialization ever
+        installationCombo.select(extensionInstallations.getDefaultInstallationIndex());
+      } else {
+        installationCombo.select(configuration.getAttribute(installationIndexAttribute, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
+      }
+    } catch (CoreException e) {
+      EclipseJPF.logError("Error occurred while getting the selected extension installation: " + extension, e);
+    }
   }
-  
-  String[] jpfs = (String[]) extensionInstallations.toStringArray(new String[extensionInstallations.size()]);
-  installationCombo.setItems(jpfs);
-  installationCombo.setVisibleItemCount(Math.min(jpfs.length, 20));
-  if (configuration == null || configuration.getAttribute(installationIndexAttribute, -1) == -1) {
-    // this is the first initialization ever
-    installationCombo.select(extensionInstallations.getDefaultInstallationIndex());
-  } else {
-    installationCombo.select(configuration.getAttribute(installationIndexAttribute, ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX));
-  }
-}
 }

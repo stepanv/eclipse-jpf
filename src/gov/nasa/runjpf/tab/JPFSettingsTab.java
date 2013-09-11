@@ -258,7 +258,6 @@ public class JPFSettingsTab extends AbstractJPFTab {
     updateLaunchConfigurationDialog();
   }
 
-  @SuppressWarnings("unchecked")
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {

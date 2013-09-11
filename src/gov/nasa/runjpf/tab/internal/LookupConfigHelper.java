@@ -38,6 +38,10 @@ public class LookupConfigHelper extends Config {
     return programArguments;
   }
 
+  public static Config defaultConfigFactory(ILaunchConfiguration configuration) {
+    return defaultConfigFactory(configuration, appPropPath(configuration));
+  }
+  
   public static Config defaultConfigFactory(ILaunchConfiguration configuration, String appPropPath) {
     String sitePath = null;
     // Check whether site is overridden from the command line
@@ -87,10 +91,6 @@ public class LookupConfigHelper extends Config {
      EclipseJPF.logError("Cannot reload configuration", e);
      // we don't care more
     }
-  }
-
-  public static Config defaultConfigFactory(ILaunchConfiguration configuration) {
-    return defaultConfigFactory(configuration, appPropPath(configuration));
   }
   
   private static String appPropPath(ILaunchConfiguration configuration) {
