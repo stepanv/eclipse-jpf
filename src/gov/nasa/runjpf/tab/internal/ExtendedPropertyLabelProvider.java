@@ -17,6 +17,7 @@ public class ExtendedPropertyLabelProvider extends LabelProvider implements ITab
     return ((ExtendedProperty)element).get(columnIndex);
   }
   
+  @Override
   public Image getColumnImage(Object element, int columnIndex) {
     if (columnIndex == 0) {
       return DebugPluginImages.getImage(IDebugUIConstants.IMG_OBJS_ENV_VAR);

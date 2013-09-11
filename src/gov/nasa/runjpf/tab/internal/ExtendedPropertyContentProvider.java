@@ -17,7 +17,10 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Button;
 
 /**
- * Content provider for the config table
+ * Content provider for the config table.<br/>
+ * The content is dynamically displayed according to what the user preferences.
+ * 
+ * @author stepan
  */
 public class ExtendedPropertyContentProvider implements IStructuredContentProvider {
   /**
@@ -27,10 +30,11 @@ public class ExtendedPropertyContentProvider implements IStructuredContentProvid
   private Button checkCmdargsProperties;
   private Button checkDefaultProperties;
   private Button checkDynamicProperties;
+
   private Map<String, String> configToNameMap;
 
   public ExtendedPropertyContentProvider(Button checkAppProperties, Button checkCmdargsProperties, Button checkDefaultProperties,
-      Button checkDynamicProperties, Map<String, String> configToNameMap) {
+                                         Button checkDynamicProperties, Map<String, String> configToNameMap) {
     this.checkAppProperties = checkAppProperties;
     this.checkCmdargsProperties = checkCmdargsProperties;
     this.checkDefaultProperties = checkDefaultProperties;
@@ -76,6 +80,7 @@ public class ExtendedPropertyContentProvider implements IStructuredContentProvid
     return elements.toArray();
   }
 
+  @Override
   public void dispose() {
   }
 

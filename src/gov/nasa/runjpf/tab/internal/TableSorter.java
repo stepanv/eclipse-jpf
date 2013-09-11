@@ -13,6 +13,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
 /**
+ * This class adds a possibility to sort a table.
+ * The table content is sorted as {@link String}.
  * 
  * @author http://www.dzone.com/snippets/javaswt-click-table-column
  *
@@ -21,6 +23,10 @@ public class TableSorter {
 
   private final TableViewer tableViewer;
 
+  /**
+   * Table sorter constructor.
+   * @param tableViewer
+   */
   public TableSorter(TableViewer tableViewer) {
     this.tableViewer = tableViewer;
     addColumnSelectionListeners(tableViewer);
