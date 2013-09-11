@@ -4,7 +4,6 @@ import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
 import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
-import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
 import gov.nasa.runjpf.tab.JPFSourceLookupTab;
 
@@ -26,7 +25,7 @@ public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationT
     if (ILaunchManager.DEBUG_MODE.equals(arg0.getMode())) {
       jpfTab = new JPFDebugTab();
     } else {
-      jpfTab = new JPFRunTab();
+      jpfTab = new JPFCommonTab();
     }
     ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { jpfTab, new JPFSettingsTab(), new JPFArgumentsTab(), new JPFClasspathTab(), new JavaJRETab(),
         new JPFSourceLookupTab(), new EnvironmentTab(), new CommonTab() };

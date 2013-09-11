@@ -44,7 +44,7 @@ public class ExtensionInstallations extends ArrayList<ExtensionInstallation> imp
     return array;
   }
 
-  public int getDefaultInstallationIndex() {
+  public int defaultInstallationIndex() {
     if (size() > 1) {
       return NONEMBEDDED_INSTALLATION_INDEX;
     } else {

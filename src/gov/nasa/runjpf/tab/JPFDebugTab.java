@@ -1,8 +1,6 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.runjpf.EclipseJPF;
-import gov.nasa.runjpf.EclipseJPFLauncher;
-import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
 
 import java.io.File;
@@ -28,148 +26,127 @@ import org.eclipse.swt.widgets.Label;
 @SuppressWarnings("restriction")
 public class JPFDebugTab extends JPFCommonTab {
 
-  
-  private Button btnDebugBothTargets;
-  private Button btnDebugJpfItself;
-  private Button btnDebugTheProgram;
-  private Combo fCombo;
+  private Button checkDebugBothTargets;
+  private Button radioDebugJpfItself;
+  private Button radioDebugTheProgram;
+  private Combo comboJdwp;
+  private Label labelJdwp;
+  private Button buttonJdwpReset;
+
+  private static final String[] REQUIRED_LIBRARIES = new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar",
+      "lib/slf4j-nop-1.7.5.jar" };
+  private static final String EXTENSION_STRING = "jpf-jdwp";
+  public static final ExtensionInstallations jdwpInstallations = ExtensionInstallations.factory(REQUIRED_LIBRARIES);
 
   /**
    * @wbp.parser.entryPoint
    */
-  @Override
   public void createControl(Composite parent) {
-
-    Composite comp2 = new Composite(parent, SWT.NONE);
-    comp2.setFont(parent.getFont());
-
-    GridData gd = new GridData(1);
-    gd.horizontalAlignment = SWT.FILL;
-    gd.grabExcessHorizontalSpace = true;
-    gd.horizontalSpan = GridData.FILL_BOTH;
-    comp2.setLayoutData(gd);
-
-    GridLayout layout = new GridLayout(1, false);
-    layout.verticalSpacing = 0;
-    layout.horizontalSpacing = 0;
-    comp2.setLayout(layout);
-
-    super.createControl(comp2);
-
-    setControl(comp2);
-   
+    super.createControl(parent);
   }
 
+  @Override
   protected void runtimeAppend(Composite comp2) {
-    
-    lblJdwp = new Label(comp2, SWT.NONE);
-    lblJdwp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-    lblJdwp.setText("JDWP:");
-    
-    
-    fCombo = SWTFactory.createCombo(comp2, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
-    
+
+    labelJdwp = new Label(comp2, SWT.NONE);
+    labelJdwp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+    labelJdwp.setText("JDWP:");
+
+    comboJdwp = SWTFactory.createCombo(comp2, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
+
     buttonJdwpReset = new Button(comp2, SWT.NONE);
     buttonJdwpReset.setText("Reset");
     buttonJdwpReset.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
         jdwpInstallations.reset(REQUIRED_LIBRARIES);
-        initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
+        initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, comboJdwp,
+                                         JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
         updateLaunchConfigurationDialog();
       }
     });
-    //ControlAccessibleListener.addListener(fCombo, fSpecificButton.getText());
-    fCombo.addSelectionListener(new SelectionAdapter() {
+    comboJdwp.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
         updateLaunchConfigurationDialog();
-//        setStatus(OK_STATUS);
-//        firePropertyChange();
       }
     });
   }
-  
-  private static final String[] REQUIRED_LIBRARIES = new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar", "lib/slf4j-nop-1.7.5.jar" };
-  private static final String EXTENSION_STRING = "jpf-jdwp";
-  // TODO put them to an appropriate place
-  public static final ExtensionInstallations jdwpInstallations = ExtensionInstallations.factory(REQUIRED_LIBRARIES);
-  
-  private Label lblJdwp;
-  private Button buttonJdwpReset;
-  
-  
-  protected String getSitePropertiesPath() {
-    return EclipseJPF.getDefault().getPluginPreferences().getString(EclipseJPFLauncher.SITE_PROPERTIES_PATH);
-  }
-  
+
   @Override
   protected void runtimePrepend(Composite parent) {
-  
+
     Group grpExperimentalSetting = new Group(parent, SWT.NONE);
     grpExperimentalSetting.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     grpExperimentalSetting.setText("Experimental settings");
     grpExperimentalSetting.setLayout(new GridLayout(2, false));
 
-    btnDebugTheProgram = new Button(grpExperimentalSetting, SWT.RADIO);
-    btnDebugTheProgram.addSelectionListener(new SelectionAdapter() {
+    radioDebugTheProgram = new Button(grpExperimentalSetting, SWT.RADIO);
+    radioDebugTheProgram.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
         updateLaunchConfigurationDialog();
       }
     });
-    btnDebugTheProgram.setText("Debug the program being verified in JPF");
+    radioDebugTheProgram.setText("Debug the program being verified in JPF");
 
-    btnDebugBothTargets = new Button(grpExperimentalSetting, SWT.CHECK);
-    btnDebugBothTargets.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 2));
-    btnDebugBothTargets.setText("Debug both the underlaying VM and the program (can lead to deadlocks)");
+    checkDebugBothTargets = new Button(grpExperimentalSetting, SWT.CHECK);
+    checkDebugBothTargets.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 2));
+    checkDebugBothTargets.setText("Debug both the underlaying VM and the program (can lead to deadlocks)");
 
-    btnDebugJpfItself = new Button(grpExperimentalSetting, SWT.RADIO);
-    btnDebugJpfItself.setText("Debug JPF itself");
-    btnDebugJpfItself.addSelectionListener(new SelectionAdapter() {
+    radioDebugJpfItself = new Button(grpExperimentalSetting, SWT.RADIO);
+    radioDebugJpfItself.setText("Debug JPF itself");
+    radioDebugJpfItself.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
         updateLaunchConfigurationDialog();
       }
     });
 
-    btnDebugBothTargets.addSelectionListener(new SelectionAdapter() {
+    checkDebugBothTargets.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
 
-        boolean readioChoicesEnabled = !btnDebugBothTargets.getSelection();
-        btnDebugJpfItself.setEnabled(readioChoicesEnabled);
-        btnDebugTheProgram.setEnabled(readioChoicesEnabled);
+        boolean readioChoicesEnabled = !checkDebugBothTargets.getSelection();
+        radioDebugJpfItself.setEnabled(readioChoicesEnabled);
+        radioDebugTheProgram.setEnabled(readioChoicesEnabled);
         updateLaunchConfigurationDialog();
       }
     });
-
-    return;
 
   }
 
+  /**
+   * The default initialization of this tab.
+   * 
+   * @param configuration
+   *          The configuration
+   * @param projectName
+   *          The project name
+   * @param jpfFile
+   *          APF Application properties file (*.jpf)
+   */
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
     JPFCommonTab.initDefaultConfiguration(configuration, projectName, jpfFile);
-    configuration.setAttribute(JPF_DEBUG_BOTHVMS, false);
-    configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
-    
-    // TODO it's better to not use the embedded one if normal extension is detected
+
+    // it's better to not use the embedded one if normal extension is detected
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
   }
 
+  @Override
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
-      lookupLocalInstallation(configuration, jdwpInstallations, "jpf-jdwp");
-      
-      btnDebugBothTargets.setSelection(configuration.getAttribute(JPF_DEBUG_BOTHVMS, false));
-      btnDebugJpfItself.setSelection(configuration.getAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, false));
-      btnDebugTheProgram.setSelection(!btnDebugJpfItself.getSelection());
+      lookupLocalInstallation(configuration, jdwpInstallations, EXTENSION_STRING);
 
-      boolean readioChoicesEnabled = !btnDebugBothTargets.getSelection();
-      btnDebugJpfItself.setEnabled(readioChoicesEnabled);
-      btnDebugTheProgram.setEnabled(readioChoicesEnabled);
-      
-      initializeExtensionInstallations(configuration, jdwpInstallations, fCombo, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
-      
+      checkDebugBothTargets.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false));
+      radioDebugJpfItself.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false));
+      radioDebugTheProgram.setSelection(!radioDebugJpfItself.getSelection());
+
+      boolean readioChoicesEnabled = !checkDebugBothTargets.getSelection();
+      radioDebugJpfItself.setEnabled(readioChoicesEnabled);
+      radioDebugTheProgram.setEnabled(readioChoicesEnabled);
+
+      initializeExtensionInstallations(configuration, jdwpInstallations, comboJdwp, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, EXTENSION_STRING);
+
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
     }
@@ -180,26 +157,27 @@ public class JPFDebugTab extends JPFCommonTab {
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     super.performApply(configuration);
-    
-    boolean debugBothVms = btnDebugBothTargets.getSelection();
-    boolean debugJpfItself = btnDebugJpfItself.getSelection();
-    
-    configuration.setAttribute(JPF_DEBUG_BOTHVMS, debugBothVms);
-    configuration.setAttribute(JPF_DEBUG_JPF_INSTEADOFPROGRAM, debugJpfItself);
-    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, fCombo.getSelectionIndex());
-    
+
+    boolean debugBothVms = checkDebugBothTargets.getSelection();
+    boolean debugJpfItself = radioDebugJpfItself.getSelection();
+
+    configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, debugBothVms);
+    configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, debugJpfItself);
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, comboJdwp.getSelectionIndex());
+
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> dynMapConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String,String>emptyMap());
-      // we're using +jpf-core.native_classpath only here so we can safely remove it
+      Map<String, String> dynMapConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG,
+                                                                    Collections.<String, String> emptyMap());
+      // we're using +jpf-core.native_classpath only here so we can safely
+      // remove it
       // TODO move this to JPFSettings and wipe it always
       dynMapConfig.remove("+jpf-core.native_classpath");
-      
+
       if (!debugJpfItself || debugBothVms) {
         // we're debugging the program itself
-        
-        int selectedJdwpInstallation = configuration.getAttribute(
-            JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
+
+        int selectedJdwpInstallation = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
 
         if (selectedJdwpInstallation == -1) {
           EclipseJPF.logError("Obtained incorret jdwp installation index");
@@ -210,12 +188,11 @@ public class JPFDebugTab extends JPFCommonTab {
         } // nothing changes
       }
     } catch (CoreException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      EclipseJPF.logError("Cannot store debug configuration into the launch configuration!", e);
     }
-    
+
   }
-  
+
   @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
     initDefaultConfiguration(configuration, null, null);
@@ -223,13 +200,11 @@ public class JPFDebugTab extends JPFCommonTab {
   }
 
   @Override
-  public boolean isValid(ILaunchConfiguration config) {
-    setErrorMessage(null);
-    setMessage(null);
-    setWarningMessage(null);
-    if (fCombo.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
+  public boolean isPostValid(ILaunchConfiguration config) {
+    if (comboJdwp.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
       if (!jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).isValid()) {
-        setErrorMessage("Embedded JDWP installation in error due to: " + jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).toString());
+        setErrorMessage("Embedded JDWP installation in error due to: "
+            + jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).toString());
         return false;
       }
       // selected embedded

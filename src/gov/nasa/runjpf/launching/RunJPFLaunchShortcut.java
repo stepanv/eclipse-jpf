@@ -3,8 +3,8 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
+import gov.nasa.runjpf.tab.JPFCommonTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
-import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
 import gov.nasa.runjpf.tab.JPFSourceLookupTab;
 import gov.nasa.runjpf.util.ProjectUtil;
@@ -13,7 +13,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -33,7 +32,6 @@ import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.debug.ui.ILaunchGroup;
 import org.eclipse.debug.ui.ILaunchShortcut;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.debug.ui.classpath.ClasspathModel;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
@@ -97,7 +95,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         for (ILaunchConfiguration config : configs) {
 
           if (isJpfRunConfiguration(config)) {
-            String currentProejctName = config.getAttribute(JPFRunTab.JPF_FILE_LOCATION, "");
+            String currentProejctName = config.getAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFFILELOCATION, "");
             File foundFile = new File(currentProejctName);
             if (foundFile.equals(selectedFile)) {
               return config;
@@ -205,7 +203,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, launchConfigName);
         
         JPFSettingsTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
-        JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
+        JPFCommonTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFArgumentsTab.defaults(wc);
         

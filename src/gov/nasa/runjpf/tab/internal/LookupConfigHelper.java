@@ -7,6 +7,7 @@ import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.tab.JPFSettingsTab;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -96,7 +97,7 @@ public class LookupConfigHelper extends Config {
   private static String appPropPath(ILaunchConfiguration configuration) {
     String appPropPath = null;
     try {
-      appPropPath = configuration.getAttribute(JPFSettingsTab.JPF_FILE_LOCATION, (String)null);
+      appPropPath = configuration.getAttribute(JPFSettingsTab.JPF_ATTR_MAIN_JPFFILELOCATION, (String)null);
     } catch (CoreException e) {
       // we're fine
     }
@@ -115,5 +116,32 @@ public class LookupConfigHelper extends Config {
     }
     // behave as though no application property file was provided
     return new Config((String)null);
+  }
+  
+  public static Map<String, File> getSiteProjects(Config config) {
+    Map<String, File> projects = new HashMap<>();
+
+    for (String projId : config.getEntrySequence()) {
+      if ("extensions".equals(projId)) {
+        // we have to filter this out in case there is only a single project
+        // in
+        // the list, in which case we find a jpf.properties under its value
+        continue;
+      }
+
+      String v = config.getString(projId);
+      if (v == null) {
+        continue;
+      }
+      File projDir = new File(v);
+
+      if (projDir.isDirectory()) {
+        File propFile = new File(projDir, "jpf.properties");
+        if (propFile.isFile()) {
+          projects.put(projId, propFile);
+        }
+      }
+    }
+    return projects;
   }
 }

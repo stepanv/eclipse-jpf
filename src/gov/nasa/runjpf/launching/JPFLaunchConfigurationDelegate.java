@@ -39,8 +39,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_BOTHVMS, false);
-    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
+    boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_DEBUGBOTHVMS, false);
+    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
 //    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
 //    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
 //    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
@@ -106,8 +106,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>();
-      if (configuration.getAttribute(JPFCommonTab.JPF_ATTR_RUNTIME_JPFFILESELECTED, true)) {
-        programArgs.add(configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "(this is an error) ??? .jpf"));
+      if (configuration.getAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
+        programArgs.add(configuration.getAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
       } // else +target=some.Class is used
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       

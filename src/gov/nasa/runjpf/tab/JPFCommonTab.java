@@ -47,19 +47,6 @@ import org.eclipse.swt.widgets.Text;
 @SuppressWarnings("restriction")
 public class JPFCommonTab extends AbstractJPFTab {
 
-  private static final String ATTRIBUTE_UNIQUE_PREFIX = "gov.nasa.jpf.runjpf-attributeprefix-";
-  
-  public static final String JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_STORE";
-  public static final String JPF_ATTR_TRACE_FILE = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_FILE";
-  public static final String JPF_ATTR_TRACE_ENABLED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_TRACE_ENABLED";
-  public static final String JPF_ATTR_OPT_LISTENER = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_LISTENER";
-  public static final String JPF_ATTR_OPT_SEARCH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_SEARCH";
-  public static final String JPF_ATTR_OPT_TARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_OPT_TARGET";
-  
-  public static final String JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX";
-  public static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
-  public static final String JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH";
-
   private static final String FLUSHED_COMMENT = "" + System.lineSeparator() + "# This is dynamic configuration by the Eclipse-JPF plugin" + System.lineSeparator();
   private Text jpfFileLocationText;
 
@@ -109,11 +96,6 @@ public class JPFCommonTab extends AbstractJPFTab {
       
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
 
-  public static final String JPF_ATTR_RUNTIME_JPFFILESELECTED = "JPF_ATTR_RUNTIME_JPFFILESELECTED";
-
-  public static final String JPF_ATTR_SHELL_ENABLED = "JPF_ATTR_SHELL_ENABLED";
-
-  private static final String JPF_ATTR_SHELL_PORT = "JPR_ATTR_SHELL_PORT";
   private Button checkShellEnabled;
   private Text textShellPort;
 
@@ -147,7 +129,7 @@ public class JPFCommonTab extends AbstractJPFTab {
    */
   @Override
   public void createControl(Composite parent) {
-
+    
     Composite comp2 = new Composite(parent, SWT.NONE);
     comp2.setFont(parent.getFont());
 
@@ -512,13 +494,19 @@ public class JPFCommonTab extends AbstractJPFTab {
     runtime(comp2);
   }
   
+  /** Append graphic objects to the runtime */
   protected void runtimeAppend(Composite parent) {
     // empty implementation for subclasses;
   }
   
+  /** 
+   * Prepend graphic object to the Runtime.
+   * @param parent The parent object
+   */
   protected void runtimePrepend(Composite parent) {
- // empty implementation for subclasses;
+    // empty implementation for subclasses;
   }
+  
   private void runtime(Composite parent) {
     runtimePrepend(parent);
     
@@ -570,12 +558,12 @@ public class JPFCommonTab extends AbstractJPFTab {
    
     if (jpfFile != null) {
       String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();
-      configuration.setAttribute(JPF_FILE_LOCATION, jpfFileAbsolutePath);
+      configuration.setAttribute(JPF_ATTR_MAIN_JPFFILELOCATION, jpfFileAbsolutePath);
     } else {
-      configuration.setAttribute(JPF_FILE_LOCATION, "");
+      configuration.setAttribute(JPF_ATTR_MAIN_JPFFILELOCATION, "");
     }
     
-    configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false);
+    configuration.setAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, false);
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, false);
     
     // TODO it's better to not use the embedded one if normal extension is detected
@@ -592,7 +580,7 @@ public class JPFCommonTab extends AbstractJPFTab {
     
     configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_LISTENER, defaultProperty(map, "listener", ""));
     configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_SEARCH, defaultProperty(map, "search.class", ""));
-    configuration.setAttribute(JPFCommonTab.JPF_ATTR_OPT_TARGET, defaultProperty(map, "target", ""));
+    configuration.setAttribute(JPFCommonTab.JPF_ATTR_MAIN_JPFTARGET, defaultProperty(map, "target", ""));
     
     
     
@@ -611,32 +599,32 @@ public class JPFCommonTab extends AbstractJPFTab {
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
-      jpfFileLocationText.setText(configuration.getAttribute(JPF_FILE_LOCATION, ""));
+      jpfFileLocationText.setText(configuration.getAttribute(JPF_ATTR_MAIN_JPFFILELOCATION, ""));
       setText(configuration, listenerText, JPFCommonTab.JPF_ATTR_OPT_LISTENER);
       setText(configuration, searchText, JPFCommonTab.JPF_ATTR_OPT_SEARCH);
-      setText(configuration, targetText, JPFCommonTab.JPF_ATTR_OPT_TARGET);
+      setText(configuration, targetText, JPFCommonTab.JPF_ATTR_MAIN_JPFTARGET);
       
 //      boolean override = configuration.getAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, false);
 //      radioOverride.setSelection(override);
 //      radioAppend.setSelection(!override);
 //      
       
-      checkShellEnabled.setSelection(configuration.getAttribute(JPF_ATTR_SHELL_ENABLED, true));
+      checkShellEnabled.setSelection(configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, true));
       int defaultShellPort = Platform.getPreferencesService().getInt(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.PORT, EclipseJPFLauncher.DEFAULT_PORT, null);
-      textShellPort.setText(String.valueOf(configuration.getAttribute(JPF_ATTR_SHELL_PORT, defaultShellPort)));
-      textShellPort.setEnabled(configuration.getAttribute(JPF_ATTR_SHELL_ENABLED, true));
+      textShellPort.setText(String.valueOf(configuration.getAttribute(JPF_ATTR_OPT_SHELLPORT, defaultShellPort)));
+      textShellPort.setEnabled(configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, true));
       
       boolean traceEnabled = configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false);
       
       radioTraceNoTrace.setSelection(!traceEnabled);
-      radioTraceReplay.setSelection(traceEnabled && !configuration.getAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false));
-      radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, false));
+      radioTraceReplay.setSelection(traceEnabled && !configuration.getAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, false));
+      radioTraceStore.setSelection(traceEnabled && configuration.getAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, false));
       textTraceFile.setEnabled(traceEnabled);
       buttonTraceBrowse.setEnabled(traceEnabled);
       buttonTraceBrowseWorkspace.setEnabled(traceEnabled);
       textTraceFile.setText(configuration.getAttribute(JPF_ATTR_TRACE_FILE, createPlaceholderedTraceFile()));
       
-      boolean jpfFileSelected = configuration.getAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, true);
+      boolean jpfFileSelected = configuration.getAttribute(JPF_ATTR_MAIN_JPFFILESELECTED, true);
       runJpfSelected(jpfFileSelected);
       radioMainMethodClass.setSelection(!jpfFileSelected);
       radioJpfFileSelected.setSelection(jpfFileSelected);
@@ -709,20 +697,129 @@ public class JPFCommonTab extends AbstractJPFTab {
     }
   }
   
+  private void performApplyDynamicConfiguration(ILaunchConfigurationWorkingCopy configuration) {
+    try {
+      @SuppressWarnings("unchecked")
+      Map<String, String> map = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+
+      String listenerString = "";
+      map.remove("trace.file");
+      map.remove("choice.use_trace");
+      map.remove("listener");
+      map.remove("search.class");
+      map.remove("target");
+      map.remove("shell.port");
+
+      if (!radioTraceNoTrace.getSelection()) {
+        // we're tracing
+        String traceFileName = textTraceFile.getText().trim();
+        if (radioTraceStore.getSelection()) {
+          // we're storing a trace
+
+          // let's substitute the generated random string into the unique
+          // placeholder
+          if (traceFileName.contains(JPFCommonTab.UNIQUE_ID_PLACEHOLDER)) {
+            String uniqueId = UUID.randomUUID().toString();
+            traceFileName = traceFileName.replace(JPFCommonTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
+            textTraceFile.setText(traceFileName);
+          }
+          map.put("trace.file", traceFileName);
+
+          listenerString = addListener(listenerString, ".listener.TraceStorer");
+
+        } else if (radioTraceReplay.getSelection()) {
+          // we're replaying a trace
+          map.put("choice.use_trace", traceFileName);
+
+          listenerString = addListener(listenerString, ".listener.ChoiceSelector");
+        } else {
+          throw new IllegalStateException("Shouldn't occur");
+        }
+        configuration.setAttribute(JPF_ATTR_TRACE_FILE, traceFileName);
+      }
+
+      if (checkShellEnabled.getSelection()) {
+        map.put("shell.port", textShellPort.getText());
+      }
+
+      if (!isApplicationProperty(configuration, "listener", listenerText.getText())) {
+        listenerString = addListener(listenerString, listenerText.getText().trim());
+      }
+      if (!Objects.equals("", listenerString)) {
+        map.put("listener", listenerString);
+      }
+      putIfNotApplicationPropertyAndNotEmpty(configuration, map, "search.class", searchText.getText());
+      putIfNotApplicationPropertyAndNotEmpty(configuration, map, "target", targetText.getText());
+
+    } catch (CoreException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+  
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-    IProject implicitProject = null;
+    generateImplicitProject(configuration);
+
+    configuration.setAttribute(JPF_ATTR_OPT_SHELLENABLED, checkShellEnabled.getSelection());
+    // port is already validated
+    int portShell = Integer.parseInt(textShellPort.getText());
+    configuration.setAttribute(JPF_ATTR_OPT_SHELLPORT, portShell);
+
+    if (!attributeEquals(configuration, JPF_ATTR_MAIN_JPFFILELOCATION, jpfFileLocationText.getText())) {
+      // jpf file location has changed
+      configuration.setAttribute(JPF_ATTR_MAIN_JPFFILELOCATION, jpfFileLocationText.getText());
+
+      // reload app config
+      LookupConfigHelper.reloadConfig(configuration, JPFSettingsTab.ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
+
+      // reload jpf installations
+      initializeExtensionInstallations(configuration, jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
+    }
+
+    configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
+    configuration.setAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, radioTraceStore.getSelection());
+
+    configuration.setAttribute(JPF_ATTR_OPT_LISTENER, listenerText.getText().trim());
+    configuration.setAttribute(JPF_ATTR_OPT_SEARCH, searchText.getText().trim());
+    configuration.setAttribute(JPF_ATTR_MAIN_JPFTARGET, targetText.getText().trim());
+
+    int selectedJpfInstallation = jpfCombo.getSelectionIndex();
+    configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, selectedJpfInstallation);
+
+    if (selectedJpfInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
+      // using embedded JPF
+      String classpath = jpfInstallations.getEmbedded().classpath(File.pathSeparator);
+      configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, classpath);
+    } else {
+      // clear it
+      configuration.removeAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH);
+    }
+
+    configuration.setAttribute(JPF_ATTR_MAIN_JPFFILESELECTED, radioJpfFileSelected.getSelection());
     
-    for (IType type : new IType[] {searchType, listenerType, targetType}) {
+    performApplyDynamicConfiguration(configuration);
+  }
+
+  /**
+   * Generates an implicit project according to the given configuration.
+   * <br/>
+   * The implicit project is used in default working directory for example.
+   * @param configuration
+   */
+  private void generateImplicitProject(ILaunchConfigurationWorkingCopy configuration) {
+    IProject implicitProject = null;
+
+    for (IType type : new IType[] { searchType, listenerType, targetType }) {
       if (type == null || type.getJavaProject() == null) {
         continue;
       }
       implicitProject = type.getJavaProject().getProject();
     }
-    
+
     IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
     URI jpfFileUri = new File(jpfFileLocationText.getText()).toURI();
-    
+
     IFile[] iFiles = root.findFilesForLocationURI(jpfFileUri);
     for (int i = iFiles.length - 1; i >= 0; --i) {
       if (iFiles[i].getProject() == null) {
@@ -731,137 +828,22 @@ public class JPFCommonTab extends AbstractJPFTab {
       implicitProject = iFiles[i].getProject();
     }
     
-    configuration.setAttribute(JPF_ATTR_SHELL_ENABLED, checkShellEnabled.getSelection());
-    // port is already validated
-    int portShell = Integer.parseInt(textShellPort.getText());
-    configuration.setAttribute(JPF_ATTR_SHELL_PORT, portShell);
-    
-    
-      if (!attributeEquals(configuration, JPF_FILE_LOCATION, jpfFileLocationText.getText())) {
-        // jpf file location has changed
-        configuration.setAttribute(JPF_FILE_LOCATION, jpfFileLocationText.getText());
-        
-        // reload app config
-        LookupConfigHelper.reloadConfig(configuration, JPFSettingsTab.ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
-        
-        // reload jpf installations
-        initializeExtensionInstallations(configuration, jpfInstallations, jpfCombo, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
-      }
-      
-      try {
-      configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
-      configuration.setAttribute(JPF_ATTR_TRACE_STORE_INSTEADOF_REPLAY, radioTraceStore.getSelection());
-
-      configuration.setAttribute(JPF_ATTR_OPT_LISTENER, listenerText.getText().trim());
-      configuration.setAttribute(JPF_ATTR_OPT_SEARCH, searchText.getText().trim());
-      configuration.setAttribute(JPF_ATTR_OPT_TARGET, targetText.getText().trim());
-      
-      int selectedJpfInstallation = jpfCombo.getSelectionIndex();
-      configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, selectedJpfInstallation);
-      
-      if (selectedJpfInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
-        // using embedded JPF
-        String classpath = jpfInstallations.getEmbedded().classpath(File.pathSeparator);
-        configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, classpath);
-      } else {
-        // clear it
-        configuration.removeAttribute(JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH);
-      }
-      
-      configuration.setAttribute(JPF_ATTR_RUNTIME_JPFFILESELECTED, radioJpfFileSelected.getSelection());
-    
-      @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
-    
-      String listenerString = "";
-      map.remove("trace.file");
-      map.remove("choice.use_trace");
-      map.remove("listener");
-      map.remove("search.class");
-      map.remove("target");
-      map.remove("shell.port");
-      
-      if (!radioTraceNoTrace.getSelection()) {
-        // we're tracing
-        String traceFileName = textTraceFile.getText().trim();
-        if (radioTraceStore.getSelection()) {
-          // we're storing a trace
-          
-          // let's substitute the generated random string into the unique placeholder
-          if (traceFileName.contains(JPFCommonTab.UNIQUE_ID_PLACEHOLDER)) {
-            String uniqueId = UUID.randomUUID().toString();
-            traceFileName = traceFileName.replace(JPFCommonTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
-            textTraceFile.setText(traceFileName);
-          }
-          map.put("trace.file", traceFileName);
-          
-          listenerString = addListener(listenerString, ".listener.TraceStorer");
-          
-        } else if (radioTraceReplay.getSelection()) {
-          // we're replaying a trace
-          map.put("choice.use_trace", traceFileName);
-          
-          listenerString = addListener(listenerString, ".listener.ChoiceSelector");
-        } else {
-          throw new IllegalStateException("Shouldn't occur");
-        }
-        configuration.setAttribute(JPF_ATTR_TRACE_FILE, traceFileName);
-      }
-      
-      if (checkShellEnabled.getSelection()) {
-        map.put("shell.port", String.valueOf(portShell));
-      }
-      
-      if (isDynamic(configuration, "listener", listenerText.getText())) {
-        listenerString = addListener(listenerString, listenerText.getText().trim());
-      }
-      if (!Objects.equals("", listenerString)) {
-        map.put("listener", listenerString);
-      }
-      putIfDynamicAndNotEmpty(configuration, map, "search.class", searchText.getText());
-      putIfDynamicAndNotEmpty(configuration, map, "target", targetText.getText());
-        
-    } catch (CoreException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-//    configuration.setAttribute(JPF_OPT_TARGET, targetText.getText());
-//    configuration.setAttribute(JPF_OPT_SEARCH, searchText.getText());
-//    configuration.setAttribute(JPF_OPT_LISTENER, listenerText.getText());
-    
-//    configuration.setAttribute(JPF_OPT_OVERRIDE_INSTEADOFADD, radioOverride.getSelection() && !radioAppend.getSelection());
-    
     if (implicitProject != null) {
       configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, implicitProject.getName());
     }
   }
 
-  private boolean isDynamic(ILaunchConfigurationWorkingCopy configuration, String key, String value) throws CoreException {
-    if (value == null) {
-      return false;
-    }
-    
-    // TODO look at other configs too
-    @SuppressWarnings("unchecked")
-    Map<String, String> appMap = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
-    
-    String appValue = (String) appMap.get(key);
-    if (appValue != null && appValue.trim().equals(value.trim())) {
-        return false;
-    }
-    return true;
-  }
-  private void putIfDynamicAndNotEmpty(ILaunchConfigurationWorkingCopy configuration, Map<String, String> map, String key, String value) throws CoreException {
-    if (!Objects.equals("", value) && isDynamic(configuration, key, value)) {
-      map.put(key, value);
-    }
-  }
-  
+  /**
+   * Tests whether given file exists
+   * @param filename Filename of the file
+   * @return true or false
+   */
   private static boolean testFileExists(String filename) {
     File file = new File(filename);
-    return file.isFile();
+    return file.isFile() && file.exists();
   }
   
+  /** The icon for this tab */
   private static final Image icon = createImage("icons/service_manager.png");
   
   @Override
@@ -873,7 +855,10 @@ public class JPFCommonTab extends AbstractJPFTab {
    * @see org.eclipse.debug.ui.AbstractLaunchConfigurationTab#isValid(org.eclipse.debug.core.ILaunchConfiguration)
    */
   @Override
-  public boolean isValid(ILaunchConfiguration config) {
+  final public boolean isValid(ILaunchConfiguration config) {
+    setErrorMessage(null);
+    setMessage(null);
+    setWarningMessage(null);
     String jpfFileString = jpfFileLocationText.getText();
     String targetString = targetText.getText();
     if (Objects.equals("", jpfFileString) && Objects.equals("", targetString)) {
@@ -934,9 +919,23 @@ public class JPFCommonTab extends AbstractJPFTab {
       // we have other than embedded jdwps
       setWarningMessage("Multiple JPF extensions found. It is likely, there will be some classpath issues.");
     }
+    
+    if (!isPostValid(config)) {
+      return false;
+    }
     return super.isValid(config);
   }
   
+  /**
+   * Post-validation for subtypes.
+   * @param config Launch configuration
+   * @return whether it's valid or invalid
+   */
+  protected boolean isPostValid(ILaunchConfiguration config) {
+    return true;
+    // for subtypes
+  }
+
   @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
     initDefaultConfiguration(configuration, null, null);
