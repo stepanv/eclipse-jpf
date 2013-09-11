@@ -42,6 +42,10 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
  */
 public class LookupConfigHelper {
 
+  /* non instatiable helper */
+  private LookupConfigHelper() {
+  }
+
   /**
    * Private class that exposes some protected methods.
    * 

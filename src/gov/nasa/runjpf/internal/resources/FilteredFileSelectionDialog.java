@@ -26,6 +26,10 @@ import org.eclipse.ui.dialogs.ISelectionStatusValidator;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 /**
+ * Workspace relative extension based filtering file selection dialog.<br/>
+ * 
+ * @see <a
+ *      href="http://stackoverflow.com/questions/14750712/swt-component-for-choose-file-only-from-workspace">http://stackoverflow.com/questions/14750712/swt-component-for-choose-file-only-from-workspace</a>
  * @author Alexey Prybytkouski
  * @author stepan
  */
@@ -33,14 +37,32 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
 
   private String[] filteredExtensions;
 
+  /**
+   * This content provided recursively hides subfolders if they don't contain
+   * desired extensions.
+   * 
+   * @author stepan
+   * 
+   */
   private static class ExtensionFilterFileContentenProvider implements ITreeContentProvider {
     String[] extensions;
 
+    /**
+     * Creates a content provider with enabled filtering for the provided
+     * extensions.<br/>
+     * 
+     * 
+     * @param extensions
+     *          An array of extensions (without a dot) such as:
+     *          <tt>new String[] {"txt", "properties", "java"}</tt> or null if
+     *          no filtering.
+     */
     public ExtensionFilterFileContentenProvider(String[] extensions) {
       super();
       this.extensions = extensions;
     }
 
+    @Override
     public Object[] getChildren(Object element) {
       if (element instanceof IContainer) {
         try {
@@ -55,7 +77,8 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
                 objects.add(resource);
               }
             } else if (resource instanceof IFolder) {
-              // recursively detect whether the folder contain a file with desired extensions
+              // recursively detect whether the folder contain a file with
+              // desired extensions
               Object[] children = getChildren(resource);
               if (children != null && children.length > 0) {
                 objects.add(resource);
@@ -71,21 +94,26 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
       return null;
     }
 
+    @Override
     public Object getParent(Object element) {
       return ((IResource) element).getParent();
     }
 
+    @Override
     public boolean hasChildren(Object element) {
       return element instanceof IContainer;
     }
 
+    @Override
     public Object[] getElements(Object input) {
       return (Object[]) input;
     }
 
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
     }
   };
@@ -93,7 +121,7 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
   private static final IStatus OK = new Status(IStatus.OK, EclipseJPF.PLUGIN_ID, 0, "", null);
   private static final IStatus ERROR = new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, 0, "", null);
 
-  /*
+  /**
    * Validator
    */
   private ISelectionStatusValidator validator = new ISelectionStatusValidator() {
@@ -103,6 +131,13 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
     }
   };
 
+  /**
+   * This view comparator gives the priority to the folders the be shown before
+   * files.
+   * 
+   * @author stepan
+   * 
+   */
   private static class FileViewerComparator extends ViewerComparator {
     @Override
     public int category(Object element) {
@@ -114,10 +149,20 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
     }
   }
 
-  public FilteredFileSelectionDialog(String title, String message, String[] type) {
+  /**
+   * Convenient constructor for easy of use.
+   * 
+   * @param title
+   *          Title of the dialog window.
+   * @param message
+   *          Message to show above the file tree selection subwindow.
+   * @param extensions
+   *          Extensions to be shown or null for no filtering
+   */
+  public FilteredFileSelectionDialog(String title, String message, String[] extensions) {
     this(Display.getDefault().getActiveShell(), WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider(),
-        new ExtensionFilterFileContentenProvider(type));
-    this.filteredExtensions = type;
+        new ExtensionFilterFileContentenProvider(extensions));
+    this.filteredExtensions = extensions;
 
     setComparator(new FileViewerComparator());
     setTitle(title);
@@ -127,6 +172,9 @@ public class FilteredFileSelectionDialog extends ElementTreeSelectionDialog {
     setValidator(validator);
   }
 
+  /**
+   * Generic constructor.
+   */
   public FilteredFileSelectionDialog(Shell parent, ILabelProvider labelProvider, ITreeContentProvider contentProvider) {
     super(parent, labelProvider, contentProvider);
   }

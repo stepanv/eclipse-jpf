@@ -28,6 +28,7 @@ Eclipse-BundleShape: dir
 Bundle-ActivationPolicy: lazy
 Import-Package: com.sun.jdi,
  com.sun.jdi.connect,
+ org.apache.commons.lang,
  org.eclipse.core.filesystem,
  org.eclipse.core.resources,
  org.eclipse.core.runtime;version="3.4.0",

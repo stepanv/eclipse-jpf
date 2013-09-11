@@ -39,6 +39,14 @@ import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.connect.ListeningConnector;
 
+/**
+ * This class reuse and copy the {@link StandardVMDebugger} implementation.<br/>
+ * However, new functionality for JPF JDWP debugging is added.<br/>
+ * This runner provides debugging of any combination of the VM and JPF!
+ * 
+ * @author stepan
+ * 
+ */
 @SuppressWarnings("restriction")
 public class JPFDebugger extends StandardVMDebugger {
 
@@ -48,7 +56,7 @@ public class JPFDebugger extends StandardVMDebugger {
     super(vmInstance);
     this.debugVM = debugVM;
   }
-  
+
   @Override
   protected Map<String, String> getDefaultProcessMap() {
     return JPFRunner.jpfProcessDefaultMap();
@@ -82,7 +90,7 @@ public class JPFDebugger extends StandardVMDebugger {
       portDebugVM = SocketUtil.findFreePort();
       if (portDebugVM == -1) {
         abort(LaunchingMessages.StandardVMDebugger_Could_not_find_a_free_socket_for_the_debugger_1, null,
-          IJavaLaunchConfigurationConstants.ERR_NO_SOCKET_AVAILABLE);
+              IJavaLaunchConfigurationConstants.ERR_NO_SOCKET_AVAILABLE);
       }
     }
 
@@ -119,7 +127,7 @@ public class JPFDebugger extends StandardVMDebugger {
           arguments.add("-Xdebug"); //$NON-NLS-1$
           arguments.add("-Xnoagent"); //$NON-NLS-1$
         }
-  
+
         // check if java 1.4 or greater
         if (version < 1.4) {
           arguments.add("-Djava.compiler=NONE"); //$NON-NLS-1$
@@ -129,7 +137,7 @@ public class JPFDebugger extends StandardVMDebugger {
         } else {
           arguments.add("-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:" + portDebugVM); //$NON-NLS-1$
         }
-  
+
       }
     }
 
@@ -184,7 +192,7 @@ public class JPFDebugger extends StandardVMDebugger {
     Map<String, Connector.Argument> map = connector.defaultArguments();
 
     specifyArguments(map, port);
-    
+
     ListeningConnector connectorDebugVM = null;
     Map<String, Connector.Argument> mapDebugVM = null;
     if (debugVM) {
@@ -194,7 +202,7 @@ public class JPFDebugger extends StandardVMDebugger {
               IJavaLaunchConfigurationConstants.ERR_CONNECTOR_NOT_AVAILABLE);
       }
       mapDebugVM = connectorDebugVM.defaultArguments();
-  
+
       specifyArguments(mapDebugVM, portDebugVM);
     }
     Process p = null;
@@ -222,7 +230,8 @@ public class JPFDebugger extends StandardVMDebugger {
           return;
         }
 
-        String timestamp = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(new Date(System.currentTimeMillis()));
+        String timestamp = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+            .format(new Date(System.currentTimeMillis()));
         IProcess process = newProcess(launch, p, renderProcessLabel(cmdLine, timestamp), getDefaultProcessMap());
         process.setAttribute(IProcess.ATTR_CMDLINE, renderCommandLine(cmdLine));
         subMonitor.worked(1);
@@ -263,7 +272,7 @@ public class JPFDebugger extends StandardVMDebugger {
                 } catch (InterruptedException e) {
                 }
               }
-              
+
               Exception ex = runnableDebugVM.getException();
               if (ex instanceof IllegalConnectorArgumentsException) {
                 throw (IllegalConnectorArgumentsException) ex;
@@ -274,13 +283,13 @@ public class JPFDebugger extends StandardVMDebugger {
               if (ex instanceof IOException) {
                 throw (IOException) ex;
               }
-              
+
               VirtualMachine vmDebugVM = runnableDebugVM.getVirtualMachine();
               if (vmDebugVM != null) {
                 createDebugTarget(config, launch, portDebugVM, process, vmDebugVM);
               }
             }
-            
+
             ConnectRunnable runnable = new ConnectRunnable(connector, map);
             Thread connectThread = new Thread(runnable, "Listening Connector"); //$NON-NLS-1$
             connectThread.setDaemon(true);

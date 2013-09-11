@@ -57,7 +57,7 @@ public class JPFRunTab extends AbstractJPFTab {
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
 
   public static final ExtensionInstallations jpfInstallations = ExtensionInstallations.factory(REQUIRED_LIBRARY);
-  
+
   private Text textMainAppFileLocation;
   private Text textMainTarget;
   private Button radioMainAppFileSelected;
@@ -69,8 +69,8 @@ public class JPFRunTab extends AbstractJPFTab {
 
   private Text textOptListenerClass;
   private Text textOptSearchClass;
-  private Button checkOptShellEnabled;
   private Text textOptShellPort;
+  private Button checkOptShellEnabled;
 
   private Text textTraceFile;
   private Button radioTraceStore;
@@ -269,6 +269,9 @@ public class JPFRunTab extends AbstractJPFTab {
     });
     radioMainMethodClass.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
     radioMainMethodClass.setText("Run a main class:");
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
 
     Label lblTarget = new Label(grpJpfExecution, SWT.NONE);
     lblTarget.setText("Target:");
@@ -283,8 +286,6 @@ public class JPFRunTab extends AbstractJPFTab {
     });
     new Label(grpJpfExecution, SWT.NONE);
     new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
 
     Composite composite_2 = new Composite(grpJpfExecution, SWT.NONE);
     composite_2.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
@@ -292,8 +293,9 @@ public class JPFRunTab extends AbstractJPFTab {
     glComposite.marginHeight = 0;
     glComposite.marginWidth = 0;
     composite_2.setLayout(glComposite);
+    new Label(grpJpfExecution, SWT.NONE);
 
-    buttonMainSearchMainClass = new Button(composite_2, SWT.NONE);
+    buttonMainSearchMainClass = new Button(grpJpfExecution, SWT.NONE);
     buttonMainSearchMainClass.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
     buttonMainSearchMainClass.setText("Search...");
     buttonMainSearchMainClass.addSelectionListener(new SelectionAdapter() {
@@ -366,6 +368,8 @@ public class JPFRunTab extends AbstractJPFTab {
 
     textOptShellPort = new Text(groupOpt, SWT.BORDER);
     textOptShellPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+    new Label(groupOpt, SWT.NONE);
+    new Label(groupOpt, SWT.NONE);
 
     Group groupTrace = new Group(comp2, SWT.NONE);
     groupTrace.setLayout(new GridLayout(3, false));
@@ -620,7 +624,8 @@ public class JPFRunTab extends AbstractJPFTab {
       radioMainMethodClass.setSelection(!jpfFileSelected);
       radioMainAppFileSelected.setSelection(jpfFileSelected);
 
-      initializeExtensionInstallations(configuration, jpfInstallations, comboJpfInstallation, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
+      initializeExtensionInstallations(configuration, jpfInstallations, comboJpfInstallation, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX,
+                                       EXTENSION_PROJECT);
 
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
@@ -768,7 +773,8 @@ public class JPFRunTab extends AbstractJPFTab {
       LookupConfigHelper.reloadConfig(configuration, JPFSettingsTab.ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
 
       // reload jpf installations
-      initializeExtensionInstallations(configuration, jpfInstallations, comboJpfInstallation, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, EXTENSION_PROJECT);
+      initializeExtensionInstallations(configuration, jpfInstallations, comboJpfInstallation, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX,
+                                       EXTENSION_PROJECT);
     }
 
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
