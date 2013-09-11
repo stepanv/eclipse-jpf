@@ -16,6 +16,7 @@ import org.eclipse.debug.core.sourcelookup.containers.AbstractSourceContainer;
 import org.eclipse.debug.core.sourcelookup.containers.ContainerSourceContainer;
 import org.eclipse.debug.ui.sourcelookup.SourceLookupTab;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
+import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 
 @SuppressWarnings("restriction")
 public class JPFSourceLookupTab extends SourceLookupTab {
@@ -60,7 +61,7 @@ public class JPFSourceLookupTab extends SourceLookupTab {
 
   private static void generateSourcepathRecursively(ISourceContainer[] sourceContainers, Set<IPath> sourceLookupPaths, StringBuilder sourceLookupPathsFlattened) throws CoreException {
     for (ISourceContainer sourceContainer : sourceContainers) {
-      if (sourceContainer instanceof AbstractSourceContainer) {
+      if (sourceContainer instanceof JavaProjectSourceContainer) {
         generateSourcepathRecursively(((AbstractSourceContainer)sourceContainer).getSourceContainers(), sourceLookupPaths, sourceLookupPathsFlattened);
       }
       if (sourceContainer instanceof ContainerSourceContainer) {

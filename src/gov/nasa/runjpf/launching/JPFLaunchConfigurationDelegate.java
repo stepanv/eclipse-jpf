@@ -39,7 +39,6 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    String jpfFile = configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "");
     boolean debugBothVMs = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_BOTHVMS, false);
     boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFCommonTab.JPF_DEBUG_JPF_INSTEADOFPROGRAM, false);
 //    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
@@ -107,7 +106,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>();
-      programArgs.add(jpfFile);
+      if (configuration.getAttribute(JPFCommonTab.JPF_ATTR_RUNTIME_JPFFILESELECTED, true)) {
+        programArgs.add(configuration.getAttribute(JPFCommonTab.JPF_FILE_LOCATION, "(this is an error) ??? .jpf"));
+      } // else +target=some.Class is used
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       
       @SuppressWarnings({ "unchecked" })

@@ -275,7 +275,7 @@ public class JPFSettingsTab extends AbstractJPFTab {
       checkAppProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, false));
     } catch (CoreException e1) {
       // this should not happened
-      throw new IllegalStateException("Programmers fatal error...", e1);
+      throw new IllegalStateException("Programmer's fatal error...", e1);
     }
 
     LookupConfigHelper.reloadConfig(configuration, ATTR_JPF_CMDARGSCONFIG, LookupConfigHelper.programArgumentsConfigFactory(configuration));
@@ -293,7 +293,7 @@ public class JPFSettingsTab extends AbstractJPFTab {
 
   @Override
   public String getName() {
-    return "JPF Settings";
+    return "JPF Overview";
   }
 
   @Override
@@ -302,23 +302,6 @@ public class JPFSettingsTab extends AbstractJPFTab {
     configuration.setAttribute(ATTR_JPF_SETTINGS_CMDARGSSELECTED, checkCmdargsProperties.getSelection());
     configuration.setAttribute(ATTR_JPF_SETTINGS_DEFAULTSELECTED, checkDefaultProperties.getSelection());
     configuration.setAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, checkAppProperties.getSelection());
-
-    // IProject implicitProject = null;
-
-    // TableItem[] items = environmentTable.getTable().getItems();
-    // Map map = new HashMap(items.length);
-    // for (int i = 0; i < items.length; i++)
-    // {
-    // ExtendedProperty var = (ExtendedProperty) items[i].getData();
-    // map.put(var.getName(), var.getValue());
-    // }
-    // if (map.size() == 0) {
-    // configuration.setAttribute(ILaunchManager.ATTR_ENVIRONMENT_VARIABLES,
-    // (Map) null);
-    // } else {
-    // configuration.setAttribute(ILaunchManager.ATTR_ENVIRONMENT_VARIABLES,
-    // map);
-    // }
   }
 
   @Override

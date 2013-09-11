@@ -60,8 +60,7 @@ public class JPFCommonTab extends AbstractJPFTab {
   public static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
   public static final String JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH";
 
-
-  private static final String FLUSHED_COMMENT = "" + System.lineSeparator() + "# This is flushed dynamic configuration by the Eclipse-JPF plugin" + System.lineSeparator();
+  private static final String FLUSHED_COMMENT = "" + System.lineSeparator() + "# This is dynamic configuration by the Eclipse-JPF plugin" + System.lineSeparator();
   private Text jpfFileLocationText;
 
   private Text listenerText;
@@ -110,9 +109,9 @@ public class JPFCommonTab extends AbstractJPFTab {
       
   public static final String UNIQUE_ID_PLACEHOLDER = "{UNIQUE_ID}";
 
-  private static final String JPF_ATTR_RUNTIME_JPFFILESELECTED = "JPF_ATTR_RUNTIME_JPFFILESELECTED";
+  public static final String JPF_ATTR_RUNTIME_JPFFILESELECTED = "JPF_ATTR_RUNTIME_JPFFILESELECTED";
 
-  private static final String JPF_ATTR_SHELL_ENABLED = "JPF_ATTR_SHELL_ENABLED";
+  public static final String JPF_ATTR_SHELL_ENABLED = "JPF_ATTR_SHELL_ENABLED";
 
   private static final String JPF_ATTR_SHELL_PORT = "JPR_ATTR_SHELL_PORT";
   private Button checkShellEnabled;
@@ -881,14 +880,22 @@ public class JPFCommonTab extends AbstractJPFTab {
       setErrorMessage("Either JPF File (*.jpf) or Target class has to be specified!");
       return false;
     }
-    if (!"".equals(jpfFileString) && !jpfFileString.toLowerCase().endsWith(".jpf")) {
-      // this is here because we provide just .jpf files in the workspace browser and as such we want to be consistent
-      setErrorMessage("JPF File (*.jpf) must end with .jpf extension!");
-      return false;
-    }
-    if (radioJpfFileSelected.getSelection() && !testFileExists(jpfFileString)) {
-      setErrorMessage("Provided JPF file: '" + jpfFileString + "' doesn't exist!");
-      return false;
+    
+    if (radioJpfFileSelected.getSelection()) {
+      if (!"".equals(jpfFileString) && !jpfFileString.toLowerCase().endsWith(".jpf")) {
+        // this is here because we provide just .jpf files in the workspace browser and as such we want to be consistent
+        setErrorMessage("JPF File (*.jpf) must end with .jpf extension!");
+        return false;
+      }
+      if (radioJpfFileSelected.getSelection() && !testFileExists(jpfFileString)) {
+        setErrorMessage("Provided JPF file: '" + jpfFileString + "' doesn't exist!");
+        return false;
+      }
+    } else {
+      if ("".equals(targetText.getText())) {
+        setErrorMessage("Specified target class must not be empty!");
+        return false;
+      }
     }
     String traceFileString = textTraceFile.getText();
     if (radioTraceReplay.getSelection() && !testFileExists(traceFileString)) {
