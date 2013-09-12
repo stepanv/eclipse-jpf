@@ -4,7 +4,7 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.util.JPFSiteUtils;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
-import gov.nasa.runjpf.tab.JPFSettingsTab;
+import gov.nasa.runjpf.tab.JPFOverviewTab;
 import gov.nasa.runjpf.wizard.NewJPFProjectPage;
 
 import java.io.File;
@@ -209,7 +209,7 @@ public class LookupConfigHelper {
   private static String appPropPath(ILaunchConfiguration configuration) {
     String appPropPath = null;
     try {
-      appPropPath = configuration.getAttribute(JPFSettingsTab.JPF_ATTR_MAIN_JPFFILELOCATION, (String) null);
+      appPropPath = configuration.getAttribute(JPFOverviewTab.JPF_ATTR_MAIN_JPFFILELOCATION, (String) null);
     } catch (CoreException e) {
       // we're fine
     }

@@ -1,7 +1,7 @@
 package gov.nasa.runjpf.tab.internal;
 
 import gov.nasa.runjpf.EclipseJPF;
-import gov.nasa.runjpf.tab.JPFSettingsTab;
+import gov.nasa.runjpf.tab.JPFOverviewTab;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,16 +49,16 @@ public class ExtendedPropertyContentProvider implements IStructuredContentProvid
 
     List<String> attributes = new LinkedList<String>();
     if (checkDefaultProperties.getSelection()) {
-      attributes.add(JPFSettingsTab.ATTR_JPF_DEFAULTCONFIG);
+      attributes.add(JPFOverviewTab.ATTR_JPF_DEFAULTCONFIG);
     }
     if (checkCmdargsProperties.getSelection()) {
-      attributes.add(JPFSettingsTab.ATTR_JPF_CMDARGSCONFIG);
+      attributes.add(JPFOverviewTab.ATTR_JPF_CMDARGSCONFIG);
     }
     if (checkAppProperties.getSelection()) {
-      attributes.add(JPFSettingsTab.ATTR_JPF_APPCONFIG);
+      attributes.add(JPFOverviewTab.ATTR_JPF_APPCONFIG);
     }
     if (checkDynamicProperties.getSelection()) {
-      attributes.add(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG);
+      attributes.add(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG);
     }
     for (String attribute : attributes) {
       try {

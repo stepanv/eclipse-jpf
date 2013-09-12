@@ -6,7 +6,7 @@ import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.internal.launching.JPFRunner;
 import gov.nasa.runjpf.tab.JPFRunTab;
-import gov.nasa.runjpf.tab.JPFSettingsTab;
+import gov.nasa.runjpf.tab.JPFOverviewTab;
 import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
 import java.io.File;
@@ -112,7 +112,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
       
       @SuppressWarnings({ "unchecked" })
-      Map<String, String> dynamicMap = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
+      Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
       
       for (String key : dynamicMap.keySet()) {
         String value = dynamicMap.get(key);

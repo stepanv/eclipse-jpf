@@ -33,6 +33,7 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMInstall2;
 import org.eclipse.jdt.launching.SocketUtil;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
+import org.eclipse.osgi.util.NLS;
 
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;
@@ -230,9 +231,7 @@ public class JPFDebugger extends StandardVMDebugger {
           return;
         }
 
-        String timestamp = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-            .format(new Date(System.currentTimeMillis()));
-        IProcess process = newProcess(launch, p, renderProcessLabel(cmdLine, timestamp), getDefaultProcessMap());
+        IProcess process = newProcess(launch, p, renderProcessLabel(cmdLine), getDefaultProcessMap());
         process.setAttribute(IProcess.ATTR_CMDLINE, renderCommandLine(cmdLine));
         subMonitor.worked(1);
         subMonitor.subTask(LaunchingMessages.StandardVMDebugger_Establishing_debug_connection____5);
@@ -551,6 +550,27 @@ public class JPFDebugger extends StandardVMDebugger {
       return 0D;
     }
 
+  }
+  
+  /**
+   * Returns the 'rendered' name for the specified command line
+   * @param commandLine the command line
+   * @param timestamp the run-at time for the process
+   * @return the name for the process
+   */
+  public static String renderProcessLabel(String[] commandLine, String timestamp) {
+    String format= LaunchingMessages.StandardVMRunner__0____1___2; 
+    return NLS.bind(format, new String[] { commandLine[0], timestamp });
+  }
+  /**
+   * Returns the 'rendered' name for the specified command line
+   * @param commandLine the command line
+   * @return the name for the process
+   */
+  public static String renderProcessLabel(String[] commandLine) {
+    String format= LaunchingMessages.StandardVMRunner__0____1___2; 
+    String timestamp= DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(new Date(System.currentTimeMillis()));
+    return NLS.bind(format, new String[] { commandLine[0], timestamp });
   }
 
 }

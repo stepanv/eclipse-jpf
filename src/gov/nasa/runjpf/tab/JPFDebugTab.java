@@ -23,6 +23,17 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 
+/**
+ * <p>
+ * This is a GUI SWT Eclipse launch configuration Tab for Java PathFinder
+ * Verification launch action.<br/>
+ * The intention of this tab is add debug options on top of what
+ * {@link JPFRunTab} provides.
+ * </p>
+ * 
+ * @author stepan
+ * 
+ */
 @SuppressWarnings("restriction")
 public class JPFDebugTab extends JPFRunTab {
 
@@ -167,7 +178,7 @@ public class JPFDebugTab extends JPFRunTab {
 
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> dynMapConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG,
+      Map<String, String> dynMapConfig = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
                                                                     Collections.<String, String> emptyMap());
       // we're using +jpf-core.native_classpath only here so we can safely
       // remove it

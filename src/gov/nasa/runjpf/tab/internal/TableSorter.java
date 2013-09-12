@@ -13,11 +13,11 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
 /**
- * This class adds a possibility to sort a table.
- * The table content is sorted as {@link String}.
+ * This class adds a possibility to sort a table. The table content is sorted as
+ * {@link String}.
  * 
  * @author http://www.dzone.com/snippets/javaswt-click-table-column
- *
+ * 
  */
 public class TableSorter {
 
@@ -25,6 +25,7 @@ public class TableSorter {
 
   /**
    * Table sorter constructor.
+   * 
    * @param tableViewer
    */
   public TableSorter(TableViewer tableViewer) {
@@ -37,21 +38,28 @@ public class TableSorter {
     });
   }
 
+  /**
+   * Add a column selection listeners to all columns.
+   * 
+   * @param tableViewer
+   *          Where to add the listener
+   */
   private void addColumnSelectionListeners(TableViewer tableViewer) {
-    TableColumn[] columns = tableViewer.getTable().getColumns();
-    for (int i = 0; i < columns.length; i++) {
-      addColumnSelectionListener(columns[i]);
+    for (TableColumn column : tableViewer.getTable().getColumns()) {
+      column.addSelectionListener(new SelectionAdapter() {
+        public void widgetSelected(SelectionEvent e) {
+          tableColumnClicked((TableColumn) e.widget);
+        }
+      });
     }
   }
 
-  private void addColumnSelectionListener(TableColumn column) {
-    column.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        tableColumnClicked((TableColumn) e.widget);
-      }
-    });
-  }
-
+  /**
+   * The action to perform when a column header is clicked.
+   * 
+   * @param column
+   *          The column that is used.
+   */
   private void tableColumnClicked(TableColumn column) {
     Table table = column.getParent();
     if (column.equals(table.getSortColumn())) {
@@ -63,7 +71,17 @@ public class TableSorter {
     tableViewer.refresh();
   }
 
-  private int  compareElements(Object e1, Object e2) {
+  /**
+   * {@link String} based compare of elements;
+   * 
+   * @param e1
+   *          First element
+   * @param e2
+   *          Second element
+   * @return The result of comparison as {@link Comparable#compareTo(Object)}
+   *         would do.
+   */
+  private int compareElements(Object e1, Object e2) {
     ITableLabelProvider columnValueProvider = (ITableLabelProvider) tableViewer.getLabelProvider();
     Table table = tableViewer.getTable();
     int index = Arrays.asList(table.getColumns()).indexOf(table.getSortColumn());

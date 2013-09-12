@@ -17,28 +17,44 @@ import org.eclipse.jdt.internal.debug.ui.classpath.IClasspathEntry;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
 
+/**
+ * <p>
+ * This class just adds update of the JPF Dynamic Config when the content of
+ * this tab changes so that JPF CLI property <tt>classpath</tt> can reflect what
+ * user chooses through the GUI. adds some defaults to it.
+ * </p>
+ * <p>
+ * Even though th super class is marked as noextendable it seems it works well.
+ * </p>
+ * 
+ * @author stepan
+ * 
+ */
 @SuppressWarnings("restriction")
 public class JPFClasspathTab extends JavaClasspathTab {
 
+  /**
+   * Get the user classpath.<br/>
+   * Similar to {@link JavaClasspathTab#getCurrentClasspath()}.
+   * 
+   * @return an array of runtime user classpath entries
+   */
   private IRuntimeClasspathEntry[] getUserClasspath() {
-    IClasspathEntry[] user = getModel().getEntries(ClasspathModel.USER);
-    List<IRuntimeClasspathEntry> entries = new ArrayList<IRuntimeClasspathEntry>(user.length);
-    IRuntimeClasspathEntry entry;
-    IClasspathEntry userEntry;
-    for (int i = 0; i < user.length; i++) {
-      userEntry = user[i];
-      entry = null;
-      if (userEntry instanceof ClasspathEntry) {
-        entry = ((ClasspathEntry) userEntry).getDelegate();
-      } else if (userEntry instanceof IRuntimeClasspathEntry) {
-        entry = (IRuntimeClasspathEntry) user[i];
+    IClasspathEntry[] entries = getModel().getEntries(ClasspathModel.USER);
+    List<IRuntimeClasspathEntry> runtimeEntries = new ArrayList<IRuntimeClasspathEntry>(entries.length);
+    for (IClasspathEntry entry : entries) {
+      IRuntimeClasspathEntry runtimeEntry = null;
+      if (entry instanceof ClasspathEntry) {
+        runtimeEntry = ((ClasspathEntry) entry).getDelegate();
+      } else if (entry instanceof IRuntimeClasspathEntry) {
+        runtimeEntry = (IRuntimeClasspathEntry) entry;
       }
-      if (entry != null) {
-        entry.setClasspathProperty(IRuntimeClasspathEntry.USER_CLASSES);
-        entries.add(entry);
+      if (runtimeEntry != null) {
+        runtimeEntry.setClasspathProperty(IRuntimeClasspathEntry.USER_CLASSES);
+        runtimeEntries.add(runtimeEntry);
       }
     }
-    return entries.toArray(new IRuntimeClasspathEntry[entries.size()]);
+    return runtimeEntries.toArray(new IRuntimeClasspathEntry[runtimeEntries.size()]);
   }
 
   @Override
@@ -48,7 +64,7 @@ public class JPFClasspathTab extends JavaClasspathTab {
     // we also want to put classpath entries to the dynamic config
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> dynamicConfig = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, (Map<String, String>) null);
+      Map<String, String> dynamicConfig = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, (Map<String, String>) null);
 
       if (dynamicConfig != null) {
         IRuntimeClasspathEntry[] entries = JavaRuntime.resolveRuntimeClasspath(getUserClasspath(), configuration);
@@ -59,6 +75,17 @@ public class JPFClasspathTab extends JavaClasspathTab {
     }
   }
 
+  /**
+   * Generate classpath from the classpath entries.
+   * 
+   * @param configuration
+   *          Launch configuration
+   * @param entries
+   *          Resolved runtime classpath entries (refer to
+   *          {@link JavaRuntime#resolveRuntimeClasspath(IRuntimeClasspathEntry[], org.eclipse.debug.core.ILaunchConfiguration)}
+   * @return Flattened classpath to be used as JPF CLI run property
+   *         <tt>classpath</tt> or null
+   */
   public static String generateClasspath(ILaunchConfigurationWorkingCopy configuration, IRuntimeClasspathEntry[] entries) {
     StringBuilder classpathFlattened = new StringBuilder("");
 

@@ -38,8 +38,23 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
+/**
+ * <p>
+ * This is a GUI SWT Eclipse launch configuraion Tab for Java PathFinder
+ * Verification launch action.<br/>
+ * The intention of this tab is to provide user an easy way to determine the
+ * exact set of parameters, properties and settings JPF will be started with.
+ * </p>
+ * <p>
+ * It would be cool if user can modify the values here, but that is completely
+ * out of the scope of my GSoC 2013 project.
+ * </p>
+ * 
+ * @author stepan
+ * 
+ */
 @SuppressWarnings("restriction")
-public class JPFSettingsTab extends AbstractJPFTab {
+public class JPFOverviewTab extends CommonJPFTab {
 
   public static final String ATTR_JPF_DEFAULTCONFIG = "ATTR_JPF_CONFIG";
   public static final String ATTR_JPF_APPCONFIG = "ATTR_JPF_APPCONFIG";
@@ -206,36 +221,37 @@ public class JPFSettingsTab extends AbstractJPFTab {
     new TableSorter(configTable);
   }
 
-//  String getSitePropertiesLocation(String[] args, String appPropPath) {
-//    String path = getPathArg(args, "site");
-//
-//    if (path == null) {
-//      // look into the app properties
-//      // NOTE: we might want to drop this in the future because it constitutes
-//      // a cyclic properties file dependency
-//      if (appPropPath != null) {
-//        path = JPFSiteUtils.getMatchFromFile(appPropPath, "site");
-//      }
-//
-//      if (path == null) {
-//        File siteProps = JPFSiteUtils.getStandardSiteProperties();
-//        if (siteProps != null) {
-//          path = siteProps.getAbsolutePath();
-//        }
-//      }
-//    }
-//
-//    put("jpf.site", path);
-//
-//    return path;
-//  }
+  // String getSitePropertiesLocation(String[] args, String appPropPath) {
+  // String path = getPathArg(args, "site");
+  //
+  // if (path == null) {
+  // // look into the app properties
+  // // NOTE: we might want to drop this in the future because it constitutes
+  // // a cyclic properties file dependency
+  // if (appPropPath != null) {
+  // path = JPFSiteUtils.getMatchFromFile(appPropPath, "site");
+  // }
+  //
+  // if (path == null) {
+  // File siteProps = JPFSiteUtils.getStandardSiteProperties();
+  // if (siteProps != null) {
+  // path = siteProps.getAbsolutePath();
+  // }
+  // }
+  // }
+  //
+  // put("jpf.site", path);
+  //
+  // return path;
+  // }
 
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
     String appPropPath = null;
-    if (jpfFile != null && jpfFile.getLocation() != null && jpfFile.getLocation().toFile() != null && jpfFile.getLocation().toFile().exists()) {
+    if (jpfFile != null && jpfFile.getLocation() != null && jpfFile.getLocation().toFile() != null
+        && jpfFile.getLocation().toFile().exists()) {
       appPropPath = jpfFile.getLocation().toFile().getAbsolutePath();
     }
-    
+
     // empty config
     configuration.setAttribute(ATTR_JPF_DYNAMICCONFIG, new Config((String) null));
     configuration.setAttribute(ATTR_JPF_DEFAULTCONFIG, LookupConfigHelper.defaultConfigFactory(configuration, appPropPath));
@@ -243,9 +259,9 @@ public class JPFSettingsTab extends AbstractJPFTab {
     configuration.setAttribute(ATTR_JPF_CMDARGSCONFIG, LookupConfigHelper.programArgumentsConfigFactory(configuration));
 
   }
-  
+
   private static final Image icon = createImage("icons/search.png");
-  
+
   @Override
   public Image getImage() {
     return icon;
@@ -281,7 +297,7 @@ public class JPFSettingsTab extends AbstractJPFTab {
     LookupConfigHelper.reloadConfig(configuration, ATTR_JPF_CMDARGSCONFIG, LookupConfigHelper.programArgumentsConfigFactory(configuration));
     LookupConfigHelper.reloadConfig(configuration, ATTR_JPF_DEFAULTCONFIG, LookupConfigHelper.defaultConfigFactory(configuration));
     LookupConfigHelper.reloadConfig(configuration, ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
-   
+
     updateConfig(configuration);
 
     super.initializeFrom(configuration);

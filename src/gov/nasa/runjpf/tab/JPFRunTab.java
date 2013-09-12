@@ -33,7 +33,6 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -45,8 +44,19 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+/**
+ * <p>
+ * This is a GUI SWT Eclipse launch configuration Tab for Java PathFinder
+ * Verification launch action.<br/>
+ * The intention of this tab is to provide a user with an easy way to choose
+ * some handy JPF options as well as to specify what to execute (verify).
+ * </p>
+ * 
+ * @author stepan
+ * 
+ */
 @SuppressWarnings("restriction")
-public class JPFRunTab extends AbstractJPFTab {
+public class JPFRunTab extends CommonJPFTab {
 
   private static final String FLUSHED_COMMENT = "" + System.lineSeparator() + "# This is dynamic configuration by the Eclipse-JPF plugin"
       + System.lineSeparator();
@@ -91,6 +101,12 @@ public class JPFRunTab extends AbstractJPFTab {
     return commonDir + File.separatorChar + "trace-" + UNIQUE_ID_PLACEHOLDER + ".txt";
   }
 
+  /**
+   * Main group selection and modification handler.
+   * 
+   * @param isJpfFile
+   *          whether JPF file was selected or a main class
+   */
   private void runJpfSelected(boolean isJpfFile) {
     buttonMainAppendDynamicProperties.setEnabled(isJpfFile);
     buttonMainBrowseFilesystem.setEnabled(isJpfFile);
@@ -103,6 +119,9 @@ public class JPFRunTab extends AbstractJPFTab {
     updateLaunchConfigurationDialog();
   }
 
+  /**
+   * Trace selection changed.
+   */
   private void traceChanged() {
     boolean isNoTrace = radioTraceNoTrace.getSelection();
     textTraceFile.setEnabled(!isNoTrace);
@@ -170,7 +189,7 @@ public class JPFRunTab extends AbstractJPFTab {
         FileWriter fileWrite = null;
         try {
           @SuppressWarnings("unchecked")
-          Map<String, String> config = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG,
+          Map<String, String> config = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
                                                                   Collections.<String, String> emptyMap());
 
           fileWrite = new FileWriter(fileString, true);
@@ -565,7 +584,7 @@ public class JPFRunTab extends AbstractJPFTab {
 
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
+      Map<String, String> map = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
 
       configuration.setAttribute(JPFRunTab.JPF_ATTR_OPT_LISTENER, defaultProperty(map, "listener", ""));
       configuration.setAttribute(JPFRunTab.JPF_ATTR_OPT_SEARCH, defaultProperty(map, "search.class", ""));
@@ -661,7 +680,7 @@ public class JPFRunTab extends AbstractJPFTab {
   // return null;
   // }
   // if (originalListener.contains(removalListener)) {
-  // // TODO this is completely wrong!!!
+  // // T O D O this is completely wrong!!!
   // int startIndex = originalListener.indexOf(removalListener);
   // String result = originalListener.substring(0, startIndex);
   // int advancedIndex = startIndex + removalListener.length() + 1;
@@ -700,7 +719,7 @@ public class JPFRunTab extends AbstractJPFTab {
   private void performApplyDynamicConfiguration(ILaunchConfigurationWorkingCopy configuration) {
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+      Map<String, String> map = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
 
       String listenerString = "";
       map.remove("trace.file");
@@ -770,7 +789,7 @@ public class JPFRunTab extends AbstractJPFTab {
       configuration.setAttribute(JPF_ATTR_MAIN_JPFFILELOCATION, textMainAppFileLocation.getText());
 
       // reload app config
-      LookupConfigHelper.reloadConfig(configuration, JPFSettingsTab.ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
+      LookupConfigHelper.reloadConfig(configuration, JPFOverviewTab.ATTR_JPF_APPCONFIG, LookupConfigHelper.appConfigFactory(configuration));
 
       // reload jpf installations
       initializeExtensionInstallations(configuration, jpfInstallations, comboJpfInstallation, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX,

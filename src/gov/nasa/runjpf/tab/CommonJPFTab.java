@@ -48,7 +48,7 @@ import org.osgi.framework.Bundle;
  * 
  */
 @SuppressWarnings("restriction")
-public abstract class AbstractJPFTab extends JavaLaunchTab {
+public abstract class CommonJPFTab extends JavaLaunchTab {
 
   private static final String ATTRIBUTE_UNIQUE_PREFIX = "gov.nasa.jpf.eclipsejpf";
 
@@ -76,7 +76,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
   /**
    * Whether to store the trace instead of replaying it.
    * 
-   * @see AbstractJPFTab#JPF_ATTR_TRACE_ENABLED
+   * @see CommonJPFTab#JPF_ATTR_TRACE_ENABLED
    */
   public static final String JPF_ATTR_TRACE_STOREINSTEADOFREPLAY = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_TRACE_STOREINSTEADOFREPLAY";
   /** Trace file location */
@@ -84,7 +84,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
   /**
    * Whether trace is enabled
    * 
-   * @see AbstractJPFTab#JPF_ATTR_TRACE_STOREINSTEADOFREPLAY
+   * @see CommonJPFTab#JPF_ATTR_TRACE_STOREINSTEADOFREPLAY
    */
   public static final String JPF_ATTR_TRACE_ENABLED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_TRACE_ENABLED";
 
@@ -340,7 +340,7 @@ public abstract class AbstractJPFTab extends JavaLaunchTab {
 
     try {
       @SuppressWarnings("unchecked")
-      Map<String, String> appMap = configuration.getAttribute(JPFSettingsTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
+      Map<String, String> appMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
 
       String appValue = (String) appMap.get(key);
       if (appValue != null && appValue.trim().equals(value.trim())) {

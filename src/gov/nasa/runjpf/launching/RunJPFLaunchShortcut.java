@@ -5,9 +5,9 @@ import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFDebugTab;
-import gov.nasa.runjpf.tab.JPFSettingsTab;
+import gov.nasa.runjpf.tab.JPFOverviewTab;
 import gov.nasa.runjpf.tab.JPFSourceLookupTab;
-import gov.nasa.runjpf.util.ProjectUtil;
+import gov.nasa.runjpf.util.LaunchUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -149,7 +149,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       
       // add the result to the dynamic config
       @SuppressWarnings("unchecked")
-      Map<String, String> dynamicConfig = workingCopy.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
+      Map<String, String> dynamicConfig = workingCopy.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
       dynamicConfig.put("sourcepath", JPFSourceLookupTab.generateSourcepath(existingContainers));
 
     } catch (Exception e) {
@@ -202,7 +202,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
         String launchConfigName = getLaunchManager().generateLaunchConfigurationName(((IFile)type).getName());
         ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, launchConfigName);
         
-        JPFSettingsTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
+        JPFOverviewTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile)type);
         JPFArgumentsTab.defaults(wc);
@@ -229,7 +229,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       
    // add the result to the dynamic config
       @SuppressWarnings("unchecked")
-      Map<String, String> dynamicConfig = wc.getAttribute(JPFSettingsTab.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
+      Map<String, String> dynamicConfig = wc.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, new HashMap<>());
       dynamicConfig.put("classpath", JPFClasspathTab.generateClasspath(wc, entries));
       
     } catch (CoreException e) {
@@ -281,11 +281,11 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
   }
 
   public IResource getLaunchableResource(ISelection selection) {
-    return getLaunchableResource(ProjectUtil.getSelectedResource(selection));
+    return getLaunchableResource(LaunchUtils.getSelectedResource(selection));
   }
 
   public IResource getLaunchableResource(IEditorPart editorpart) {
-    return getLaunchableResource(ProjectUtil.getFile(editorpart.getEditorInput()));
+    return getLaunchableResource(LaunchUtils.getFile(editorpart.getEditorInput()));
   }
 
   private IResource getLaunchableResource(IResource ir) {
