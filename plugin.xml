@@ -147,7 +147,7 @@
          </enablement>
       </consolePatternMatchListener>
       <consolePatternMatchListener
-            class="gov.nasa.runjpf.JPFProcessPatternMatcher"
+            class="gov.nasa.runjpf.JPFProcessConsoleTracker"
             regex="([\w\\/]+\.java)(?::(\d+))?"
             qualifier="java"
             id="gov.nasa.runjpf.JPFProcessPatternMatcher">

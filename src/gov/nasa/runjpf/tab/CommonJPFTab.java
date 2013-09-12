@@ -109,6 +109,9 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
   public static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
   /** The embedded JPF classpath */
   public static final String JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH";
+  
+  /** Unique property so that JPF launch configuration can be distinguished from all other configurations */
+  public static final String JPF_ATTR_LAUNCHID = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_LAUNCHID";
 
   /**
    * If it's modified , just update the configuration directly.

@@ -1,6 +1,6 @@
 package gov.nasa.runjpf.internal.launching;
 
-import gov.nasa.runjpf.JPFProcessPatternMatcher;
+import gov.nasa.runjpf.JPFProcessConsoleTracker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class JPFRunner extends StandardVMRunner {
   /**
    * This is how the {@link StandardVMRunner} is forced to use the JPF specific
    * process identification.<br/>
-   * This is used by the {@link JPFProcessPatternMatcher}.
+   * This is used by the {@link JPFProcessConsoleTracker}.
    */
   @Override
   protected Map<String, String> getDefaultProcessMap() {
@@ -39,7 +39,8 @@ public class JPFRunner extends StandardVMRunner {
   }
 
   /**
-   * Creates process map for JPF processes.
+   * Creates process map for JPF processes with new ID
+   * <tt>gov.nasa.jpf.ui.jpfProcess</tt>.
    * 
    * @return The map
    */

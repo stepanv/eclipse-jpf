@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Text;
 
 /**
  * <p>
- * This is a GUI SWT Eclipse launch configuraion Tab for Java PathFinder
+ * This is a GUI SWT Eclipse launch configuration Tab for Java PathFinder
  * Verification launch action.<br/>
  * The intention of this tab is to provide user an easy way to determine the
  * exact set of parameters, properties and settings JPF will be started with.

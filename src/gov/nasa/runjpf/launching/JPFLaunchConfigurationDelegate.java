@@ -5,8 +5,8 @@ import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.internal.launching.JPFRunner;
-import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFOverviewTab;
+import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 
 import java.io.File;
@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -34,34 +33,24 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
-public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements
-    ILaunchConfigurationDelegate {
+/**
+ * <p>
+ * This delegate transform the <i>Launch Configuration</i> (an instance of
+ * {@link ILaunchConfiguration}) to match CLI accepted by JPF. <br/>
+ * That is a process with arguments to be executed.
+ * </p>
+ * <p>
+ * The sole execution is performed by {@link JPFRunner} or {@link JPFDebugger}
+ * depending on whether the debug mode is on.
+ * </p>
+ * 
+ * @author stepan
+ * 
+ */
+public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
 
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    boolean debugBothVMs = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGBOTHVMS, false);
-    boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
-//    String listenerClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_LISTENER, "");
-//    String searchClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_SEARCH, "");
-//    String targetClass = configuration.getAttribute(JPFCommonTab.JPF_OPT_TARGET, "");
-//    boolean override = configuration.getAttribute(JPFCommonTab.JPF_OPT_OVERRIDE_INSTEADOFADD, false);
-    
-    // /*
-    // * for those terminate by our self .
-    // *
-    // * @see #terminateOldRJRLauncher
-    // */
-    // if (/* run the validation */) {
-    // throw new CoreException(
-    // new Status(
-    // IStatus.ERROR,
-    // Plugin.PLUGIN_ID,
-    // 01,
-    // " Invalid run configuration , please check the configuration ",
-    // null));
-    // }
-
-    // addSourcesLookupProjectsFromMavenIfExist(configuration);
 
     if (monitor == null) {
       monitor = new NullProgressMonitor();
@@ -80,49 +69,46 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
 
       List<String> classpath = new LinkedList<>();
-      String embeddedJpfClasspath = configuration.getAttribute(JPFRunTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String)null);
-      
+      String embeddedJpfClasspath = configuration.getAttribute(JPFRunTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String) null);
+
       if (embeddedJpfClasspath != null) {
         // using embedded JPF
         classpath.add(embeddedJpfClasspath);
       } else {
-      
+
         try {
           Config config = LookupConfigHelper.defaultConfigFactory(configuration);
           EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
           File siteProperties = new File(config.getString("jpf.site"));
           File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
-          
+
           classpath.add(jpfRunJar.getAbsolutePath());
         } catch (NullPointerException npe) {
           EclipseJPF.logError("JPF was not sucessfully found.", npe);
           throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
         }
       }
-      
 
       // Create VM config
-      
-      VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
+
+      VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS,
+          classpath.toArray(new String[classpath.size()]));
 
       List<String> programArgs = new ArrayList<String>();
       if (configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
         programArgs.add(configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
       } // else +target=some.Class is used
       programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
-      
+
       @SuppressWarnings({ "unchecked" })
-      Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, Collections.<String, String>emptyMap());
-      
+      Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
+                                                                  Collections.<String, String> emptyMap());
+
       for (String key : dynamicMap.keySet()) {
         String value = dynamicMap.get(key);
         programArgs.add(new StringBuilder("+").append(key).append("=").append(value).toString());
       }
-      // TODO
-//      conditionallyAddOrOverride(programArgs, override, "target", targetClass);
-//      conditionallyAddOrOverride(programArgs, override, "listener", listenerClass);
-//      conditionallyAddOrOverride(programArgs, override, "search.class", searchClass);
-      
+
       runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
 
       // Environment variables
@@ -155,22 +141,18 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       launch.getSourceLocator();
       monitor.worked(1);
 
-      
       synchronized (configuration) {
-        // terminateOldRJRLauncher(configuration, launch);
-        // Launch the configuration - 1 unit of work
-        // getVMRunner(configuration, mode)
-        // .run(runConfig, launch, monitor);
         IVMRunner runner;
         IVMInstall vm = verifyVMInstall(configuration);
+        boolean debugBothVMs = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGBOTHVMS, false);
+        boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
+        
         if (ILaunchManager.DEBUG_MODE.equals(mode) && (debugBothVMs || !debugJPFInsteadOfTheProgram)) {
           runner = new JPFDebugger(vm, debugBothVMs);
         } else {
           runner = new JPFRunner(vm);
         }
         runner.run(runConfig, launch, monitor);
-
-        // registerRJRLauncher(configuration, launch);
       }
 
       // check for cancellation

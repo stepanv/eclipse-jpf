@@ -566,8 +566,12 @@ public class JPFRunTab extends CommonJPFTab {
    */
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
 
+    // set a unique id
+    configuration.setAttribute(JPF_ATTR_LAUNCHID, JPF_ATTR_LAUNCHID);
+    
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
+    
 
     if (jpfFile != null) {
       String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();

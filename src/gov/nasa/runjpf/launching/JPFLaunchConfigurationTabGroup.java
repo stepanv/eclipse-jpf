@@ -15,6 +15,13 @@ import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaJRETab;
 
+/**
+ * The tab group that facilities all the tabs JPF launch configuration dialog
+ * consists of.
+ * 
+ * @author stepan
+ * 
+ */
 public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup implements
     org.eclipse.debug.ui.ILaunchConfigurationTabGroup {
 
@@ -23,12 +30,13 @@ public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationT
 
     JPFRunTab jpfTab;
     if (ILaunchManager.DEBUG_MODE.equals(arg0.getMode())) {
+      // in the debug mode some more functionality is added.
       jpfTab = new JPFDebugTab();
     } else {
       jpfTab = new JPFRunTab();
     }
-    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { jpfTab, new JPFOverviewTab(), new JPFArgumentsTab(), new JPFClasspathTab(), new JavaJRETab(),
-        new JPFSourceLookupTab(), new EnvironmentTab(), new CommonTab() };
+    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { jpfTab, new JPFOverviewTab(), new JPFArgumentsTab(),
+        new JPFClasspathTab(), new JavaJRETab(), new JPFSourceLookupTab(), new EnvironmentTab(), new CommonTab() };
     setTabs(tabs);
   }
 }
