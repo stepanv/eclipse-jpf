@@ -221,30 +221,16 @@ public class JPFOverviewTab extends CommonJPFTab {
     new TableSorter(configTable);
   }
 
-  // String getSitePropertiesLocation(String[] args, String appPropPath) {
-  // String path = getPathArg(args, "site");
-  //
-  // if (path == null) {
-  // // look into the app properties
-  // // NOTE: we might want to drop this in the future because it constitutes
-  // // a cyclic properties file dependency
-  // if (appPropPath != null) {
-  // path = JPFSiteUtils.getMatchFromFile(appPropPath, "site");
-  // }
-  //
-  // if (path == null) {
-  // File siteProps = JPFSiteUtils.getStandardSiteProperties();
-  // if (siteProps != null) {
-  // path = siteProps.getAbsolutePath();
-  // }
-  // }
-  // }
-  //
-  // put("jpf.site", path);
-  //
-  // return path;
-  // }
-
+  /**
+   * Initialize the launch configuration with some defaults.
+   * 
+   * @param configuration
+   *          The launch configuration to initialize
+   * @param projectName
+   *          The name of the project or null
+   * @param jpfFile
+   *          The JPF file to execute or null
+   */
   public static void initDefaultConfiguration(ILaunchConfigurationWorkingCopy configuration, String projectName, IFile jpfFile) {
     String appPropPath = null;
     if (jpfFile != null && jpfFile.getLocation() != null && jpfFile.getLocation().toFile() != null
@@ -301,10 +287,6 @@ public class JPFOverviewTab extends CommonJPFTab {
     updateConfig(configuration);
 
     super.initializeFrom(configuration);
-  }
-
-  String getJpfFileLocation() {
-    return jpfFileLocationText.getText().trim();
   }
 
   @Override

@@ -182,7 +182,6 @@ public class JPFDebugTab extends JPFRunTab {
                                                                     Collections.<String, String> emptyMap());
       // we're using +jpf-core.native_classpath only here so we can safely
       // remove it
-      // TODO move this to JPFSettings and wipe it always
       dynMapConfig.remove("+jpf-core.native_classpath");
 
       if (!debugJpfItself || debugBothVms) {

@@ -24,7 +24,7 @@ import org.eclipse.jdt.launching.JavaRuntime;
  * user chooses through the GUI. adds some defaults to it.
  * </p>
  * <p>
- * Even though th super class is marked as noextendable it seems it works well.
+ * Even though the super class is marked as no-extendible it seems it works well.
  * </p>
  * 
  * @author stepan
