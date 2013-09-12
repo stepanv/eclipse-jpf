@@ -7,6 +7,8 @@
       name="JPF Config File" priority="normal">
     </content-type>
   </extension>
+  
+  <!-- The legacy "Verify.." option from the context menu now executes the new style run -->
   <extension point="org.eclipse.ui.popupMenus">
     <objectContribution adaptable="false"
       id="runjpf.jpfConfigLaunch" nameFilter="*.jpf"
@@ -19,6 +21,7 @@
     </objectContribution>
   </extension>
 
+  <!-- available launch configuration types -->
   <extension point="org.eclipse.debug.core.launchConfigurationTypes">
     <launchConfigurationType id="eclipse-jpf.launching.runJpf"
       name="Java PathFinder Verification"
@@ -41,6 +44,7 @@
     </launchConfigurationTypeImage>
   </extension>
 
+<!-- JPF Verification with conditional dialog triggered from "Run as" and "Debug as" context menu of .jpf files -->
   <extension point="org.eclipse.debug.ui.launchShortcuts">
     <shortcut class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut"
       icon="icons/jpf-logo.png" id="eclipse-jpf.launching.shortcut"
@@ -75,6 +79,8 @@
       </description>
     </shortcut>
   </extension>
+  
+  <!-- JPF Verification with dialog always on triggered from "Run as" and "Debug as" context menu of .jpf files -->
   <extension point="org.eclipse.debug.ui.launchShortcuts">
     <shortcut
       class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut:WITH_DIALOG"
@@ -111,8 +117,41 @@
     </shortcut>
   </extension>
   
-<extension
+  <!-- JPF Verify... legacy execution that remains available from "Run As" context menu of .jpf files -->
+  <extension point="org.eclipse.debug.ui.launchShortcuts">
+    <shortcut
+      class="gov.nasa.runjpf.launching.RunJPFLaunchShortcut:LEGACY"
+      icon="icons/jpf-logo.png" id="eclipse-jpf.launching.shortcutWithDialog"
+      label="Verify in Java Pathfinder ... (legacy)" modes="run">
+
+      <contextLabel label="Run the verification in JPF ..."
+        mode="run" />
+      <contextualLaunch>
+        <enablement>
+          <count value="1" />
+          <iterate>
+            <or>
+              <adapt type="org.eclipse.core.resources.IFile">
+                <test property="org.eclipse.core.resources.name"
+                  value="*.jpf" />
+              </adapt>
+            </or>
+          </iterate>
+        </enablement>
+      </contextualLaunch>
+
+      <configurationType id="eclipse-jpf.launching.runJpf">
+      </configurationType>
+
+      <description description="Run JPF" mode="run">
+      </description>
+    </shortcut>
+  </extension>
+  
+  <extension
          point="org.eclipse.ui.console.consolePatternMatchListeners">
+         
+         <!-- Standard Java process trackers that we inject even for JPF Process -->
       <consolePatternMatchListener
             class="org.eclipse.jdt.internal.debug.ui.console.JavaConsoleTracker"
             regex="\(\S*${java_extensions_regex}\S*\)"
@@ -146,11 +185,13 @@
             </or>
          </enablement>
       </consolePatternMatchListener>
+      
+      <!-- JPF Process console tracker that enables hyperlinks for JPF error output -->
       <consolePatternMatchListener
             class="gov.nasa.runjpf.JPFProcessConsoleTracker"
             regex="([\w\\/]+\.java)(?::(\d+))?"
             qualifier="java"
-            id="gov.nasa.runjpf.JPFProcessPatternMatcher">
+            id="gov.nasa.runjpf.JPFProcessConsoleTracker">
          <enablement>
             <or>
                <test property="org.eclipse.debug.ui.processTypeTest" value="gov.nasa.jpf.ui.jpfProcess"/>

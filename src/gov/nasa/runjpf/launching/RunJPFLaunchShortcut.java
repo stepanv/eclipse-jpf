@@ -1,6 +1,7 @@
 package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.RunJPF;
 import gov.nasa.runjpf.tab.CommonJPFTab;
 import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
@@ -49,12 +50,19 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 /**
+ * <p>
  * This shortcut is used when user clicks on <i>Run as</i> or <i>Debug as</i>
  * sub-option of the context menu of the file (for instance a file in a
- * <i>Project Explorer</i>).<br/>
+ * <i>Project Explorer</i>).
+ * </p>
+ * <p>
  * It will look for any associated already existing launch configurations and
  * then it is decided whether the verification (the run) should be directly
- * triggered or the <i>Launch configuration dialog</i> is shown.
+ * triggered or the <i>Launch configuration dialog</i> is shown.<br/>
+ * It is also possible to skip this shortcut and open the <i>Launch
+ * configuration dialog</i> (see {@link JPFLaunchConfigurationTabGroup})
+ * directly which is done if user opens the <i>Run Configurations...</i> or the
+ * <i>Debug Configurations...</i> dialogs.
  * 
  * @author stepan
  * 
@@ -67,11 +75,14 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
    * verification directly
    */
   private boolean showDialog = false;
+  private boolean legacy = false;
 
   @Override
   public void setInitializationData(IConfigurationElement config, String propertyName, Object data) {
     if ("WITH_DIALOG".equals(data)) { //$NON-NLS-1$
       this.showDialog = true;
+    } else if ("LEGACY".equals(data)) {
+      this.legacy  = true;
     }
   }
 
@@ -98,7 +109,12 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
    * @param mode
    *          debug or run mode
    */
-  private void launch(IResource resource, String mode) {
+  public void launch(IResource resource, String mode) {
+    if (legacy) {
+      runLegacy(resource);
+      return;
+    }
+    
     ILaunchConfiguration configuration = findOrCreateLaunchConfiguration(resource);
 
     if (configuration == null) {
@@ -110,6 +126,12 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       DebugUITools.openLaunchConfigurationDialog(getActiveShell(), configuration, group.getIdentifier(), null);
     } else {
       DebugUITools.launch(configuration, mode);
+    }
+  }
+
+  private void runLegacy(IResource resource) {
+    if (resource != null && resource instanceof IFile) {
+      new RunJPF((IFile)resource).schedule();
     }
   }
 
@@ -377,6 +399,16 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       return null;
 
     return win.getShell();
+  }
+
+  /**
+   * Whether to show the dialog.
+   * 
+   * @param showDialog
+   *          True or False
+   */
+  public void setShowDialog(boolean showDialog) {
+    this.showDialog = showDialog;
   }
 
 }
