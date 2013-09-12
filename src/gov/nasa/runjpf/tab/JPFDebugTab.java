@@ -195,7 +195,7 @@ public class JPFDebugTab extends JPFRunTab {
         } else if (selectedJdwpInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
           // using embedded jdwp
           String classpath = jdwpInstallations.getEmbedded().classpath(File.pathSeparator);
-          dynMapConfig.put("+jpf-core.native_classpath", classpath);
+          dynMapConfig.put("+jpf-core.native_classpath", classpath + File.pathSeparator);
         } // nothing changes
       }
     } catch (CoreException e) {
@@ -228,6 +228,6 @@ public class JPFDebugTab extends JPFRunTab {
       // we have other than embedded jdwps
       setWarningMessage("Multiple JDWP extensions found. It is likely, there will be some classpath issues.");
     }
-    return super.isValid(config);
+    return true;
   }
 }
