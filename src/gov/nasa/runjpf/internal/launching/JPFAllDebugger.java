@@ -49,18 +49,13 @@ import com.sun.jdi.connect.ListeningConnector;
  * 
  */
 @SuppressWarnings("restriction")
-public class JPFDebugger extends StandardVMDebugger {
+public class JPFAllDebugger extends JPFDebugger {
 
   private boolean debugVM;
 
-  public JPFDebugger(IVMInstall vmInstance, boolean debugVM) {
+  public JPFAllDebugger(IVMInstall vmInstance, boolean debugVM) {
     super(vmInstance);
     this.debugVM = debugVM;
-  }
-
-  @Override
-  protected Map<String, String> getDefaultProcessMap() {
-    return JPFRunner.jpfProcessDefaultMap();
   }
 
   /*

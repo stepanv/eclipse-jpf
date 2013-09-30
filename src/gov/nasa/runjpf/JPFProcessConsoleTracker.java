@@ -1,6 +1,6 @@
 package gov.nasa.runjpf;
 
-import gov.nasa.runjpf.internal.launching.JPFDebugger;
+import gov.nasa.runjpf.internal.launching.JPFAllDebugger;
 import gov.nasa.runjpf.internal.launching.JPFRunner;
 
 import java.util.regex.Matcher;
@@ -15,7 +15,7 @@ import org.eclipse.ui.console.TextConsole;
 /**
  * The tracker (referenced from <tt>/plugin.xml</tt>) for process type
  * <tt>gov.nasa.jpf.ui.jpfProcess</tt> that is injected by {@link JPFRunner} on
- * top of original <tt>StandardVMRunner</tt> configuration implementation. The same for {@link JPFDebugger}.<br/>
+ * top of original <tt>StandardVMRunner</tt> configuration implementation. The same for {@link JPFAllDebugger}.<br/>
  * Refer to {@link JPFRunner#jpfProcessDefaultMap()}.
  * 
  * @author stepan

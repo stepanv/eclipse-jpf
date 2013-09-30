@@ -3,6 +3,7 @@ package gov.nasa.runjpf.launching;
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
+import gov.nasa.runjpf.internal.launching.JPFAllDebugger;
 import gov.nasa.runjpf.internal.launching.JPFDebugger;
 import gov.nasa.runjpf.internal.launching.JPFRunner;
 import gov.nasa.runjpf.tab.JPFOverviewTab;
@@ -14,21 +15,31 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugEvent;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
+import org.eclipse.jdt.debug.core.IJavaDebugTarget;
+import org.eclipse.jdt.debug.core.IJavaExceptionBreakpoint;
+import org.eclipse.jdt.debug.core.IJavaMethodBreakpoint;
+import org.eclipse.jdt.debug.core.JDIDebugModel;
+import org.eclipse.jdt.internal.launching.LaunchingPlugin;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.ExecutionArguments;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
@@ -40,7 +51,7 @@ import org.eclipse.jdt.launching.VMRunnerConfiguration;
  * That is a process with arguments to be executed.
  * </p>
  * <p>
- * The sole execution is performed by {@link JPFRunner} or {@link JPFDebugger}
+ * The sole execution is performed by {@link JPFRunner} or {@link JPFAllDebugger}
  * depending on whether the debug mode is on.
  * </p>
  * 
@@ -131,6 +142,8 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
       // stop in main
       prepareStopInMain(configuration);
+      
+      prepareStopOnPropertyViolation(configuration);
 
       // done the verification phase
       monitor.worked(1);
@@ -148,9 +161,13 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
         
         if (ILaunchManager.DEBUG_MODE.equals(mode) && (debugBothVMs || !debugJPFInsteadOfTheProgram)) {
-          runner = new JPFDebugger(vm, debugBothVMs);
+          runner = new JPFAllDebugger(vm, debugBothVMs);
         } else {
-          runner = new JPFRunner(vm);
+          if (ILaunchManager.DEBUG_MODE.equals(mode) && debugJPFInsteadOfTheProgram) {
+            runner = new JPFDebugger(vm);
+          } else {
+            runner = new JPFRunner(vm);
+          }
         }
         runner.run(runConfig, launch, monitor);
       }
@@ -163,5 +180,83 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       monitor.done();
     }
   }
+  
+  protected void prepareStopOnPropertyViolation(ILaunchConfiguration configuration)
+      throws CoreException {
+    if (isStopOnPropertyViolation(configuration)) {
+      // This listener does not remove itself from the debug plug-in
+      // as an event listener (there is no dispose notification for
+      // launch delegates). However, since there is only one delegate
+      // instantiated per config type, this is tolerable.
+      DebugPlugin.getDefault().addDebugEventListener(this);
+    }
+  }
+  /**
+   * Handles the "stop-in-main" option.
+   * 
+   * @param events
+   *            the debug events.
+   * @see org.eclipse.debug.core.IDebugEventSetListener#handleDebugEvents(DebugEvent[])
+   */
+  public void handleDebugEvents(DebugEvent[] events) {
+    for (int i = 0; i < events.length; i++) {
+      DebugEvent event = events[i];
+      if (event.getKind() == DebugEvent.CREATE
+          && event.getSource() instanceof IJavaDebugTarget) {
+        IJavaDebugTarget target = (IJavaDebugTarget) event.getSource();
+        ILaunch launch = target.getLaunch();
+        if (launch != null) {
+          ILaunchConfiguration configuration = launch
+              .getLaunchConfiguration();
+          if (configuration != null) {
+            try {
+              if (isStopOnPropertyViolation(configuration)) {
+                Map<String, Object> map = new HashMap<String, Object>();
+                IJavaExceptionBreakpoint ebp = JDIDebugModel.createExceptionBreakpoint(ResourcesPlugin
+                              .getWorkspace()
+                              .getRoot(), "*", false, false, false, true , map); //$NON-NLS-1$
+                ebp.setPersisted(false);
+                target.breakpointAdded(ebp);
+              }
+              if (isStopInMain(configuration)) {
+                String mainType = getMainTypeName(configuration);
+                if (mainType != null) {
+                  Map<String, Object> map = new HashMap<String, Object>();
+                  map
+                      .put(
+                          IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN,
+                          IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN);
+                  IJavaMethodBreakpoint bp = JDIDebugModel
+                      .createMethodBreakpoint(
+                          ResourcesPlugin
+                              .getWorkspace()
+                              .getRoot(),
+                          mainType, "main", //$NON-NLS-1$
+                          "([Ljava/lang/String;)V", //$NON-NLS-1$
+                          true, false, false, -1, -1,
+                          -1, 1, false, map); 
+                  bp.setPersisted(false);
+                  target.breakpointAdded(bp);
+                  DebugPlugin.getDefault()
+                      .removeDebugEventListener(this);
+                }
+              }
+            } catch (CoreException e) {
+              LaunchingPlugin.log(e);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  /**
+   * @param configuration
+   * @return
+   */
+  protected boolean isStopOnPropertyViolation(ILaunchConfiguration configuration) {
+    return true;
+  }
+  
 
 }
