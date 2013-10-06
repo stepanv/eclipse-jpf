@@ -34,6 +34,7 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 import org.eclipse.jdt.debug.core.IJavaDebugTarget;
 import org.eclipse.jdt.debug.core.IJavaExceptionBreakpoint;
@@ -142,10 +143,10 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       if (monitor.isCanceled())
         return;
 
-      // stop in main
-      prepareStopInMain(configuration);
-
-      prepareStopOnPropertyViolation(configuration);
+      cleanupPropertyViolationBreakpoints();
+      
+      // stop in main or in app main or stop on property violation - conditional preparation
+      conditionallyConfigureAsDebugHandler(configuration);
 
       // done the verification phase
       monitor.worked(1);
@@ -183,14 +184,19 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     }
   }
 
-  protected void prepareStopOnPropertyViolation(ILaunchConfiguration configuration) throws CoreException {
-    if (isStopOnPropertyViolation(configuration)) {
+  /**
+   * @param configuration
+   * @throws CoreException 
+   */
+  private void conditionallyConfigureAsDebugHandler(ILaunchConfiguration configuration) throws CoreException {
+    if (isStopInAppMain(configuration) || isStopInMain(configuration) || isStopOnPropertyViolation(configuration)) {
       // This listener does not remove itself from the debug plug-in
       // as an event listener (there is no dispose notification for
       // launch delegates). However, since there is only one delegate
       // instantiated per config type, this is tolerable.
       DebugPlugin.getDefault().addDebugEventListener(this);
     }
+    
   }
 
   public String getJPFMainTypeName(ILaunchConfiguration configuration) throws CoreException {
@@ -211,7 +217,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
   }
 
   /**
-   * Handles the "stop-in-main" option.
+   * Handles the both "stop-in-main" and "stop-on-property-violation" options.
    * 
    * @param events
    *          the debug events.
@@ -227,7 +233,6 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
           ILaunchConfiguration configuration = launch.getLaunchConfiguration();
           if (configuration != null) {
             try {
-
               if (isStopOnPropertyViolation(configuration)) {
                 Map<String, Object> map = new HashMap<String, Object>(10);
                 map.put(CommonJPFTab.JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, CommonJPFTab.JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION);
@@ -270,6 +275,30 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
               EclipseJPF.logError("An error occurred during a creation of synthetic breakpoints.", e);
             }
           }
+        }
+      }
+    }
+  }
+
+  private void cleanupPropertyViolationBreakpoints() {
+    // remove all bp
+    DebugPlugin plugin = DebugPlugin.getDefault();
+    List<IBreakpoint> bpsRemove = new ArrayList<>();
+    if (plugin != null) {
+      for (IBreakpoint iBreakpoint : plugin.getBreakpointManager().getBreakpoints()) {
+        if (iBreakpoint instanceof SuspendVMExceptionBreakpoint) {
+          SuspendVMExceptionBreakpoint b = (SuspendVMExceptionBreakpoint )iBreakpoint;
+          if ("gov.nasa.jpf.jdwp.exception.special.NoPropertyViolationException".equals(b.getExceptionTypeName())) {
+            bpsRemove.add(b);
+          }
+        }
+      }
+      for (IBreakpoint iBreakpoint : bpsRemove) {
+        try {
+          plugin.getBreakpointManager().removeBreakpoint(iBreakpoint, true);
+        } catch (CoreException e) {
+          EclipseJPF.logInfo("Cannot remove breakpoint: " + iBreakpoint + ". Exception: " + e.getMessage());
+          // trying to go further
         }
       }
     }
