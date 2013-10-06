@@ -76,6 +76,9 @@ public class JPFRunTab extends CommonJPFTab {
   private Button buttonMainBrowseWorkspace;
   private Button buttonMainBrowseFilesystem;
   private Button buttonMainSearchMainClass;
+  private Button checkMainStopInAppMain;
+  private Button checkMainStopOnPropertyViolation;
+  private Button checkMainStopInJpfMain;
 
   private Text textOptListenerClass;
   private Text textOptSearchClass;
@@ -317,6 +320,37 @@ public class JPFRunTab extends CommonJPFTab {
     buttonMainSearchMainClass = new Button(grpJpfExecution, SWT.NONE);
     buttonMainSearchMainClass.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
     buttonMainSearchMainClass.setText("Search...");
+    
+    checkMainStopOnPropertyViolation = new Button(grpJpfExecution, SWT.CHECK);
+    checkMainStopOnPropertyViolation.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
+    checkMainStopOnPropertyViolation.setText("Stop on property violation");
+    checkMainStopOnPropertyViolation.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+    
+    checkMainStopInAppMain = new Button(grpJpfExecution, SWT.CHECK);
+    checkMainStopInAppMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
+    checkMainStopInAppMain.setText("Stop in application main");
+    checkMainStopInAppMain.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+    
+    checkMainStopInJpfMain = new Button(grpJpfExecution, SWT.CHECK);
+    checkMainStopInJpfMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
+    checkMainStopInJpfMain.setText("Stop in JPF main");
+    checkMainStopInJpfMain.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+    
     buttonMainSearchMainClass.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -646,6 +680,10 @@ public class JPFRunTab extends CommonJPFTab {
       runJpfSelected(jpfFileSelected);
       radioMainMethodClass.setSelection(!jpfFileSelected);
       radioMainAppFileSelected.setSelection(jpfFileSelected);
+      
+      checkMainStopInAppMain.setSelection(configuration.getAttribute(JPF_ATTR_MAIN_STOPINMAIN, false));
+      checkMainStopOnPropertyViolation.setSelection(configuration.getAttribute(JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, false));
+      checkMainStopInJpfMain.setSelection(configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN, false));
 
       initializeExtensionInstallations(configuration, jpfInstallations, comboJpfInstallation, JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX,
                                        EXTENSION_PROJECT);
@@ -820,6 +858,10 @@ public class JPFRunTab extends CommonJPFTab {
     }
 
     configuration.setAttribute(JPF_ATTR_MAIN_JPFFILESELECTED, radioMainAppFileSelected.getSelection());
+    
+    configuration.setAttribute(JPF_ATTR_MAIN_STOPINMAIN, checkMainStopInAppMain.getSelection());
+    configuration.setAttribute(JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, checkMainStopOnPropertyViolation.getSelection());
+    configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN, checkMainStopInJpfMain.getSelection());
 
     performApplyDynamicConfiguration(configuration);
   }

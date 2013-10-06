@@ -61,7 +61,12 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
   public static final String JPF_ATTR_MAIN_JPFTARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_JPFTARGET";
   /** Whether the JPF file is selected instead of the main class */
   public static final String JPF_ATTR_MAIN_JPFFILESELECTED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_JPFFILESELECTED";
+  /** Whether to stop in main when verifying the application in JPF - applies for debug mode only */
+  public static final String JPF_ATTR_MAIN_STOPINMAIN = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_STOPINMAIN";
+  /** Whether to stop on property violation when verifying the application in JPF - applies for debug mode only */
+  public static final String JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION";
 
+  
   /**
    * Whether to debug both VMs - JPF running in the JRE as well as the SuT
    * program running in JPF
