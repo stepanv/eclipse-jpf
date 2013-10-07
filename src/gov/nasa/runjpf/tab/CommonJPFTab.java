@@ -127,6 +127,12 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
    */
   public static final String JPF_ATTR_LAUNCHID = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_LAUNCHID";
 
+  
+  static final String[] JDWP_REQUIRED_LIBRARIES = new String[] { "lib/jpf-jdwp.jar", "lib/slf4j-api-1.7.5.jar",
+  "lib/slf4j-nop-1.7.5.jar" };
+ static final String JDWP_EXTENSION_STRING = "jpf-jdwp";
+public static final ExtensionInstallations jdwpInstallations = ExtensionInstallations.factory(JDWP_REQUIRED_LIBRARIES);
+
   /**
    * If it's modified , just update the configuration directly.
    */
@@ -428,6 +434,21 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
       map.remove("search.class");
       map.remove("target");
       map.remove("shell.port");
+      map.remove("jpf-core.native_classpath");
+
+      if (!configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false) || configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false)) {
+        // we're debugging the program itself
+
+        int selectedJdwpInstallation = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
+
+        if (selectedJdwpInstallation == -1) {
+          EclipseJPF.logError("Obtained incorret jdwp installation index");
+        } else if (selectedJdwpInstallation == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
+          // using embedded jdwp
+          String classpath = jdwpInstallations.getEmbedded().classpath(File.pathSeparator);
+          map.put("jpf-core.native_classpath", classpath + File.pathSeparator);
+        } // nothing changes
+      }
 
       if (configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false)) {
         // we're tracing

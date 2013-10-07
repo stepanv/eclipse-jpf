@@ -91,6 +91,22 @@ public class JPFRunTab extends CommonJPFTab {
   private Button buttonJpfRuntimeReset;
   
   private IType targetType;
+  
+  private Button checkDebugBothTargets;
+  private Button radioDebugJpfItself;
+  private Button radioDebugTheProgram;
+  private Combo comboJdwp;
+  private Label labelJdwp;
+  private Button buttonJdwpReset;
+
+  private boolean debug;
+
+  /**
+   * @param equals
+   */
+  public JPFRunTab(boolean debug) {
+    this.debug = debug;
+  }
 
   private String createPlaceholderedTraceFile() {
     String commonDir = Platform.getPreferencesService().getString(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.COMMON_DIR, "", null);
@@ -313,10 +329,16 @@ public class JPFRunTab extends CommonJPFTab {
     buttonMainSearchMainClass = new Button(grpJpfExecution, SWT.NONE);
     buttonMainSearchMainClass.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
     buttonMainSearchMainClass.setText("Search...");
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
     
     checkMainStopOnPropertyViolation = new Button(grpJpfExecution, SWT.CHECK);
     checkMainStopOnPropertyViolation.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
     checkMainStopOnPropertyViolation.setText("Stop on property violation");
+    checkMainStopOnPropertyViolation.setEnabled(debug);
     checkMainStopOnPropertyViolation.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -327,6 +349,7 @@ public class JPFRunTab extends CommonJPFTab {
     checkMainStopInAppMain = new Button(grpJpfExecution, SWT.CHECK);
     checkMainStopInAppMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
     checkMainStopInAppMain.setText("Stop in application main");
+    checkMainStopInAppMain.setEnabled(debug);
     checkMainStopInAppMain.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -337,6 +360,7 @@ public class JPFRunTab extends CommonJPFTab {
     checkMainStopInJpfMain = new Button(grpJpfExecution, SWT.CHECK);
     checkMainStopInJpfMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
     checkMainStopInJpfMain.setText("Stop in JPF main");
+    checkMainStopInJpfMain.setEnabled(debug);
     checkMainStopInJpfMain.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -348,6 +372,61 @@ public class JPFRunTab extends CommonJPFTab {
       @Override
       public void widgetSelected(SelectionEvent e) {
         targetType = handleSearchMainClassButtonSelected(textMainTarget, targetType);
+      }
+    });
+    
+    lblNewLabel = new Label(grpJpfExecution, SWT.NONE);
+    GridData gd_lblNewLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+    gd_lblNewLabel.heightHint = -12;
+    lblNewLabel.setLayoutData(gd_lblNewLabel);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    
+    radioDebugTheProgram = new Button(grpJpfExecution, SWT.RADIO);
+    GridData gd_radioDebugTheProgram = new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1);
+    gd_radioDebugTheProgram.widthHint = 239;
+    radioDebugTheProgram.setLayoutData(gd_radioDebugTheProgram);
+    radioDebugTheProgram.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+    radioDebugTheProgram.setText("Debug the program being verified in JPF");
+    radioDebugTheProgram.setEnabled(debug);
+    
+    checkDebugBothTargets = new Button(grpJpfExecution, SWT.CHECK);
+    GridData gd_checkDebugBothTargets = new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 2);
+    gd_checkDebugBothTargets.widthHint = 339;
+    checkDebugBothTargets.setLayoutData(gd_checkDebugBothTargets);
+    checkDebugBothTargets.setText("Debug both the underlaying VM and the program");
+    checkDebugBothTargets.setEnabled(debug);
+    
+        checkDebugBothTargets.addSelectionListener(new SelectionAdapter() {
+          public void widgetSelected(SelectionEvent e) {
+    
+            boolean readioChoicesEnabled = !checkDebugBothTargets.getSelection();
+            radioDebugJpfItself.setEnabled(readioChoicesEnabled);
+            radioDebugTheProgram.setEnabled(readioChoicesEnabled);
+            updateLaunchConfigurationDialog();
+          }
+        });
+    
+    radioDebugJpfItself = new Button(grpJpfExecution, SWT.RADIO);
+    radioDebugJpfItself.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+    radioDebugJpfItself.setEnabled(debug);
+    radioDebugJpfItself.setText("Debug JPF itself");
+    
+    label_1 = new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    new Label(grpJpfExecution, SWT.NONE);
+    radioDebugJpfItself.addSelectionListener(new SelectionAdapter() {
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
       }
     });
 
@@ -452,27 +531,11 @@ public class JPFRunTab extends CommonJPFTab {
         updateLaunchConfigurationDialog();
       }
     });
-
+    
     runtime(comp2);
   }
 
-  /** Append graphic objects to the runtime */
-  protected void runtimeAppend(Composite parent) {
-    // empty implementation for subclasses;
-  }
-
-  /**
-   * Prepend graphic object to the Runtime.
-   * 
-   * @param parent
-   *          The parent object
-   */
-  protected void runtimePrepend(Composite parent) {
-    // empty implementation for subclasses;
-  }
-
   private void runtime(Composite parent) {
-    runtimePrepend(parent);
 
     Group groupRuntime = new Group(parent, SWT.NONE);
     groupRuntime.setLayout(new GridLayout(3, false));
@@ -505,7 +568,30 @@ public class JPFRunTab extends CommonJPFTab {
       }
     });
 
-    runtimeAppend(groupRuntime);
+    labelJdwp = new Label(groupRuntime, SWT.NONE);
+    labelJdwp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+    labelJdwp.setText("JDWP:");
+
+    comboJdwp = SWTFactory.createCombo(groupRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
+    comboJdwp.setEnabled(debug);
+    
+    buttonJdwpReset = new Button(groupRuntime, SWT.NONE);
+    buttonJdwpReset.setText("Reset");
+    buttonJdwpReset.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        jdwpInstallations.reset(JDWP_REQUIRED_LIBRARIES);
+        initializeExtensionInstallations(getCurrentLaunchConfiguration(), jdwpInstallations, comboJdwp,
+                                         JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWP_EXTENSION_STRING);
+        updateLaunchConfigurationDialog();
+      }
+    });
+    comboJdwp.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
   }
 
   private static String defaultProperty(Map<String, String> map, String property, String defValue) {
@@ -546,6 +632,8 @@ public class JPFRunTab extends CommonJPFTab {
 
     // now we still don't know what is better to pick
     configuration.setAttribute(JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX, -1);
+    // it's better to not use the embedded one if normal extension is detected
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, -1);
 
     try {
       @SuppressWarnings("unchecked")
@@ -611,6 +699,23 @@ public class JPFRunTab extends CommonJPFTab {
       EclipseJPF.logError("Error during the JPF initialization form", e);
       MessageDialog.openError(getShell(), "Error during the initialization of the tab!", e.getMessage());
       return;
+    }
+    
+    try {
+      lookupLocalInstallation(configuration, jdwpInstallations, JDWP_EXTENSION_STRING);
+
+      checkDebugBothTargets.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false));
+      radioDebugJpfItself.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false));
+      radioDebugTheProgram.setSelection(!radioDebugJpfItself.getSelection());
+
+      boolean readioChoicesEnabled = !checkDebugBothTargets.getSelection();
+      radioDebugJpfItself.setEnabled(readioChoicesEnabled && debug);
+      radioDebugTheProgram.setEnabled(readioChoicesEnabled && debug);
+
+      initializeExtensionInstallations(configuration, jdwpInstallations, comboJdwp, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWP_EXTENSION_STRING);
+
+    } catch (CoreException e) {
+      EclipseJPF.logError("Error during the JPF initialization form", e);
     }
 
     super.initializeFrom(configuration);
@@ -690,7 +795,12 @@ public class JPFRunTab extends CommonJPFTab {
     configuration.setAttribute(JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, checkMainStopOnPropertyViolation.getSelection());
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN, checkMainStopInJpfMain.getSelection());
 
+    configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, checkDebugBothTargets.getSelection());
+    configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, radioDebugJpfItself.getSelection());
+    configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, comboJdwp.getSelectionIndex());
+
     storeDynamicConfiguration(configuration);
+
   }
 
   /**
@@ -739,6 +849,9 @@ public class JPFRunTab extends CommonJPFTab {
 
   /** The icon for this tab */
   private static final Image icon = createImage("icons/service_manager.png");
+  private Label label;
+  private Label lblNewLabel;
+  private Label label_1;
 
   @Override
   public Image getImage() {
@@ -806,9 +919,23 @@ public class JPFRunTab extends CommonJPFTab {
       setWarningMessage("Multiple JPF extensions found. It is likely, there will be some classpath issues.");
     }
 
-    if (!isPostValid(config)) {
-      return false;
+    if (comboJdwp.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {
+      if (!jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).isValid()) {
+        setErrorMessage("Embedded JDWP installation in error due to: "
+            + jdwpInstallations.get(ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX).toString());
+        return false;
+      }
+      // selected embedded
+      if (jdwpInstallations.size() > 1) {
+        // we have other than embedded jdwps
+        setWarningMessage("If embedded JDWP is used it is likely, it will interfere with locally installed jpf-jdwp extension.");
+      }
     }
+    if (jdwpInstallations.size() > 2) {
+      // we have other than embedded jdwps
+      setWarningMessage("Multiple JDWP extensions found. It is likely, there will be some classpath issues.");
+    }
+    
     return super.isValid(config);
   }
 

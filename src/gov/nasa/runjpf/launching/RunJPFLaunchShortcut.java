@@ -5,7 +5,6 @@ import gov.nasa.runjpf.RunJPF;
 import gov.nasa.runjpf.tab.CommonJPFTab;
 import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
-import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFOverviewTab;
 import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFSourceLookupTab;
@@ -335,7 +334,6 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
         JPFOverviewTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile) type);
         JPFRunTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile) type);
-        JPFDebugTab.initDefaultConfiguration(wc, type.getProject().getName(), (IFile) type);
         JPFArgumentsTab.defaults(wc);
 
         addProjectAsSourceLookupAndSourcepath(type.getProject(), wc);

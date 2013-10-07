@@ -2,9 +2,8 @@ package gov.nasa.runjpf.launching;
 
 import gov.nasa.runjpf.tab.JPFArgumentsTab;
 import gov.nasa.runjpf.tab.JPFClasspathTab;
-import gov.nasa.runjpf.tab.JPFRunTab;
-import gov.nasa.runjpf.tab.JPFDebugTab;
 import gov.nasa.runjpf.tab.JPFOverviewTab;
+import gov.nasa.runjpf.tab.JPFRunTab;
 import gov.nasa.runjpf.tab.JPFSourceLookupTab;
 
 import org.eclipse.debug.core.ILaunchManager;
@@ -28,15 +27,9 @@ public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationT
   @Override
   public void createTabs(ILaunchConfigurationDialog arg0, String arg1) {
 
-    JPFRunTab jpfTab;
-    if (ILaunchManager.DEBUG_MODE.equals(arg0.getMode())) {
-      // in the debug mode some more functionality is added.
-      jpfTab = new JPFDebugTab();
-    } else {
-      jpfTab = new JPFRunTab();
-    }
-    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { jpfTab, new JPFOverviewTab(), new JPFArgumentsTab(),
-        new JPFClasspathTab(), new JavaJRETab(), new JPFSourceLookupTab(), new EnvironmentTab(), new CommonTab() };
+    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { new JPFRunTab(ILaunchManager.DEBUG_MODE.equals(arg0.getMode())),
+        new JPFOverviewTab(), new JPFArgumentsTab(), new JPFClasspathTab(), new JavaJRETab(), new JPFSourceLookupTab(),
+        new EnvironmentTab(), new CommonTab() };
     setTabs(tabs);
   }
 }

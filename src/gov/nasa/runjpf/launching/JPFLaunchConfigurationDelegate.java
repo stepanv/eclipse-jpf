@@ -71,6 +71,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     PROPERTIES_TO_PREPEND.add("listener");
     PROPERTIES_TO_PREPEND.add("sourcepath");
     PROPERTIES_TO_PREPEND.add("classpath");
+    PROPERTIES_TO_PREPEND.add("jpf-core.native_classpath");
   }
 
   @Override
