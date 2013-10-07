@@ -2,6 +2,7 @@ package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.EclipseJPFLauncher;
 import gov.nasa.runjpf.internal.ui.ClassSearchEngine;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
@@ -61,12 +62,17 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
   public static final String JPF_ATTR_MAIN_JPFTARGET = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_JPFTARGET";
   /** Whether the JPF file is selected instead of the main class */
   public static final String JPF_ATTR_MAIN_JPFFILESELECTED = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_JPFFILESELECTED";
-  /** Whether to stop in main when verifying the application in JPF - applies for debug mode only */
+  /**
+   * Whether to stop in main when verifying the application in JPF - applies for
+   * debug mode only
+   */
   public static final String JPF_ATTR_MAIN_STOPINMAIN = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_STOPINMAIN";
-  /** Whether to stop on property violation when verifying the application in JPF - applies for debug mode only */
+  /**
+   * Whether to stop on property violation when verifying the application in JPF
+   * - applies for debug mode only
+   */
   public static final String JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION";
 
-  
   /**
    * Whether to debug both VMs - JPF running in the JRE as well as the SuT
    * program running in JPF
@@ -114,8 +120,11 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
   public static final String JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_INSTALLATIONINDEX";
   /** The embedded JPF classpath */
   public static final String JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH";
-  
-  /** Unique property so that JPF launch configuration can be distinguished from all other configurations */
+
+  /**
+   * Unique property so that JPF launch configuration can be distinguished from
+   * all other configurations
+   */
   public static final String JPF_ATTR_LAUNCHID = ATTRIBUTE_UNIQUE_PREFIX + "JPF_ATTR_LAUNCHID";
 
   /**
@@ -378,5 +387,94 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
     if (value != null && !Objects.equals("", value) && !isApplicationProperty(configuration, key, value)) {
       map.put(key, value);
     }
+  }
+
+  /**
+   * Conditionally add a listener to the existing listeners provided the
+   * listener is not present.
+   * 
+   * @param originalListeners
+   *          The listeners delimited by comma where to append the new listener
+   * @param newListener
+   *          The listener to add
+   * @return New listeners delimited by comma.
+   */
+  protected static String addListener(String originalListeners, String newListener) {
+    if (originalListeners == null || "".equals(originalListeners)) {
+      return newListener;
+    }
+    if (originalListeners.contains(newListener)) {
+      return originalListeners;
+    }
+    return originalListeners + "," + newListener;
+  }
+
+  /**
+   * Stores the <i>dynamic</i> configuration from all the tabs into a map that
+   * is to be used for creation of JPF CLI properties.
+   * 
+   * @param configuration
+   *          The launch configuration to store the dynamic configuration from.
+   */
+  protected static void storeDynamicConfiguration(ILaunchConfigurationWorkingCopy configuration) {
+    try {
+      @SuppressWarnings("unchecked")
+      Map<String, String> map = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
+
+      String listenerString = "";
+      map.remove("trace.file");
+      map.remove("choice.use_trace");
+      map.remove("listener");
+      map.remove("search.class");
+      map.remove("target");
+      map.remove("shell.port");
+
+      if (configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false)) {
+        // we're tracing
+        String traceFileName = configuration.getAttribute(JPF_ATTR_TRACE_FILE, "");
+
+        if (configuration.getAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, false)) {
+          // we're storing a trace
+
+          map.put("trace.file", traceFileName);
+          listenerString = addListener(listenerString, ".listener.TraceStorer");
+
+        } else {
+          // we're replaying a trace
+
+          map.put("choice.use_trace", traceFileName);
+          listenerString = addListener(listenerString, ".listener.ChoiceSelector");
+
+        }
+
+      }
+
+      String listener = configuration.getAttribute(JPF_ATTR_OPT_LISTENER, "");
+      if (!isApplicationProperty(configuration, "listener", listener)) {
+        listenerString = addListener(listenerString, listener);
+      }
+      if (!Objects.equals("", listenerString)) {
+        map.put("listener", listenerString);
+      }
+      putIfNotApplicationPropertyAndNotEmpty(configuration, map, "search.class", configuration.getAttribute(JPF_ATTR_OPT_SEARCH, ""));
+
+      if (configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, false)) {
+        map.put("shell.port", String.valueOf(configuration.getAttribute(JPF_ATTR_OPT_SHELLPORT, defaultShellPort())));
+      }
+
+      String target = configuration.getAttribute(JPF_ATTR_MAIN_JPFTARGET, "");
+      putIfNotApplicationPropertyAndNotEmpty(configuration, map, "target", target);
+
+    } catch (CoreException e) {
+      EclipseJPF.logError("Cannot reset dynamic configuration properties!", e);
+    }
+  }
+
+  /**
+   * The default shell port as specified by the configuration.
+   */
+  protected static int defaultShellPort() {
+    return Platform.getPreferencesService().getInt(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.PORT, EclipseJPFLauncher.DEFAULT_PORT,
+                                                   null);
   }
 }

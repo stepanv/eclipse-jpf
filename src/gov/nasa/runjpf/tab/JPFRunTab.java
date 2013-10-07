@@ -80,11 +80,6 @@ public class JPFRunTab extends CommonJPFTab {
   private Button checkMainStopOnPropertyViolation;
   private Button checkMainStopInJpfMain;
 
-  private Text textOptListenerClass;
-  private Text textOptSearchClass;
-  private Text textOptShellPort;
-  private Button checkOptShellEnabled;
-
   private Text textTraceFile;
   private Button radioTraceStore;
   private Button radioTraceReplay;
@@ -94,9 +89,7 @@ public class JPFRunTab extends CommonJPFTab {
 
   private Combo comboJpfInstallation;
   private Button buttonJpfRuntimeReset;
-
-  private IType listenerType;
-  private IType searchType;
+  
   private IType targetType;
 
   private String createPlaceholderedTraceFile() {
@@ -358,72 +351,6 @@ public class JPFRunTab extends CommonJPFTab {
       }
     });
 
-    Group groupOpt = new Group(comp, SWT.NONE);
-    groupOpt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    groupOpt.setText("Common JPF settings");
-    groupOpt.setLayout(new GridLayout(5, false));
-
-    Label labelListener = new Label(groupOpt, SWT.NONE);
-    labelListener.setText("Listener:");
-
-    textOptListenerClass = new Text(groupOpt, SWT.BORDER);
-    textOptListenerClass.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-    textOptListenerClass.addModifyListener(new ModifyListener() {
-      @Override
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
-
-    Button buttonListenerSearch = new Button(groupOpt, SWT.NONE);
-    buttonListenerSearch.setText("Search...");
-    buttonListenerSearch.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        listenerType = handleSupertypeSearchButtonSelected("gov.nasa.jpf.JPFListener", textOptListenerClass, listenerType);
-        updateLaunchConfigurationDialog();
-      }
-    });
-
-    Label labelSearch = new Label(groupOpt, SWT.NONE);
-    labelSearch.setText("Search:");
-
-    textOptSearchClass = new Text(groupOpt, SWT.BORDER);
-    textOptSearchClass.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-    textOptSearchClass.addModifyListener(new ModifyListener() {
-      @Override
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
-
-    Button searchSearchButton = new Button(groupOpt, SWT.NONE);
-    searchSearchButton.setText("Search...");
-    searchSearchButton.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        searchType = handleSupertypeSearchButtonSelected("gov.nasa.jpf.search.Search", textOptSearchClass, searchType);
-        updateLaunchConfigurationDialog();
-      }
-    });
-
-    checkOptShellEnabled = new Button(groupOpt, SWT.CHECK);
-    checkOptShellEnabled.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-    checkOptShellEnabled.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        boolean isShellEnabled = checkOptShellEnabled.getSelection();
-        textOptShellPort.setEnabled(isShellEnabled);
-        updateLaunchConfigurationDialog();
-      }
-    });
-    checkOptShellEnabled.setText("Enable shell on port:");
-
-    textOptShellPort = new Text(groupOpt, SWT.BORDER);
-    textOptShellPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-    new Label(groupOpt, SWT.NONE);
-    new Label(groupOpt, SWT.NONE);
-
     Group groupTrace = new Group(comp2, SWT.NONE);
     groupTrace.setLayout(new GridLayout(3, false));
     groupTrace.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
@@ -656,15 +583,7 @@ public class JPFRunTab extends CommonJPFTab {
 
     try {
       textMainAppFileLocation.setText(configuration.getAttribute(JPF_ATTR_MAIN_JPFFILELOCATION, ""));
-      setText(configuration, textOptListenerClass, JPFRunTab.JPF_ATTR_OPT_LISTENER);
-      setText(configuration, textOptSearchClass, JPFRunTab.JPF_ATTR_OPT_SEARCH);
       setText(configuration, textMainTarget, JPFRunTab.JPF_ATTR_MAIN_JPFTARGET);
-
-      checkOptShellEnabled.setSelection(configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, true));
-      int defaultShellPort = Platform.getPreferencesService().getInt(EclipseJPF.BUNDLE_SYMBOLIC, EclipseJPFLauncher.PORT,
-                                                                     EclipseJPFLauncher.DEFAULT_PORT, null);
-      textOptShellPort.setText(String.valueOf(configuration.getAttribute(JPF_ATTR_OPT_SHELLPORT, defaultShellPort)));
-      textOptShellPort.setEnabled(configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, true));
 
       boolean traceEnabled = configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false);
 
@@ -706,45 +625,6 @@ public class JPFRunTab extends CommonJPFTab {
     return "JPF Run";
   }
 
-  private String addListener(String originalListener, String newListener) {
-    if (originalListener == null || "".equals(originalListener)) {
-      return newListener;
-    }
-    if (originalListener.contains(newListener)) {
-      return originalListener;
-    }
-    return originalListener + "," + newListener;
-  }
-
-  // private String removeListener(String originalListener, String
-  // removalListener) {
-  // if (originalListener == null) {
-  // return null;
-  // }
-  // if (originalListener.contains(removalListener)) {
-  // // T O D O this is completely wrong!!!
-  // int startIndex = originalListener.indexOf(removalListener);
-  // String result = originalListener.substring(0, startIndex);
-  // int advancedIndex = startIndex + removalListener.length() + 1;
-  // if (originalListener.length() >= advancedIndex) {
-  // String append = originalListener.substring(startIndex +
-  // removalListener.length() + 1);
-  //
-  // if (result.endsWith(",") && append.startsWith(",")) {
-  // result += append.substring(1);
-  // } else {
-  // result += append;
-  // }
-  // } else {
-  // if (result.endsWith(",")) {
-  // result = result.substring(0, result.length() - 1);
-  // }
-  // }
-  // return result;
-  // }
-  // return originalListener;
-  // }
-
   public boolean attributeEquals(ILaunchConfiguration configuration, String stringAttributeName, String valueCandidate) {
     if (valueCandidate == null) {
       return false;
@@ -758,73 +638,9 @@ public class JPFRunTab extends CommonJPFTab {
     }
   }
 
-  private void performApplyDynamicConfiguration(ILaunchConfigurationWorkingCopy configuration) {
-    try {
-      @SuppressWarnings("unchecked")
-      Map<String, String> map = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
-
-      String listenerString = "";
-      map.remove("trace.file");
-      map.remove("choice.use_trace");
-      map.remove("listener");
-      map.remove("search.class");
-      map.remove("target");
-      map.remove("shell.port");
-
-      if (!radioTraceNoTrace.getSelection()) {
-        // we're tracing
-        String traceFileName = textTraceFile.getText().trim();
-        if (radioTraceStore.getSelection()) {
-          // we're storing a trace
-
-          // let's substitute the generated random string into the unique
-          // placeholder
-          if (traceFileName.contains(JPFRunTab.UNIQUE_ID_PLACEHOLDER)) {
-            String uniqueId = UUID.randomUUID().toString();
-            traceFileName = traceFileName.replace(JPFRunTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
-            textTraceFile.setText(traceFileName);
-          }
-          map.put("trace.file", traceFileName);
-
-          listenerString = addListener(listenerString, ".listener.TraceStorer");
-
-        } else if (radioTraceReplay.getSelection()) {
-          // we're replaying a trace
-          map.put("choice.use_trace", traceFileName);
-
-          listenerString = addListener(listenerString, ".listener.ChoiceSelector");
-        } else {
-          throw new IllegalStateException("Shouldn't occur");
-        }
-        configuration.setAttribute(JPF_ATTR_TRACE_FILE, traceFileName);
-      }
-
-      if (checkOptShellEnabled.getSelection()) {
-        map.put("shell.port", textOptShellPort.getText());
-      }
-
-      if (!isApplicationProperty(configuration, "listener", textOptListenerClass.getText())) {
-        listenerString = addListener(listenerString, textOptListenerClass.getText().trim());
-      }
-      if (!Objects.equals("", listenerString)) {
-        map.put("listener", listenerString);
-      }
-      putIfNotApplicationPropertyAndNotEmpty(configuration, map, "search.class", textOptSearchClass.getText());
-      putIfNotApplicationPropertyAndNotEmpty(configuration, map, "target", textMainTarget.getText());
-
-    } catch (CoreException e) {
-      EclipseJPF.logError("Cannot reset dynamic configuration properties!", e);
-    }
-  }
-
   @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     generateImplicitProject(configuration);
-
-    configuration.setAttribute(JPF_ATTR_OPT_SHELLENABLED, checkOptShellEnabled.getSelection());
-    // port is already validated
-    int portShell = Integer.parseInt(textOptShellPort.getText());
-    configuration.setAttribute(JPF_ATTR_OPT_SHELLPORT, portShell);
 
     if (!attributeEquals(configuration, JPF_ATTR_MAIN_JPFFILELOCATION, textMainAppFileLocation.getText())) {
       // jpf file location has changed
@@ -840,9 +656,20 @@ public class JPFRunTab extends CommonJPFTab {
 
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
     configuration.setAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, radioTraceStore.getSelection());
+   
+    String traceFileName = textTraceFile.getText();
+    configuration.setAttribute(JPF_ATTR_TRACE_FILE, traceFileName);
+   
+    if (!radioTraceNoTrace.getSelection()) {
+      // let's substitute the generated random string into the unique
+      // placeholder
+      if (traceFileName.contains(JPFRunTab.UNIQUE_ID_PLACEHOLDER)) {
+        String uniqueId = UUID.randomUUID().toString();
+        traceFileName = traceFileName.replace(JPFRunTab.UNIQUE_ID_PLACEHOLDER, uniqueId);
+        textTraceFile.setText(traceFileName);
+      }
+    }
 
-    configuration.setAttribute(JPF_ATTR_OPT_LISTENER, textOptListenerClass.getText().trim());
-    configuration.setAttribute(JPF_ATTR_OPT_SEARCH, textOptSearchClass.getText().trim());
     configuration.setAttribute(JPF_ATTR_MAIN_JPFTARGET, textMainTarget.getText().trim());
 
     int selectedJpfInstallation = comboJpfInstallation.getSelectionIndex();
@@ -863,7 +690,7 @@ public class JPFRunTab extends CommonJPFTab {
     configuration.setAttribute(JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, checkMainStopOnPropertyViolation.getSelection());
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN, checkMainStopInJpfMain.getSelection());
 
-    performApplyDynamicConfiguration(configuration);
+    storeDynamicConfiguration(configuration);
   }
 
   /**
@@ -875,7 +702,7 @@ public class JPFRunTab extends CommonJPFTab {
   private void generateImplicitProject(ILaunchConfigurationWorkingCopy configuration) {
     IProject implicitProject = null;
 
-    for (IType type : new IType[] { searchType, listenerType, targetType }) {
+    for (IType type : new IType[] { targetType }) {
       if (type == null || type.getJavaProject() == null) {
         continue;
       }
@@ -958,21 +785,6 @@ public class JPFRunTab extends CommonJPFTab {
     if (radioTraceReplay.getSelection() && !testFileExists(traceFileString)) {
       setErrorMessage("Provided trace file: '" + traceFileString + "' doesn't exist!");
       return false;
-    }
-    if (checkOptShellEnabled.getSelection()) {
-      int port;
-      try {
-        port = Integer.parseInt(textOptShellPort.getText());
-      } catch (NumberFormatException e) {
-        setErrorMessage("Provided port number cannot be converted to integer: " + e.getMessage());
-        return false;
-      }
-      if (port < 0) {
-        // let's do not care about the upper bound cause I don't know if there
-        // are platforms that support different number than the normal one
-        setErrorMessage("Provided port is invalid");
-        return false;
-      }
     }
 
     if (comboJpfInstallation.getSelectionIndex() == ExtensionInstallations.EMBEDDED_INSTALLATION_INDEX) {

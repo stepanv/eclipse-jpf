@@ -1,6 +1,7 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.launching.JPFLaunchConfigurationDelegate;
 import gov.nasa.runjpf.tab.internal.ExtendedPropertyContentProvider;
 import gov.nasa.runjpf.tab.internal.ExtendedPropertyLabelProvider;
@@ -9,7 +10,6 @@ import gov.nasa.runjpf.tab.internal.TableSorter;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -30,6 +31,8 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
@@ -40,6 +43,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
@@ -94,6 +98,13 @@ public class JPFOverviewTab extends CommonJPFTab {
 
   Button checkDefaultProperties;
   Button checkCmdargsProperties;
+  private Text textOptListenerClass;
+
+  private IType listenerType;
+  private IType searchType;
+  private Text textOptSearchClass;
+  private Button checkOptShellEnabled;
+  private Text textOptShellPort;
 
   /**
    * @wbp.parser.entryPoint
@@ -106,18 +117,84 @@ public class JPFOverviewTab extends CommonJPFTab {
     gridLayout.numColumns = 1;
     setControl(mainComposite);
 
+    Group groupOpt = new Group(mainComposite, SWT.NONE);
+    groupOpt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    groupOpt.setText("Common JPF settings");
+    groupOpt.setLayout(new GridLayout(5, false));
+
+    Label labelListener = new Label(groupOpt, SWT.NONE);
+    labelListener.setText("Listener:");
+
+    textOptListenerClass = new Text(groupOpt, SWT.BORDER);
+    textOptListenerClass.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+    textOptListenerClass.addModifyListener(new ModifyListener() {
+      @Override
+      public void modifyText(ModifyEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+
+    Button buttonListenerSearch = new Button(groupOpt, SWT.NONE);
+    buttonListenerSearch.setText("Search...");
+    buttonListenerSearch.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        listenerType = handleSupertypeSearchButtonSelected("gov.nasa.jpf.JPFListener", textOptListenerClass, listenerType);
+        updateLaunchConfigurationDialog();
+      }
+    });
+
+    Label labelSearch = new Label(groupOpt, SWT.NONE);
+    labelSearch.setText("Search:");
+
+    textOptSearchClass = new Text(groupOpt, SWT.BORDER);
+    textOptSearchClass.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+    textOptSearchClass.addModifyListener(new ModifyListener() {
+      @Override
+      public void modifyText(ModifyEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+
+    Button searchSearchButton = new Button(groupOpt, SWT.NONE);
+    searchSearchButton.setText("Search...");
+    searchSearchButton.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        searchType = handleSupertypeSearchButtonSelected("gov.nasa.jpf.search.Search", textOptSearchClass, searchType);
+        updateLaunchConfigurationDialog();
+      }
+    });
+
+    checkOptShellEnabled = new Button(groupOpt, SWT.CHECK);
+    checkOptShellEnabled.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+    checkOptShellEnabled.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        boolean isShellEnabled = checkOptShellEnabled.getSelection();
+        textOptShellPort.setEnabled(isShellEnabled);
+        updateLaunchConfigurationDialog();
+      }
+    });
+    checkOptShellEnabled.setText("Enable shell on port:");
+
+    textOptShellPort = new Text(groupOpt, SWT.BORDER);
+    textOptShellPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+    new Label(groupOpt, SWT.NONE);
+    new Label(groupOpt, SWT.NONE);
+
     createConfigTable(mainComposite);
-    
+
     Composite composite = new Composite(mainComposite, SWT.NONE);
     composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     GridLayout gl_composite = new GridLayout(2, false);
     gl_composite.marginWidth = 0;
     composite.setLayout(gl_composite);
-    
+
     Label lblNewLabel = new Label(composite, SWT.NONE);
     lblNewLabel.setText("Generated command line:");
     new Label(composite, SWT.NONE);
-    
+
     textGeneratedCommandLine = new Text(composite, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
     GridData gd_text_1 = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
     gd_text_1.heightHint = 113;
@@ -289,31 +366,28 @@ public class JPFOverviewTab extends CommonJPFTab {
    *          the configuration to use as input for the backing table
    */
   protected void updateConfig(ILaunchConfiguration configuration) {
-    configTable.setInput(configuration);
+    updateConfigTable(configuration);
     updateLaunchConfigurationDialog();
   }
 
+  @Override
   public void initializeFrom(ILaunchConfiguration configuration) {
 
     try {
+      setText(configuration, textOptListenerClass, JPFRunTab.JPF_ATTR_OPT_LISTENER);
+      setText(configuration, textOptSearchClass, JPFRunTab.JPF_ATTR_OPT_SEARCH);
+
+      checkOptShellEnabled.setSelection(configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, true));
+      textOptShellPort.setText(String.valueOf(configuration.getAttribute(JPF_ATTR_OPT_SHELLPORT, defaultShellPort())));
+      textOptShellPort.setEnabled(configuration.getAttribute(JPF_ATTR_OPT_SHELLENABLED, true));
+
       checkDynamicProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_DYNAMICSELECTED, true));
       checkCmdargsProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_CMDARGSSELECTED, true));
       checkDefaultProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_DEFAULTSELECTED, false));
       checkAppProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, false));
-      
-      JPFLaunchConfigurationDelegate jpfDelegate = new JPFLaunchConfigurationDelegate();
-      VMRunnerConfiguration runConfig = jpfDelegate.createRunConfig(configuration);
-      
-      List<String> arguments = new LinkedList<>();
-      arguments.add("java");
-      arguments.add("-classpath");
-      arguments.add(StringUtils.join(runConfig.getClassPath(), File.pathSeparator));
-      arguments.addAll(Arrays.asList(runConfig.getVMArguments()));
-      arguments.add(runConfig.getClassToLaunch());
-      arguments.addAll(Arrays.asList(runConfig.getProgramArguments()));
-      
-      textGeneratedCommandLine.setText(StringUtils.join(arguments, "\n"));
-      
+
+      updateCommandLineText(configuration);
+
     } catch (CoreException e1) {
       // this should not happened
       throw new IllegalStateException("Programmer's fatal error...", e1);
@@ -328,6 +402,25 @@ public class JPFOverviewTab extends CommonJPFTab {
     super.initializeFrom(configuration);
   }
 
+  private void updateCommandLineText(ILaunchConfiguration configuration) {
+    try {
+      JPFLaunchConfigurationDelegate jpfDelegate = new JPFLaunchConfigurationDelegate();
+      VMRunnerConfiguration runConfig = jpfDelegate.createRunConfig(configuration);
+
+      List<String> arguments = new LinkedList<>();
+      arguments.add("java");
+      arguments.add("-classpath");
+      arguments.add(StringUtils.join(runConfig.getClassPath(), File.pathSeparator));
+      arguments.addAll(Arrays.asList(runConfig.getVMArguments()));
+      arguments.add(runConfig.getClassToLaunch());
+      arguments.addAll(Arrays.asList(runConfig.getProgramArguments()));
+
+      textGeneratedCommandLine.setText(StringUtils.join(arguments, "\n"));
+    } catch (CoreException e) {
+      EclipseJPF.logError("Cannot update command line text", e);
+    }
+  }
+
   @Override
   public String getName() {
     return "JPF Overview";
@@ -339,10 +432,58 @@ public class JPFOverviewTab extends CommonJPFTab {
     configuration.setAttribute(ATTR_JPF_SETTINGS_CMDARGSSELECTED, checkCmdargsProperties.getSelection());
     configuration.setAttribute(ATTR_JPF_SETTINGS_DEFAULTSELECTED, checkDefaultProperties.getSelection());
     configuration.setAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, checkAppProperties.getSelection());
+
+    configuration.setAttribute(JPF_ATTR_OPT_LISTENER, textOptListenerClass.getText().trim());
+    configuration.setAttribute(JPF_ATTR_OPT_SEARCH, textOptSearchClass.getText().trim());
+
+    // port is already validated
+    int portShell = Integer.parseInt(textOptShellPort.getText());
+    configuration.setAttribute(JPF_ATTR_OPT_SHELLPORT, portShell);
+    configuration.setAttribute(JPF_ATTR_OPT_SHELLENABLED, checkOptShellEnabled.getSelection());
+
+    // store the dynamic configuration into the launch configuration
+    storeDynamicConfiguration(configuration);
+
+    // update the configuration table
+    updateConfigTable(configuration);
+    // update the generated command line text
+    updateCommandLineText(configuration);
+  }
+
+  /**
+   * Updates the configuration table with the values from the given launch
+   * configuration.
+   * 
+   * @param configuration
+   *          The launch configuration to update the configuration table with.
+   */
+  private void updateConfigTable(ILaunchConfiguration configuration) {
+    configTable.setInput(configuration);
   }
 
   @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
     initDefaultConfiguration(configuration, null, null);
   }
+
+  @Override
+  public boolean isValid(ILaunchConfiguration launchConfig) {
+    if (checkOptShellEnabled.getSelection()) {
+      int port;
+      try {
+        port = Integer.parseInt(textOptShellPort.getText());
+      } catch (NumberFormatException e) {
+        setErrorMessage("Provided port number cannot be converted to integer: " + e.getMessage());
+        return false;
+      }
+      if (port < 0) {
+        // let's do not care about the upper bound cause I don't know if there
+        // are platforms that support different number than the normal one
+        setErrorMessage("Provided port is invalid");
+        return false;
+      }
+    }
+    return true;
+  }
+
 }

@@ -18,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -63,6 +65,14 @@ import org.eclipse.jdt.launching.VMRunnerConfiguration;
  */
 public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
 
+  /** The set of JPF properties that are automatically prepended */
+  private static Set<String> PROPERTIES_TO_PREPEND = new HashSet<>();
+  static {
+    PROPERTIES_TO_PREPEND.add("listener");
+    PROPERTIES_TO_PREPEND.add("sourcepath");
+    PROPERTIES_TO_PREPEND.add("classpath");
+  }
+
   @Override
   public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
 
@@ -86,8 +96,9 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
         return;
 
       cleanupPropertyViolationBreakpoints();
-      
-      // stop in main or in app main or stop on property violation - conditional preparation
+
+      // stop in main or in app main or stop on property violation - conditional
+      // preparation
       conditionallyConfigureAsDebugHandler(configuration);
 
       // done the verification phase
@@ -126,6 +137,16 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     }
   }
 
+  /**
+   * Creates <i>Run Configuration</i> from the current <i>Launch
+   * Configuration</i>
+   * 
+   * @param configuration
+   *          The Launch configuration to create the Run configuration from.
+   * @return The created Run Configuration
+   * @throws CoreException
+   *           If something bad deep down happens.
+   */
   public VMRunnerConfiguration createRunConfig(ILaunchConfiguration configuration) throws CoreException {
     // Program & VM arguments
     ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
@@ -153,10 +174,26 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
 
     // Create VM config
 
-    VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS,
-        classpath.toArray(new String[classpath.size()]));
+    VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS, classpath.toArray(new String[classpath.size()]));
 
-    List<String> programArgs = extracted(configuration, execArgs);
+    List<String> programArgs = new ArrayList<String>();
+    if (configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
+      programArgs.add(configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
+    } // else +target=some.Class is used
+    programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
+
+    @SuppressWarnings({ "unchecked" })
+    Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
+                                                                Collections.<String, String> emptyMap());
+
+    for (String key : dynamicMap.keySet()) {
+      String value = dynamicMap.get(key);
+      if (PROPERTIES_TO_PREPEND.contains(key)) {
+        programArgs.add(new StringBuilder("++").append(key).append('=').append(value).append(',').toString());
+      } else {
+        programArgs.add(new StringBuilder("+").append(key).append('=').append(value).toString());
+      }
+    }
 
     runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
 
@@ -176,27 +213,14 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     return runConfig;
   }
 
-  private List<String> extracted(ILaunchConfiguration configuration, ExecutionArguments execArgs) throws CoreException {
-    List<String> programArgs = new ArrayList<String>();
-    if (configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
-      programArgs.add(configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
-    } // else +target=some.Class is used
-    programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
-
-    @SuppressWarnings({ "unchecked" })
-    Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
-                                                                Collections.<String, String> emptyMap());
-
-    for (String key : dynamicMap.keySet()) {
-      String value = dynamicMap.get(key);
-      programArgs.add(new StringBuilder("+").append(key).append("=").append(value).toString());
-    }
-    return programArgs;
-  }
-
   /**
+   * Conditionally adds <code>this</code> instance as a debug event listener so
+   * that some JDWP commands can be sent to the debuggee when the target starts.
+   * 
    * @param configuration
-   * @throws CoreException 
+   *          The launch configuration.
+   * @throws CoreException
+   *           If an error occurs.
    */
   private void conditionallyConfigureAsDebugHandler(ILaunchConfiguration configuration) throws CoreException {
     if (isStopInAppMain(configuration) || isStopInMain(configuration) || isStopOnPropertyViolation(configuration)) {
@@ -206,9 +230,18 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
       // instantiated per config type, this is tolerable.
       DebugPlugin.getDefault().addDebugEventListener(this);
     }
-    
+
   }
 
+  /**
+   * Get the main class which is an entry point of the application to be
+   * verified by the JPF.
+   * 
+   * @param configuration
+   *          The launch configuration.
+   * @throws CoreException
+   *           If an error occurs.
+   */
   public String getJPFMainTypeName(ILaunchConfiguration configuration) throws CoreException {
 
     String mainType = null;
@@ -290,6 +323,10 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     }
   }
 
+  /**
+   * Removes all <i>Property Violation Breakpoints</i> from the debugger.
+   */
+  @SuppressWarnings("restriction")
   private void cleanupPropertyViolationBreakpoints() {
     // remove all bp
     DebugPlugin plugin = DebugPlugin.getDefault();
@@ -297,7 +334,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     if (plugin != null) {
       for (IBreakpoint iBreakpoint : plugin.getBreakpointManager().getBreakpoints()) {
         if (iBreakpoint instanceof SuspendVMExceptionBreakpoint) {
-          SuspendVMExceptionBreakpoint b = (SuspendVMExceptionBreakpoint )iBreakpoint;
+          SuspendVMExceptionBreakpoint b = (SuspendVMExceptionBreakpoint) iBreakpoint;
           if ("gov.nasa.jpf.jdwp.exception.special.NoPropertyViolationException".equals(b.getExceptionTypeName())) {
             bpsRemove.add(b);
           }
