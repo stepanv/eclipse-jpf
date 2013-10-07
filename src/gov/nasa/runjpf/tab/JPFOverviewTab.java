@@ -2,6 +2,7 @@ package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
+import gov.nasa.runjpf.internal.launching.JPFRunner;
 import gov.nasa.runjpf.launching.JPFLaunchConfigurationDelegate;
 import gov.nasa.runjpf.tab.internal.ExtendedPropertyContentProvider;
 import gov.nasa.runjpf.tab.internal.ExtendedPropertyLabelProvider;
@@ -179,7 +180,16 @@ public class JPFOverviewTab extends CommonJPFTab {
     checkOptShellEnabled.setText("Enable shell on port:");
 
     textOptShellPort = new Text(groupOpt, SWT.BORDER);
-    textOptShellPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+    GridData gd_textOptShellPort = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
+    gd_textOptShellPort.widthHint = 66;
+    textOptShellPort.setLayoutData(gd_textOptShellPort);
+    textOptShellPort.setOrientation(SWT.RIGHT_TO_LEFT);
+    textOptShellPort.addModifyListener(new ModifyListener() {
+      @Override
+      public void modifyText(ModifyEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
     new Label(groupOpt, SWT.NONE);
     new Label(groupOpt, SWT.NONE);
 
@@ -187,18 +197,19 @@ public class JPFOverviewTab extends CommonJPFTab {
 
     Composite composite = new Composite(mainComposite, SWT.NONE);
     composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-    GridLayout gl_composite = new GridLayout(2, false);
+    GridLayout gl_composite = new GridLayout(1, false);
     gl_composite.marginWidth = 0;
     composite.setLayout(gl_composite);
 
-    Label lblNewLabel = new Label(composite, SWT.NONE);
-    lblNewLabel.setText("Generated pseudo command line:");
-    new Label(composite, SWT.NONE);
+    Group grpGeneratedPseudoCommand = new Group(composite, SWT.NONE);
+    grpGeneratedPseudoCommand.setText("Generated pseudo command line");
+    grpGeneratedPseudoCommand.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+    grpGeneratedPseudoCommand.setLayout(new GridLayout(2, false));
 
-    textGeneratedCommandLine = new Text(composite, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
-    GridData gd_text_1 = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-    gd_text_1.heightHint = 113;
-    textGeneratedCommandLine.setLayoutData(gd_text_1);
+    textGeneratedCommandLine = new Text(grpGeneratedPseudoCommand, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
+    GridData gd_textGeneratedCommandLine = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
+    gd_textGeneratedCommandLine.heightHint = 109;
+    textGeneratedCommandLine.setLayoutData(gd_textGeneratedCommandLine);
     textGeneratedCommandLine.setEditable(false);
   }
 
@@ -210,12 +221,22 @@ public class JPFOverviewTab extends CommonJPFTab {
    *          the composite in which the table should be created
    */
   protected void createConfigTable(Composite parent) {
-
-    Label label = SWTFactory.createLabel(parent, "JPF properties to &set:", 2);
     Font font = parent.getFont();
+    // Create table composite
+    Composite tableComposite = SWTFactory.createComposite(parent, font, 1, 1, GridData.FILL_BOTH, 0, 0);
+    tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2));
+    final Composite comp = tableComposite;
 
-    Composite checkComposite = SWTFactory.createComposite(mainComposite, mainComposite.getFont(), 1, 1, GridData.FILL_BOTH, 0, 0);
-    checkComposite.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, 1, 1));
+    Group grpJpfPropertiesOverview = new Group(tableComposite, SWT.NONE);
+    grpJpfPropertiesOverview.setText("JPF properties overview");
+    grpJpfPropertiesOverview.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+    grpJpfPropertiesOverview.setLayout(new GridLayout(1, false));
+
+    Composite checkComposite = SWTFactory
+        .createComposite(grpJpfPropertiesOverview, mainComposite.getFont(), 1, 1, GridData.FILL_BOTH, 0, 0);
+    GridData gd_checkComposite = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
+    gd_checkComposite.heightHint = 19;
+    checkComposite.setLayoutData(gd_checkComposite);
     GridLayout gridLayout = (GridLayout) checkComposite.getLayout();
     gridLayout.numColumns = 4;
 
@@ -254,20 +275,18 @@ public class JPFOverviewTab extends CommonJPFTab {
       }
     });
     checkDefaultProperties.setText("Show default properties");
-    // Create table composite
-    Composite tableComposite = SWTFactory.createComposite(parent, font, 1, 1, GridData.FILL_BOTH, 0, 0);
-    tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2));
+
     // Create table
-    configTable = new TableViewer(tableComposite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION);
+    configTable = new TableViewer(grpJpfPropertiesOverview, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION);
     Table table = configTable.getTable();
+    table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
     table.setLayout(new GridLayout());
-    table.setLayoutData(new GridData(GridData.FILL_BOTH));
     table.setHeaderVisible(true);
     table.setLinesVisible(true);
     table.setFont(font);
+    configTable.setLabelProvider(new ExtendedPropertyLabelProvider());
     configTable.setContentProvider(new ExtendedPropertyContentProvider(checkAppProperties, checkCmdargsProperties, checkDefaultProperties,
         checkDynamicProperties, CONFIG_TO_NAME_MAP));
-    configTable.setLabelProvider(new ExtendedPropertyLabelProvider());
     // environmentTable.setColumnProperties(new String[] {P_VARIABLE, P_VALUE});
     configTable.addSelectionChangedListener(new ISelectionChangedListener() {
       public void selectionChanged(SelectionChangedEvent event) {
@@ -291,7 +310,6 @@ public class JPFOverviewTab extends CommonJPFTab {
     tc3.setText("Properties source");
 
     final Table tref = table;
-    final Composite comp = tableComposite;
 
     tableComposite.addControlListener(new ControlAdapter() {
       public void controlResized(ControlEvent e) {
@@ -321,6 +339,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     });
 
     new TableSorter(configTable);
+
   }
 
   /**
@@ -407,15 +426,17 @@ public class JPFOverviewTab extends CommonJPFTab {
     try {
       JPFLaunchConfigurationDelegate jpfDelegate = new JPFLaunchConfigurationDelegate();
       VMRunnerConfiguration runConfig = jpfDelegate.createRunConfig(configuration);
+      JPFRunner runner = new JPFRunner(jpfDelegate.verifyVMInstall(configuration));
+      String exec = runner.constructProgramString(runConfig);
 
       List<String> arguments = new LinkedList<>();
-      arguments.add("java");
+      arguments.add(exec);
       arguments.add("-classpath");
       arguments.add(StringUtils.join(runConfig.getClassPath(), File.pathSeparator));
       arguments.addAll(Arrays.asList(runConfig.getVMArguments()));
       arguments.add(runConfig.getClassToLaunch());
       arguments.addAll(Arrays.asList(runConfig.getProgramArguments()));
-      
+
       int topLine = textGeneratedCommandLine.getTopIndex();
       textGeneratedCommandLine.setText(StringUtils.join(arguments, "\n"));
       textGeneratedCommandLine.setTopIndex(topLine);
@@ -439,9 +460,13 @@ public class JPFOverviewTab extends CommonJPFTab {
     configuration.setAttribute(JPF_ATTR_OPT_LISTENER, textOptListenerClass.getText().trim());
     configuration.setAttribute(JPF_ATTR_OPT_SEARCH, textOptSearchClass.getText().trim());
 
-    // port is already validated
-    int portShell = Integer.parseInt(textOptShellPort.getText());
-    configuration.setAttribute(JPF_ATTR_OPT_SHELLPORT, portShell);
+    try {
+      int portShell = Integer.parseInt(textOptShellPort.getText());
+      configuration.setAttribute(JPF_ATTR_OPT_SHELLPORT, portShell);
+    } catch (NumberFormatException e) {
+      // lets do not modify the stored value (will be verified in next step
+      // anyway)
+    }
     configuration.setAttribute(JPF_ATTR_OPT_SHELLENABLED, checkOptShellEnabled.getSelection());
 
     // store the dynamic configuration into the launch configuration
@@ -471,6 +496,10 @@ public class JPFOverviewTab extends CommonJPFTab {
 
   @Override
   public boolean isValid(ILaunchConfiguration launchConfig) {
+    setErrorMessage(null);
+    setMessage(null);
+    setWarningMessage(null);
+
     if (checkOptShellEnabled.getSelection()) {
       int port;
       try {
@@ -479,10 +508,8 @@ public class JPFOverviewTab extends CommonJPFTab {
         setErrorMessage("Provided port number cannot be converted to integer: " + e.getMessage());
         return false;
       }
-      if (port < 0) {
-        // let's do not care about the upper bound cause I don't know if there
-        // are platforms that support different number than the normal one
-        setErrorMessage("Provided port is invalid");
+      if (port <= 0 || port > (Short.MAX_VALUE - Short.MIN_VALUE)) {
+        setErrorMessage("Provided port number is invalid");
         return false;
       }
     }

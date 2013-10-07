@@ -5,9 +5,11 @@ import gov.nasa.runjpf.JPFProcessConsoleTracker;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.jdt.internal.launching.StandardVMRunner;
 import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 /**
  * JPF runner that overrides on top of standard runner functionality the process
@@ -49,5 +51,12 @@ public class JPFRunner extends StandardVMRunner {
     map.put(IProcess.ATTR_PROCESS_TYPE, "gov.nasa.jpf.ui.jpfProcess");
     return map;
   }
+
+  @Override
+  public String constructProgramString(VMRunnerConfiguration config) throws CoreException {
+    return super.constructProgramString(config);
+  }
+  
+  
 
 }
