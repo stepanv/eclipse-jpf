@@ -79,65 +79,7 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     try {
       monitor.subTask("verifying installation");
 
-      // Program & VM arguments
-      ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
-
-      List<String> classpath = new LinkedList<>();
-      String embeddedJpfClasspath = configuration.getAttribute(JPFRunTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String) null);
-
-      if (embeddedJpfClasspath != null) {
-        // using embedded JPF
-        classpath.add(embeddedJpfClasspath);
-      } else {
-
-        try {
-          Config config = LookupConfigHelper.defaultConfigFactory(configuration);
-          EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
-          File siteProperties = new File(config.getString("jpf.site"));
-          File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
-
-          classpath.add(jpfRunJar.getAbsolutePath());
-        } catch (NullPointerException npe) {
-          EclipseJPF.logError("JPF was not sucessfully found.", npe);
-          throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
-        }
-      }
-
-      // Create VM config
-
-      VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS,
-          classpath.toArray(new String[classpath.size()]));
-
-      List<String> programArgs = new ArrayList<String>();
-      if (configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
-        programArgs.add(configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
-      } // else +target=some.Class is used
-      programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
-
-      @SuppressWarnings({ "unchecked" })
-      Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
-                                                                  Collections.<String, String> emptyMap());
-
-      for (String key : dynamicMap.keySet()) {
-        String value = dynamicMap.get(key);
-        programArgs.add(new StringBuilder("+").append(key).append("=").append(value).toString());
-      }
-
-      runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
-
-      // Environment variables
-      runConfig.setEnvironment(getEnvironment(configuration));
-
-      runConfig.setVMArguments(execArgs.getVMArgumentsArray());
-
-      // runConfig
-      if (verifyWorkingDirectory(configuration) != null) {
-        runConfig.setWorkingDirectory(verifyWorkingDirectory(configuration).getAbsolutePath());
-      }
-      runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
-
-      // Boot path
-      runConfig.setBootClassPath(getBootpath(configuration));
+      VMRunnerConfiguration runConfig = createRunConfig(configuration);
 
       // check for cancellation
       if (monitor.isCanceled())
@@ -182,6 +124,74 @@ public class JPFLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurat
     } finally {
       monitor.done();
     }
+  }
+
+  public VMRunnerConfiguration createRunConfig(ILaunchConfiguration configuration) throws CoreException {
+    // Program & VM arguments
+    ExecutionArguments execArgs = new ExecutionArguments(getVMArguments(configuration), getProgramArguments(configuration));
+
+    List<String> classpath = new LinkedList<>();
+    String embeddedJpfClasspath = configuration.getAttribute(JPFRunTab.JPF_ATTR_RUNTIME_JPF_EMBEDDEDCLASSPATH, (String) null);
+
+    if (embeddedJpfClasspath != null) {
+      // using embedded JPF
+      classpath.add(embeddedJpfClasspath);
+    } else {
+
+      try {
+        Config config = LookupConfigHelper.defaultConfigFactory(configuration);
+        EclipseJPFLauncher eclipseJpfLauncher = new EclipseJPFLauncher();
+        File siteProperties = new File(config.getString("jpf.site"));
+        File jpfRunJar = eclipseJpfLauncher.lookupRunJpfJar(siteProperties);
+
+        classpath.add(jpfRunJar.getAbsolutePath());
+      } catch (NullPointerException npe) {
+        EclipseJPF.logError("JPF was not sucessfully found.", npe);
+        throw new CoreException(new Status(IStatus.ERROR, EclipseJPF.PLUGIN_ID, "JPF was not found", npe));
+      }
+    }
+
+    // Create VM config
+
+    VMRunnerConfiguration runConfig = new VMRunnerConfiguration(EclipseJPF.JPF_MAIN_CLASS,
+        classpath.toArray(new String[classpath.size()]));
+
+    List<String> programArgs = extracted(configuration, execArgs);
+
+    runConfig.setProgramArguments(programArgs.toArray(new String[programArgs.size()]));
+
+    // Environment variables
+    runConfig.setEnvironment(getEnvironment(configuration));
+
+    runConfig.setVMArguments(execArgs.getVMArgumentsArray());
+
+    // runConfig
+    if (verifyWorkingDirectory(configuration) != null) {
+      runConfig.setWorkingDirectory(verifyWorkingDirectory(configuration).getAbsolutePath());
+    }
+    runConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
+
+    // Boot path
+    runConfig.setBootClassPath(getBootpath(configuration));
+    return runConfig;
+  }
+
+  private List<String> extracted(ILaunchConfiguration configuration, ExecutionArguments execArgs) throws CoreException {
+    List<String> programArgs = new ArrayList<String>();
+    if (configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
+      programArgs.add(configuration.getAttribute(JPFRunTab.JPF_ATTR_MAIN_JPFFILELOCATION, "(this is an error) ??? .jpf"));
+    } // else +target=some.Class is used
+    programArgs.addAll(Arrays.asList(execArgs.getProgramArgumentsArray()));
+
+    @SuppressWarnings({ "unchecked" })
+    Map<String, String> dynamicMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG,
+                                                                Collections.<String, String> emptyMap());
+
+    for (String key : dynamicMap.keySet()) {
+      String value = dynamicMap.get(key);
+      programArgs.add(new StringBuilder("+").append(key).append("=").append(value).toString());
+    }
+    return programArgs;
   }
 
   /**

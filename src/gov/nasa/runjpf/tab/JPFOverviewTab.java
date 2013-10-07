@@ -1,19 +1,27 @@
 package gov.nasa.runjpf.tab;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.runjpf.launching.JPFLaunchConfigurationDelegate;
 import gov.nasa.runjpf.tab.internal.ExtendedPropertyContentProvider;
 import gov.nasa.runjpf.tab.internal.ExtendedPropertyLabelProvider;
 import gov.nasa.runjpf.tab.internal.LookupConfigHelper;
 import gov.nasa.runjpf.tab.internal.TableSorter;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
+import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -94,9 +102,26 @@ public class JPFOverviewTab extends CommonJPFTab {
   public void createControl(Composite parent) {
 
     mainComposite = SWTFactory.createComposite(parent, 2, 1, GridData.FILL_HORIZONTAL);
+    GridLayout gridLayout = (GridLayout) mainComposite.getLayout();
+    gridLayout.numColumns = 1;
     setControl(mainComposite);
 
     createConfigTable(mainComposite);
+    
+    Composite composite = new Composite(mainComposite, SWT.NONE);
+    composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    GridLayout gl_composite = new GridLayout(2, false);
+    gl_composite.marginWidth = 0;
+    composite.setLayout(gl_composite);
+    
+    Label lblNewLabel = new Label(composite, SWT.NONE);
+    lblNewLabel.setText("Generated command line:");
+    new Label(composite, SWT.NONE);
+    
+    textGeneratedCommandLine = new Text(composite, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
+    GridData gd_text_1 = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
+    gd_text_1.heightHint = 113;
+    textGeneratedCommandLine.setLayoutData(gd_text_1);
   }
 
   /**
@@ -108,7 +133,7 @@ public class JPFOverviewTab extends CommonJPFTab {
    */
   protected void createConfigTable(Composite parent) {
 
-    SWTFactory.createLabel(parent, "JPF properties to &set:", 2);
+    Label label = SWTFactory.createLabel(parent, "JPF properties to &set:", 2);
     Font font = parent.getFont();
 
     Composite checkComposite = SWTFactory.createComposite(mainComposite, mainComposite.getFont(), 1, 1, GridData.FILL_BOTH, 0, 0);
@@ -151,7 +176,6 @@ public class JPFOverviewTab extends CommonJPFTab {
       }
     });
     checkDefaultProperties.setText("Show default properties");
-    new Label(mainComposite, SWT.NONE);
     // Create table composite
     Composite tableComposite = SWTFactory.createComposite(parent, font, 1, 1, GridData.FILL_BOTH, 0, 0);
     tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2));
@@ -247,6 +271,7 @@ public class JPFOverviewTab extends CommonJPFTab {
   }
 
   private static final Image icon = createImage("icons/search.png");
+  private Text textGeneratedCommandLine;
 
   @Override
   public Image getImage() {
@@ -275,6 +300,20 @@ public class JPFOverviewTab extends CommonJPFTab {
       checkCmdargsProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_CMDARGSSELECTED, true));
       checkDefaultProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_DEFAULTSELECTED, false));
       checkAppProperties.setSelection(configuration.getAttribute(ATTR_JPF_SETTINGS_APPPROPSSELECTED, false));
+      
+      JPFLaunchConfigurationDelegate jpfDelegate = new JPFLaunchConfigurationDelegate();
+      VMRunnerConfiguration runConfig = jpfDelegate.createRunConfig(configuration);
+      
+      List<String> arguments = new LinkedList<>();
+      arguments.add("java");
+      arguments.add("-classpath");
+      arguments.add(StringUtils.join(runConfig.getClassPath(), File.pathSeparator));
+      arguments.addAll(Arrays.asList(runConfig.getVMArguments()));
+      arguments.add(runConfig.getClassToLaunch());
+      arguments.addAll(Arrays.asList(runConfig.getProgramArguments()));
+      
+      textGeneratedCommandLine.setText(StringUtils.join(arguments, "\n"));
+      
     } catch (CoreException e1) {
       // this should not happened
       throw new IllegalStateException("Programmer's fatal error...", e1);
