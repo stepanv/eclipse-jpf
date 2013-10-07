@@ -192,13 +192,14 @@ public class JPFOverviewTab extends CommonJPFTab {
     composite.setLayout(gl_composite);
 
     Label lblNewLabel = new Label(composite, SWT.NONE);
-    lblNewLabel.setText("Generated command line:");
+    lblNewLabel.setText("Generated pseudo command line:");
     new Label(composite, SWT.NONE);
 
     textGeneratedCommandLine = new Text(composite, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
     GridData gd_text_1 = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
     gd_text_1.heightHint = 113;
     textGeneratedCommandLine.setLayoutData(gd_text_1);
+    textGeneratedCommandLine.setEditable(false);
   }
 
   /**
@@ -414,8 +415,10 @@ public class JPFOverviewTab extends CommonJPFTab {
       arguments.addAll(Arrays.asList(runConfig.getVMArguments()));
       arguments.add(runConfig.getClassToLaunch());
       arguments.addAll(Arrays.asList(runConfig.getProgramArguments()));
-
+      
+      int topLine = textGeneratedCommandLine.getTopIndex();
       textGeneratedCommandLine.setText(StringUtils.join(arguments, "\n"));
+      textGeneratedCommandLine.setTopIndex(topLine);
     } catch (CoreException e) {
       EclipseJPF.logError("Cannot update command line text", e);
     }
