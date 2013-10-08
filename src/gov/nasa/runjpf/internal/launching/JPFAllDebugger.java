@@ -1,10 +1,13 @@
 package gov.nasa.runjpf.internal.launching;
 
+import gov.nasa.runjpf.tab.CommonJPFTab;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +26,7 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.IStatusHandler;
 import org.eclipse.debug.core.model.IProcess;
+import org.eclipse.debug.ui.CommonTab;
 import org.eclipse.jdt.internal.launching.LaunchingMessages;
 import org.eclipse.jdt.internal.launching.LaunchingPlugin;
 import org.eclipse.jdt.internal.launching.LibraryInfo;
@@ -150,10 +154,17 @@ public class JPFAllDebugger extends JPFDebugger {
     }
 
     arguments.add(config.getClassToLaunch());
-    addArguments(config.getProgramArguments(), arguments);
-
-    addArguments(new String[] { "++listener=gov.nasa.jpf.jdwp.JDWPListener,",
-        "+jpf-jdwp.jdwp=transport=dt_socket,server=n,suspend=y,address=" + port }, arguments);
+    
+    String[] programArguments = Arrays.copyOf(config.getProgramArguments(), config.getProgramArguments().length);
+    for (int i = 0; i < programArguments.length; ++i) {
+      if (programArguments[i].contains(CommonJPFTab.PORT_NUMBER_PLCHLDR)) {
+        String prefix = programArguments[i].substring(0, programArguments[i].indexOf(CommonJPFTab.PORT_NUMBER_PLCHLDR));
+        String suffix = programArguments[i].substring(programArguments[i].indexOf(CommonJPFTab.PORT_NUMBER_PLCHLDR) + CommonJPFTab.PORT_NUMBER_PLCHLDR.length(), programArguments[i].length());
+        programArguments[i] = prefix + port + suffix;
+      }
+    }
+    
+    addArguments(programArguments, arguments);
 
     // With the newer VMs and no backwards compatibility we have to always
     // prepend the current env path (only the runtime one)

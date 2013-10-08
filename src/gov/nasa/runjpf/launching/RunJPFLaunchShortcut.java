@@ -114,7 +114,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
       return;
     }
     
-    ILaunchConfiguration configuration = findOrCreateLaunchConfiguration(resource);
+    ILaunchConfiguration configuration = findOrCreateLaunchConfiguration(resource, (ILaunchManager.DEBUG_MODE.equals(mode)));
 
     if (configuration == null) {
       return;
@@ -142,10 +142,10 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
    *          The resource the launch configuration should be associated with
    * @return a launch configuration or <tt>null</tt> to cancel.
    */
-  private ILaunchConfiguration findOrCreateLaunchConfiguration(IResource resource) {
+  private ILaunchConfiguration findOrCreateLaunchConfiguration(IResource resource, boolean debug) {
     List<ILaunchConfiguration> candidates = launchConfigurationCandidates(resource);
     if (candidates.size() <= 0) {
-      return createConfiguration(resource);
+      return createConfiguration(resource, debug);
     }
     if (candidates.size() > 1) {
       return chooseConfiguration(candidates);
@@ -323,7 +323,7 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
    * @param type
    * @return
    */
-  public ILaunchConfiguration createConfiguration(IResource type) {
+  public ILaunchConfiguration createConfiguration(IResource type, boolean debug) {
     ILaunchConfiguration config = null;
 
     if (type != null && type instanceof IFile) {
@@ -338,6 +338,8 @@ public class RunJPFLaunchShortcut implements ILaunchShortcut, IExecutableExtensi
 
         addProjectAsSourceLookupAndSourcepath(type.getProject(), wc);
         addProjectToClasspath(wc);
+        
+        CommonJPFTab.storeDynamicConfiguration(wc, debug);
 
         // set mapped resource , let next time we could execute this
         // directly from menuitem.

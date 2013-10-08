@@ -795,7 +795,7 @@ public class JPFRunTab extends CommonJPFTab {
     configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, radioDebugJpfItself.getSelection());
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, comboJdwp.getSelectionIndex());
 
-    storeDynamicConfiguration(configuration);
+    storeDynamicConfiguration(configuration, debug);
 
   }
 

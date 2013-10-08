@@ -106,7 +106,13 @@ public class JPFOverviewTab extends CommonJPFTab {
   private Text textOptSearchClass;
   private Button checkOptShellEnabled;
   private Text textOptShellPort;
+ 
+  private boolean debug;
 
+  public JPFOverviewTab(boolean debug) {
+    this.debug = debug;
+  }
+  
   /**
    * @wbp.parser.entryPoint
    */
@@ -484,7 +490,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     configuration.setAttribute(JPF_ATTR_OPT_SHELLENABLED, checkOptShellEnabled.getSelection());
 
     // store the dynamic configuration into the launch configuration
-    storeDynamicConfiguration(configuration);
+    storeDynamicConfiguration(configuration, debug);
 
     // update the configuration table
     updateConfigTable(configuration);

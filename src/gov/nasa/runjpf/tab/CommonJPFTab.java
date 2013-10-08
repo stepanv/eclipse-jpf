@@ -3,6 +3,9 @@ package gov.nasa.runjpf.tab;
 import gov.nasa.jpf.Config;
 import gov.nasa.runjpf.EclipseJPF;
 import gov.nasa.runjpf.EclipseJPFLauncher;
+import gov.nasa.runjpf.internal.launching.JPFAllDebugger;
+import gov.nasa.runjpf.internal.launching.JPFDebugger;
+import gov.nasa.runjpf.internal.launching.JPFRunner;
 import gov.nasa.runjpf.internal.ui.ClassSearchEngine;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallation;
 import gov.nasa.runjpf.internal.ui.ExtensionInstallations;
@@ -22,6 +25,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IType;
@@ -132,6 +136,8 @@ public abstract class CommonJPFTab extends JavaLaunchTab {
   "lib/slf4j-nop-1.7.5.jar" };
  static final String JDWP_EXTENSION_STRING = "jpf-jdwp";
 public static final ExtensionInstallations jdwpInstallations = ExtensionInstallations.factory(JDWP_REQUIRED_LIBRARIES);
+
+public static final String PORT_NUMBER_PLCHLDR = "{PORT_NUMBER}";
 
   /**
    * If it's modified , just update the configuration directly.
@@ -422,7 +428,7 @@ public static final ExtensionInstallations jdwpInstallations = ExtensionInstalla
    * @param configuration
    *          The launch configuration to store the dynamic configuration from.
    */
-  protected static void storeDynamicConfiguration(ILaunchConfigurationWorkingCopy configuration) {
+  public static void storeDynamicConfiguration(ILaunchConfigurationWorkingCopy configuration, boolean debug) {
     try {
       @SuppressWarnings("unchecked")
       Map<String, String> map = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_DYNAMICCONFIG, Collections.EMPTY_MAP);
@@ -435,6 +441,7 @@ public static final ExtensionInstallations jdwpInstallations = ExtensionInstalla
       map.remove("target");
       map.remove("shell.port");
       map.remove("jpf-core.native_classpath");
+      map.remove("jpf-jdwp.jdwp");
 
       if (!configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false) || configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false)) {
         // we're debugging the program itself
@@ -469,6 +476,14 @@ public static final ExtensionInstallations jdwpInstallations = ExtensionInstalla
         }
 
       }
+      
+      boolean debugBothVMs = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGBOTHVMS, false);
+      boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
+
+      if (debug && (debugBothVMs || !debugJPFInsteadOfTheProgram)) {
+        listenerString = addListener(listenerString, "gov.nasa.jpf.jdwp.JDWPListener");
+        map.put("jpf-jdwp.jdwp", "transport=dt_socket,server=n,suspend=y,address=" + PORT_NUMBER_PLCHLDR);
+      } 
 
       String listener = configuration.getAttribute(JPF_ATTR_OPT_LISTENER, "");
       if (!isApplicationProperty(configuration, "listener", listener)) {

@@ -26,9 +26,9 @@ public class JPFLaunchConfigurationTabGroup extends AbstractLaunchConfigurationT
 
   @Override
   public void createTabs(ILaunchConfigurationDialog arg0, String arg1) {
-
-    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { new JPFRunTab(ILaunchManager.DEBUG_MODE.equals(arg0.getMode())),
-        new JPFOverviewTab(), new JPFArgumentsTab(), new JPFClasspathTab(), new JavaJRETab(), new JPFSourceLookupTab(),
+    boolean debug = ILaunchManager.DEBUG_MODE.equals(arg0.getMode());
+    ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] { new JPFRunTab(debug),
+        new JPFOverviewTab(debug), new JPFArgumentsTab(), new JPFClasspathTab(), new JavaJRETab(), new JPFSourceLookupTab(),
         new EnvironmentTab(), new CommonTab() };
     setTabs(tabs);
   }
