@@ -124,9 +124,11 @@ public class JPFOverviewTab extends CommonJPFTab {
     groupOpt.setLayout(new GridLayout(5, false));
 
     Label labelListener = new Label(groupOpt, SWT.NONE);
+    labelListener.setToolTipText("The additional listener prepended to the configuration.\r\nThis option is rather a demonstration of Eclipse capabilitites than something that is intended to be used daily and heavily.");
     labelListener.setText("Listener:");
 
     textOptListenerClass = new Text(groupOpt, SWT.BORDER);
+    textOptListenerClass.setToolTipText("The listener class.\r\nThis class must be available on the classpath. See \"jpf-core.native_classpath\" property.");
     textOptListenerClass.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
     textOptListenerClass.addModifyListener(new ModifyListener() {
       @Override
@@ -136,6 +138,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     });
 
     Button buttonListenerSearch = new Button(groupOpt, SWT.NONE);
+    buttonListenerSearch.setToolTipText("Select a listener class from the Eclipse indexed classes.\r\nThe listener class must implement the VMListener interface otherwise it's not shown.");
     buttonListenerSearch.setText("Search...");
     buttonListenerSearch.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -146,9 +149,11 @@ public class JPFOverviewTab extends CommonJPFTab {
     });
 
     Label labelSearch = new Label(groupOpt, SWT.NONE);
+    labelSearch.setToolTipText("The search class to override a search class from the configuration.\r\nThis option is rather a demonstration of Eclipse capabilitites than something that is intended to be used daily and heavily.");
     labelSearch.setText("Search:");
 
     textOptSearchClass = new Text(groupOpt, SWT.BORDER);
+    textOptSearchClass.setToolTipText("The search class.\r\nThis class must be available on the classpath. See \"jpf-core.native_classpath\" property.");
     textOptSearchClass.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
     textOptSearchClass.addModifyListener(new ModifyListener() {
       @Override
@@ -158,6 +163,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     });
 
     Button searchSearchButton = new Button(groupOpt, SWT.NONE);
+    searchSearchButton.setToolTipText("Select a search class from the Eclipse indexed classes.\r\nThe listener class must implement the SearchListener interface otherwise it's not shown.");
     searchSearchButton.setText("Search...");
     searchSearchButton.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -168,6 +174,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     });
 
     checkOptShellEnabled = new Button(groupOpt, SWT.CHECK);
+    checkOptShellEnabled.setToolTipText("Whether to enable the shell on the given port.\r\nThis option is here for backwards compatibility.");
     checkOptShellEnabled.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
     checkOptShellEnabled.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -180,6 +187,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     checkOptShellEnabled.setText("Enable shell on port:");
 
     textOptShellPort = new Text(groupOpt, SWT.BORDER);
+    textOptShellPort.setToolTipText("The port number between 1 - 65535");
     GridData gd_textOptShellPort = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
     gd_textOptShellPort.widthHint = 66;
     textOptShellPort.setLayoutData(gd_textOptShellPort);
@@ -202,6 +210,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     composite.setLayout(gl_composite);
 
     Group grpGeneratedPseudoCommand = new Group(composite, SWT.NONE);
+    grpGeneratedPseudoCommand.setToolTipText("The command line string that will be used for the verification.\r\nNote that some information is not present untill the process is really created and therefore this string cannot be complete.\r\nNote that the properties are applied in the following order:\r\n1. The default properties that come from the site properties\r\n2. The application properties that come from the .jpf file\r\n3. The JPF properties specified as program arguments\r\n4. The dynamic properties that are created by this launch configuration");
     grpGeneratedPseudoCommand.setText("Generated pseudo command line");
     grpGeneratedPseudoCommand.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
     grpGeneratedPseudoCommand.setLayout(new GridLayout(2, false));
@@ -228,6 +237,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     final Composite comp = tableComposite;
 
     Group grpJpfPropertiesOverview = new Group(tableComposite, SWT.NONE);
+    grpJpfPropertiesOverview.setToolTipText("JPF properties overview displays all the properties that will be effective for the JPF verification.\r\nNote that the properties are applied in the following order:\r\n1. The default properties that come from the site properties\r\n2. The application properties that come from the .jpf file\r\n3. The JPF properties specified as program arguments\r\n4. The dynamic properties that are created by this launch configuration");
     grpJpfPropertiesOverview.setText("JPF properties overview");
     grpJpfPropertiesOverview.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
     grpJpfPropertiesOverview.setLayout(new GridLayout(1, false));
@@ -241,6 +251,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     gridLayout.numColumns = 4;
 
     checkDynamicProperties = new Button(checkComposite, SWT.CHECK);
+    checkDynamicProperties.setToolTipText("Whether to show the properties that are dynamically created by this launch configuration.\r\nThis option is useful especially for an inspection of how this Eclipse plugin sets up the JPF.");
     checkDynamicProperties.setText("Show dynamic properties");
     checkDynamicProperties.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -250,6 +261,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     });
 
     checkCmdargsProperties = new Button(checkComposite, SWT.CHECK);
+    checkCmdargsProperties.setToolTipText("Whether to show the JPF properties specified as program arguments in the JPF Arguments tab.\r\nNote that JPF property must match \"+property=value\" format.\r\nThis table doesn't indicate whether a property overrides, prepends or appends.");
     checkCmdargsProperties.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -259,6 +271,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     checkCmdargsProperties.setText("Show cmd args properties");
 
     checkAppProperties = new Button(checkComposite, SWT.CHECK);
+    checkAppProperties.setToolTipText("Whether to show the JPF properties from the .jpf application property file.");
     checkAppProperties.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -268,6 +281,7 @@ public class JPFOverviewTab extends CommonJPFTab {
     checkAppProperties.setText("Show app properties");
 
     checkDefaultProperties = new Button(checkComposite, SWT.CHECK);
+    checkDefaultProperties.setToolTipText("Whether to show the JPF properties that come through the site properties file.");
     checkDefaultProperties.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {

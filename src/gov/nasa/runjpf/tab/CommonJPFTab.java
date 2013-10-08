@@ -458,13 +458,13 @@ public static final ExtensionInstallations jdwpInstallations = ExtensionInstalla
           // we're storing a trace
 
           map.put("trace.file", traceFileName);
-          listenerString = addListener(listenerString, ".listener.TraceStorer");
+          listenerString = addListener(listenerString, "gov.nasa.jpf.listener.TraceStorer");
 
         } else {
           // we're replaying a trace
 
           map.put("choice.use_trace", traceFileName);
-          listenerString = addListener(listenerString, ".listener.ChoiceSelector");
+          listenerString = addListener(listenerString, "gov.nasa.jpf.listener.ChoiceSelector");
 
         }
 

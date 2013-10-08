@@ -169,6 +169,7 @@ public class JPFRunTab extends CommonJPFTab {
     grpJpfExecution.setLayout(new GridLayout(4, false));
 
     radioMainAppFileSelected = new Button(grpJpfExecution, SWT.RADIO);
+    radioMainAppFileSelected.setToolTipText("Run the JPF verification based on the settings from the .jpf application property file.");
     radioMainAppFileSelected.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -185,6 +186,7 @@ public class JPFRunTab extends CommonJPFTab {
     lblFile.setText("File:");
 
     textMainAppFileLocation = new Text(grpJpfExecution, SWT.BORDER);
+    textMainAppFileLocation.setToolTipText("The .jpf file to run the JPF verfication based on.\r\nThe properties from this file can be overriden by some dynamically generated properties by this launch configuration or by the properties specified as program arguments in the JPF arguments tab.");
     textMainAppFileLocation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
     textMainAppFileLocation.addModifyListener(updatedListener);
     textMainAppFileLocation.setBounds(10, 35, 524, 21);
@@ -192,6 +194,7 @@ public class JPFRunTab extends CommonJPFTab {
     new Label(grpJpfExecution, SWT.NONE);
 
     buttonMainAppendDynamicProperties = new Button(grpJpfExecution, SWT.NONE);
+    buttonMainAppendDynamicProperties.setToolTipText("Append all the dynamically generated properties to this .jpf file. The dynamically generated properties reflect all the options selected in this launch configuration including source and classpath settings.\r\nThis option may be helpful for preserving of all the options so that the JPF verification can be run later with the same properties even without Eclipse.");
     buttonMainAppendDynamicProperties.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent selectionEvent) {
@@ -242,10 +245,12 @@ public class JPFRunTab extends CommonJPFTab {
     composite_1.setLayout(gl_composite_1);
 
     buttonMainBrowseWorkspace = new Button(composite_1, SWT.NONE);
+    buttonMainBrowseWorkspace.setToolTipText("Find the .jpf file in the workspace. Only folders that contain at least one .jpf file are shown.");
     buttonMainBrowseWorkspace.setSize(109, 25);
     buttonMainBrowseWorkspace.setText("Browse &workspace");
 
     buttonMainBrowseFilesystem = new Button(composite_1, SWT.NONE);
+    buttonMainBrowseFilesystem.setToolTipText("Browse filesystem for the .jpf file.");
     buttonMainBrowseFilesystem.setText("Browse &filesystem");
     buttonMainBrowseFilesystem.setBounds(540, 33, 106, 25);
 
@@ -290,6 +295,7 @@ public class JPFRunTab extends CommonJPFTab {
     });
 
     radioMainMethodClass = new Button(grpJpfExecution, SWT.RADIO);
+    radioMainMethodClass.setToolTipText("Run the JPF verification directly from this main class.");
     radioMainMethodClass.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -305,6 +311,7 @@ public class JPFRunTab extends CommonJPFTab {
     lblTarget.setText("Target:");
 
     textMainTarget = new Text(grpJpfExecution, SWT.BORDER);
+    textMainTarget.setToolTipText("The target class where to start the JPF verification from. This class must implement the main method.");
     textMainTarget.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
     textMainTarget.addModifyListener(new ModifyListener() {
       @Override
@@ -323,6 +330,7 @@ public class JPFRunTab extends CommonJPFTab {
     composite_2.setLayout(glComposite);
 
     buttonMainSearchMainClass = new Button(grpJpfExecution, SWT.NONE);
+    buttonMainSearchMainClass.setToolTipText("Select a class from the Eclipse indexed classes. This class must implement the main method.");
     buttonMainSearchMainClass.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
     buttonMainSearchMainClass.setText("Search...");
 
@@ -342,6 +350,7 @@ public class JPFRunTab extends CommonJPFTab {
     grpStopOptions.setEnabled(debug);
 
     checkMainStopOnPropertyViolation = new Button(grpStopOptions, SWT.CHECK);
+    checkMainStopOnPropertyViolation.setToolTipText("Stop the verification on a property violation notification.\r\nThe JPF is stopped as if an exception is thrown and appropriate exception breakpoint is set.\r\nAll the threads will be suspended. The name of the thrown exception is \"gov.nasa.jpf.jdwp.exception.special.NoPropertyViolationException\" which is a synthetic exception loaded into the program in the moment of property violation notification.\r\nThis option is useful for an inspection of the program state right before the JPF verification reports a property violation such as deadlocks or uncheck exception throws.\r\nThe search class used in the JPF verification must notify the listeners about the property violation through \"SearchListener.propertyViolated(Search)\" method otherwise this option is ineffective.\r\nThis option is effective only if debugging the program being verified.");
     checkMainStopOnPropertyViolation.setText("Stop on property violation");
     checkMainStopOnPropertyViolation.setEnabled(debug);
     checkMainStopOnPropertyViolation.addSelectionListener(new SelectionAdapter() {
@@ -352,6 +361,7 @@ public class JPFRunTab extends CommonJPFTab {
     });
 
     checkMainStopInAppMain = new Button(grpStopOptions, SWT.CHECK);
+    checkMainStopInAppMain.setToolTipText("Stop on entry into the main method that is used as a target for the JPF verification.\r\nThis option is effective only if debugging the program being verified.");
     checkMainStopInAppMain.setText("Stop in application main");
     checkMainStopInAppMain.setEnabled(debug);
     checkMainStopInAppMain.addSelectionListener(new SelectionAdapter() {
@@ -362,6 +372,7 @@ public class JPFRunTab extends CommonJPFTab {
     });
 
     checkMainStopInJpfMain = new Button(grpStopOptions, SWT.CHECK);
+    checkMainStopInJpfMain.setToolTipText("Stop on entry of the main method of JPF.\r\nThis option is effective only if debugging JPF or both the program being verified and JPF itself.");
     checkMainStopInJpfMain.setText("Stop in JPF main");
     checkMainStopInJpfMain.setEnabled(debug);
     checkMainStopInJpfMain.addSelectionListener(new SelectionAdapter() {
@@ -378,6 +389,7 @@ public class JPFRunTab extends CommonJPFTab {
     grpDebuggingOptions.setEnabled(debug);
 
     radioDebugTheProgram = new Button(grpDebuggingOptions, SWT.RADIO);
+    radioDebugTheProgram.setToolTipText("Debug the program being verified by the JPF.\r\nThe debugging uses JDWP implementation from the jpf-jdwp JPF extension. This extension  should be declared in JPF site properties file but it's also possible to use an embedded version that comes bundled with this plugin.\r\n");
     radioDebugTheProgram.setSize(233, 16);
     radioDebugTheProgram.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -389,16 +401,18 @@ public class JPFRunTab extends CommonJPFTab {
     radioDebugTheProgram.setEnabled(debug);
 
     radioDebugJpfItself = new Button(grpDebuggingOptions, SWT.RADIO);
+    radioDebugJpfItself.setToolTipText("Debug JPF itself as if it was a normal java program.\r\nThis option comes handy when developing JPF extensions or for JPF troubleshooting.");
     radioDebugJpfItself.setEnabled(debug);
     radioDebugJpfItself.setText("Debug JPF itself");
 
     radioDebugBothTargets = new Button(grpDebuggingOptions, SWT.RADIO);
+    radioDebugBothTargets.setToolTipText("Debug both the JPF itself and the program being verified by JPF.\r\nThis option is good for a debugging of the JPF debugging.");
     radioDebugBothTargets.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
       }
     });
-    radioDebugBothTargets.setText("Debug both the underlaying VM and the program");
+    radioDebugBothTargets.setText("Debug both the JPF itself and the program being verified by JPF");
     radioDebugBothTargets.setEnabled(debug);
     radioDebugJpfItself.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
@@ -407,6 +421,7 @@ public class JPFRunTab extends CommonJPFTab {
     });
 
     Group groupTrace = new Group(comp2, SWT.NONE);
+    groupTrace.setToolTipText("Run the JPF verification normally.\r\nNo trace is a default option.");
     groupTrace.setLayout(new GridLayout(3, false));
     groupTrace.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
     groupTrace.setText("Trace");
@@ -419,6 +434,7 @@ public class JPFRunTab extends CommonJPFTab {
     radioTraceNoTrace.setText("No Trace");
 
     radioTraceStore = new Button(composite, SWT.RADIO);
+    radioTraceStore.setToolTipText("Store the trace using the listener \"gov.nasa.jpf.listener.TraceStorer\" into the file specified bellow.");
     radioTraceStore.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -429,6 +445,7 @@ public class JPFRunTab extends CommonJPFTab {
     radioTraceStore.setText("Store");
 
     radioTraceReplay = new Button(composite, SWT.RADIO);
+    radioTraceReplay.setToolTipText("Replay the trace as recorded by the \"gov.nasa.jpf.listener.TraceStorer\" listener using the \"gov.nasa.jpf.listener.ChoiceSelector\" listener.\r\nOnly if this option is enabled, the debugging of the program being verified by the JPF can be fully supported.\r\nTo understand this limitation, please, refer to the documentation.");
     radioTraceReplay.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -441,6 +458,7 @@ public class JPFRunTab extends CommonJPFTab {
     labelTraceFile.setText("Trace File:");
 
     textTraceFile = new Text(groupTrace, SWT.BORDER);
+    textTraceFile.setToolTipText("The location of the trace file where to record the trace path or what to replay.");
     textTraceFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
     new Label(groupTrace, SWT.NONE);
     new Label(groupTrace, SWT.NONE);
@@ -453,6 +471,7 @@ public class JPFRunTab extends CommonJPFTab {
     composite_3.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false, 1, 1));
 
     buttonTraceBrowseWorkspace = new Button(composite_3, SWT.NONE);
+    buttonTraceBrowseWorkspace.setToolTipText("Browse the workspace for the trace file.");
     buttonTraceBrowseWorkspace.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -475,6 +494,7 @@ public class JPFRunTab extends CommonJPFTab {
     buttonTraceBrowseWorkspace.setText("Browse workspace");
 
     buttonTraceBrowse = new Button(composite_3, SWT.NONE);
+    buttonTraceBrowse.setToolTipText("Browse the filesystem for the trace file.");
     buttonTraceBrowse.setText("Browse filesystem");
 
     buttonTraceBrowse.addSelectionListener(new SelectionAdapter() {
@@ -523,8 +543,10 @@ public class JPFRunTab extends CommonJPFTab {
     labelJpfRuntime.setText("JPF:");
 
     comboJpfInstallation = SWTFactory.createCombo(groupRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
+    comboJpfInstallation.setToolTipText("The JPF runtime to use for the JPF verification.\r\nThe JPF runtime is dynamically looked up using the whole JPF configuration stack. For further information refer to the documentation.\r\nThe embedded version is intended to be used only by beginners who don't have jpf-core installed in their system.");
 
     buttonJpfRuntimeReset = new Button(groupRuntime, SWT.NONE);
+    buttonJpfRuntimeReset.setToolTipText("Reload the JPF runtime location using the whole JPF configuration stack.");
     buttonJpfRuntimeReset.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -549,9 +571,11 @@ public class JPFRunTab extends CommonJPFTab {
     labelJdwp.setText("JDWP:");
 
     comboJdwp = SWTFactory.createCombo(groupRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
+    comboJdwp.setToolTipText("The location of jpf-jdwp extension that is required for the debugging of the program being verified by the JPF.\r\nThe embedded version should work just fine as long as the jpf-core extension used for the JPF verification remains compatible with the API declared in the JPF in the time of packaging of this bundled JDWP.");
     comboJdwp.setEnabled(debug);
 
     buttonJdwpReset = new Button(groupRuntime, SWT.NONE);
+    buttonJdwpReset.setToolTipText("Reload the JDWP extension location using the whole JPF configuration stack.");
     buttonJdwpReset.setText("Reset");
     buttonJdwpReset.addSelectionListener(new SelectionAdapter() {
       @Override
