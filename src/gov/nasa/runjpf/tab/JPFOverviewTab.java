@@ -444,6 +444,7 @@ public class JPFOverviewTab extends CommonJPFTab {
 
   private void updateCommandLineText(ILaunchConfiguration configuration) {
     try {
+      textGeneratedCommandLine.setVisible(false);
       JPFLaunchConfigurationDelegate jpfDelegate = new JPFLaunchConfigurationDelegate();
       VMRunnerConfiguration runConfig = jpfDelegate.createRunConfig(configuration);
       JPFRunner runner = new JPFRunner(jpfDelegate.verifyVMInstall(configuration));
@@ -462,6 +463,8 @@ public class JPFOverviewTab extends CommonJPFTab {
       textGeneratedCommandLine.setTopIndex(topLine);
     } catch (CoreException e) {
       EclipseJPF.logError("Cannot update command line text", e);
+    } finally {
+      textGeneratedCommandLine.setVisible(true);
     }
   }
 

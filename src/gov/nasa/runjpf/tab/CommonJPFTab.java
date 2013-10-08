@@ -368,6 +368,12 @@ public static final String PORT_NUMBER_PLCHLDR = "{PORT_NUMBER}";
     }
 
     try {
+      
+      if (!configuration.getAttribute(JPF_ATTR_MAIN_JPFFILESELECTED, true)) {
+        // the application JPF file option is not selected and thus no property is an application property
+        return false;
+      }
+      
       @SuppressWarnings("unchecked")
       Map<String, String> appMap = configuration.getAttribute(JPFOverviewTab.ATTR_JPF_APPCONFIG, Collections.EMPTY_MAP);
 

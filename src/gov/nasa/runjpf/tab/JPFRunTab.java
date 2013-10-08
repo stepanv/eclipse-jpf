@@ -406,13 +406,13 @@ public class JPFRunTab extends CommonJPFTab {
     radioDebugJpfItself.setText("Debug JPF itself");
 
     radioDebugBothTargets = new Button(grpDebuggingOptions, SWT.RADIO);
-    radioDebugBothTargets.setToolTipText("Debug both the JPF itself and the program being verified by JPF.\r\nThis option is good for a debugging of the JPF debugging.");
+    radioDebugBothTargets.setToolTipText("An experimental feature!\r\nDebug both the JPF itself and the program being verified by JPF.\r\nThis option is good for a debugging of the JPF debugging.\r\nCan lead to serious issues in the debugger and consequently Eclipse termination.");
     radioDebugBothTargets.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
       }
     });
-    radioDebugBothTargets.setText("Debug both the JPF itself and the program being verified by JPF");
+    radioDebugBothTargets.setText("Debug both the JPF itself and the program being verified by JPF (experimental)");
     radioDebugBothTargets.setEnabled(debug);
     radioDebugJpfItself.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
