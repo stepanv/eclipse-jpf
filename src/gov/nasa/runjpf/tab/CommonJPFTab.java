@@ -448,6 +448,7 @@ public static final String PORT_NUMBER_PLCHLDR = "{PORT_NUMBER}";
       map.remove("shell.port");
       map.remove("jpf-core.native_classpath");
       map.remove("jpf-jdwp.jdwp");
+      map.remove("jpf-jdwp.notification.propertyviolation");
 
       if (!configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false) || configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false)) {
         // we're debugging the program itself
@@ -462,7 +463,7 @@ public static final String PORT_NUMBER_PLCHLDR = "{PORT_NUMBER}";
           map.put("jpf-core.native_classpath", classpath + File.pathSeparator);
         } // nothing changes
       }
-
+      
       if (configuration.getAttribute(JPF_ATTR_TRACE_ENABLED, false)) {
         // we're tracing
         String traceFileName = configuration.getAttribute(JPF_ATTR_TRACE_FILE, "");
@@ -487,8 +488,16 @@ public static final String PORT_NUMBER_PLCHLDR = "{PORT_NUMBER}";
       boolean debugJPFInsteadOfTheProgram = configuration.getAttribute(JPFRunTab.JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false);
 
       if (debug && (debugBothVMs || !debugJPFInsteadOfTheProgram)) {
+        // the JPF JDWP needs to be enabled        
+        
         listenerString = addListener(listenerString, "gov.nasa.jpf.jdwp.JDWPListener");
         map.put("jpf-jdwp.jdwp", "transport=dt_socket,server=n,suspend=y,address=" + PORT_NUMBER_PLCHLDR);
+        
+        if (configuration.getAttribute(CommonJPFTab.JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, false)) {
+          // stop on property violation
+          map.put("jpf-jdwp.notification.propertyviolation", Boolean.TRUE.toString());
+        }
+        
       } 
 
       String listener = configuration.getAttribute(JPF_ATTR_OPT_LISTENER, "");
