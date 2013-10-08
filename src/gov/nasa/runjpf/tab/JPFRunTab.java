@@ -89,10 +89,10 @@ public class JPFRunTab extends CommonJPFTab {
 
   private Combo comboJpfInstallation;
   private Button buttonJpfRuntimeReset;
-  
+
   private IType targetType;
-  
-  private Button checkDebugBothTargets;
+
+  private Button radioDebugBothTargets;
   private Button radioDebugJpfItself;
   private Button radioDebugTheProgram;
   private Combo comboJdwp;
@@ -148,7 +148,7 @@ public class JPFRunTab extends CommonJPFTab {
   @Override
   public void createControl(Composite parent) {
 
-    Composite comp2 = new Composite(parent, SWT.NONE);
+    comp2 = new Composite(parent, SWT.NONE);
     comp2.setFont(parent.getFont());
 
     GridData gd = new GridData(1);
@@ -160,13 +160,13 @@ public class JPFRunTab extends CommonJPFTab {
     setControl(comp2);
 
     Composite comp = comp2;
-    GridLayout gl_comp2 = new GridLayout(1, false);
+    GridLayout gl_comp2 = new GridLayout(2, false);
     comp2.setLayout(gl_comp2);
 
     Group grpJpfExecution = new Group(comp2, SWT.NONE);
     grpJpfExecution.setText("JPF Execution");
-    grpJpfExecution.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
-    grpJpfExecution.setLayout(new GridLayout(5, false));
+    grpJpfExecution.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+    grpJpfExecution.setLayout(new GridLayout(4, false));
 
     radioMainAppFileSelected = new Button(grpJpfExecution, SWT.RADIO);
     radioMainAppFileSelected.addSelectionListener(new SelectionAdapter() {
@@ -180,13 +180,12 @@ public class JPFRunTab extends CommonJPFTab {
     radioMainAppFileSelected.setText("Run a .jpf file:");
     new Label(grpJpfExecution, SWT.NONE);
     new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
 
     Label lblFile = new Label(grpJpfExecution, SWT.NONE);
     lblFile.setText("File:");
 
     textMainAppFileLocation = new Text(grpJpfExecution, SWT.BORDER);
-    textMainAppFileLocation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+    textMainAppFileLocation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
     textMainAppFileLocation.addModifyListener(updatedListener);
     textMainAppFileLocation.setBounds(10, 35, 524, 21);
     new Label(grpJpfExecution, SWT.NONE);
@@ -226,7 +225,6 @@ public class JPFRunTab extends CommonJPFTab {
       }
     });
     buttonMainAppendDynamicProperties.setText("&Append dynamic properties into this file");
-    new Label(grpJpfExecution, SWT.NONE);
 
     Composite basicConfiguraionComposite = new Composite(grpJpfExecution, SWT.NONE);
     basicConfiguraionComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
@@ -302,13 +300,12 @@ public class JPFRunTab extends CommonJPFTab {
     radioMainMethodClass.setText("Run a main class:");
     new Label(grpJpfExecution, SWT.NONE);
     new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
 
     Label lblTarget = new Label(grpJpfExecution, SWT.NONE);
     lblTarget.setText("Target:");
 
     textMainTarget = new Text(grpJpfExecution, SWT.BORDER);
-    textMainTarget.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+    textMainTarget.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
     textMainTarget.addModifyListener(new ModifyListener() {
       @Override
       public void modifyText(ModifyEvent e) {
@@ -324,19 +321,27 @@ public class JPFRunTab extends CommonJPFTab {
     glComposite.marginHeight = 0;
     glComposite.marginWidth = 0;
     composite_2.setLayout(glComposite);
-    new Label(grpJpfExecution, SWT.NONE);
 
     buttonMainSearchMainClass = new Button(grpJpfExecution, SWT.NONE);
     buttonMainSearchMainClass.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
     buttonMainSearchMainClass.setText("Search...");
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    
-    checkMainStopOnPropertyViolation = new Button(grpJpfExecution, SWT.CHECK);
-    checkMainStopOnPropertyViolation.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
+
+    buttonMainSearchMainClass.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        targetType = handleSearchMainClassButtonSelected(textMainTarget, targetType);
+      }
+    });
+
+    grpStopOptions = new Group(comp2, SWT.NONE);
+    GridData gd_grpStopOptions = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+    gd_grpStopOptions.widthHint = 303;
+    grpStopOptions.setLayoutData(gd_grpStopOptions);
+    grpStopOptions.setText("Stop options");
+    grpStopOptions.setLayout(new GridLayout(1, false));
+    grpStopOptions.setEnabled(debug);
+
+    checkMainStopOnPropertyViolation = new Button(grpStopOptions, SWT.CHECK);
     checkMainStopOnPropertyViolation.setText("Stop on property violation");
     checkMainStopOnPropertyViolation.setEnabled(debug);
     checkMainStopOnPropertyViolation.addSelectionListener(new SelectionAdapter() {
@@ -345,9 +350,8 @@ public class JPFRunTab extends CommonJPFTab {
         updateLaunchConfigurationDialog();
       }
     });
-    
-    checkMainStopInAppMain = new Button(grpJpfExecution, SWT.CHECK);
-    checkMainStopInAppMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
+
+    checkMainStopInAppMain = new Button(grpStopOptions, SWT.CHECK);
     checkMainStopInAppMain.setText("Stop in application main");
     checkMainStopInAppMain.setEnabled(debug);
     checkMainStopInAppMain.addSelectionListener(new SelectionAdapter() {
@@ -356,9 +360,8 @@ public class JPFRunTab extends CommonJPFTab {
         updateLaunchConfigurationDialog();
       }
     });
-    
-    checkMainStopInJpfMain = new Button(grpJpfExecution, SWT.CHECK);
-    checkMainStopInJpfMain.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 5, 1));
+
+    checkMainStopInJpfMain = new Button(grpStopOptions, SWT.CHECK);
     checkMainStopInJpfMain.setText("Stop in JPF main");
     checkMainStopInJpfMain.setEnabled(debug);
     checkMainStopInJpfMain.addSelectionListener(new SelectionAdapter() {
@@ -367,27 +370,15 @@ public class JPFRunTab extends CommonJPFTab {
         updateLaunchConfigurationDialog();
       }
     });
-    
-    buttonMainSearchMainClass.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        targetType = handleSearchMainClassButtonSelected(textMainTarget, targetType);
-      }
-    });
-    
-    lblNewLabel = new Label(grpJpfExecution, SWT.NONE);
-    GridData gd_lblNewLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-    gd_lblNewLabel.heightHint = -12;
-    lblNewLabel.setLayoutData(gd_lblNewLabel);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    
-    radioDebugTheProgram = new Button(grpJpfExecution, SWT.RADIO);
-    GridData gd_radioDebugTheProgram = new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1);
-    gd_radioDebugTheProgram.widthHint = 239;
-    radioDebugTheProgram.setLayoutData(gd_radioDebugTheProgram);
+
+    grpDebuggingOptions = new Group(comp2, SWT.NONE);
+    grpDebuggingOptions.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    grpDebuggingOptions.setText("Debugging options");
+    grpDebuggingOptions.setLayout(new GridLayout(1, false));
+    grpDebuggingOptions.setEnabled(debug);
+
+    radioDebugTheProgram = new Button(grpDebuggingOptions, SWT.RADIO);
+    radioDebugTheProgram.setSize(233, 16);
     radioDebugTheProgram.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -396,34 +387,19 @@ public class JPFRunTab extends CommonJPFTab {
     });
     radioDebugTheProgram.setText("Debug the program being verified in JPF");
     radioDebugTheProgram.setEnabled(debug);
-    
-    checkDebugBothTargets = new Button(grpJpfExecution, SWT.CHECK);
-    GridData gd_checkDebugBothTargets = new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 2);
-    gd_checkDebugBothTargets.widthHint = 339;
-    checkDebugBothTargets.setLayoutData(gd_checkDebugBothTargets);
-    checkDebugBothTargets.setText("Debug both the underlaying VM and the program");
-    checkDebugBothTargets.setEnabled(debug);
-    
-        checkDebugBothTargets.addSelectionListener(new SelectionAdapter() {
-          public void widgetSelected(SelectionEvent e) {
-    
-            boolean readioChoicesEnabled = !checkDebugBothTargets.getSelection();
-            radioDebugJpfItself.setEnabled(readioChoicesEnabled);
-            radioDebugTheProgram.setEnabled(readioChoicesEnabled);
-            updateLaunchConfigurationDialog();
-          }
-        });
-    
-    radioDebugJpfItself = new Button(grpJpfExecution, SWT.RADIO);
-    radioDebugJpfItself.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+
+    radioDebugJpfItself = new Button(grpDebuggingOptions, SWT.RADIO);
     radioDebugJpfItself.setEnabled(debug);
     radioDebugJpfItself.setText("Debug JPF itself");
-    
-    label_1 = new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
-    new Label(grpJpfExecution, SWT.NONE);
+
+    radioDebugBothTargets = new Button(grpDebuggingOptions, SWT.RADIO);
+    radioDebugBothTargets.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+      }
+    });
+    radioDebugBothTargets.setText("Debug both the underlaying VM and the program");
+    radioDebugBothTargets.setEnabled(debug);
     radioDebugJpfItself.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
         updateLaunchConfigurationDialog();
@@ -432,7 +408,7 @@ public class JPFRunTab extends CommonJPFTab {
 
     Group groupTrace = new Group(comp2, SWT.NONE);
     groupTrace.setLayout(new GridLayout(3, false));
-    groupTrace.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    groupTrace.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
     groupTrace.setText("Trace");
 
     Composite composite = new Composite(groupTrace, SWT.NONE);
@@ -531,7 +507,7 @@ public class JPFRunTab extends CommonJPFTab {
         updateLaunchConfigurationDialog();
       }
     });
-    
+
     runtime(comp2);
   }
 
@@ -539,7 +515,7 @@ public class JPFRunTab extends CommonJPFTab {
 
     Group groupRuntime = new Group(parent, SWT.NONE);
     groupRuntime.setLayout(new GridLayout(3, false));
-    groupRuntime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    groupRuntime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
     groupRuntime.setText("Runtime");
 
     Label labelJpfRuntime = new Label(groupRuntime, SWT.NONE);
@@ -574,7 +550,7 @@ public class JPFRunTab extends CommonJPFTab {
 
     comboJdwp = SWTFactory.createCombo(groupRuntime, SWT.DROP_DOWN | SWT.READ_ONLY, 1, null);
     comboJdwp.setEnabled(debug);
-    
+
     buttonJdwpReset = new Button(groupRuntime, SWT.NONE);
     buttonJdwpReset.setText("Reset");
     buttonJdwpReset.addSelectionListener(new SelectionAdapter() {
@@ -615,10 +591,9 @@ public class JPFRunTab extends CommonJPFTab {
 
     // set a unique id
     configuration.setAttribute(JPF_ATTR_LAUNCHID, JPF_ATTR_LAUNCHID);
-    
+
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, EclipseJPF.JPF_MAIN_CLASS);
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
-    
 
     if (jpfFile != null) {
       String jpfFileAbsolutePath = jpfFile.getLocation().toFile().getAbsolutePath();
@@ -687,7 +662,7 @@ public class JPFRunTab extends CommonJPFTab {
       runJpfSelected(jpfFileSelected);
       radioMainMethodClass.setSelection(!jpfFileSelected);
       radioMainAppFileSelected.setSelection(jpfFileSelected);
-      
+
       checkMainStopInAppMain.setSelection(configuration.getAttribute(JPF_ATTR_MAIN_STOPINMAIN, false));
       checkMainStopOnPropertyViolation.setSelection(configuration.getAttribute(JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, false));
       checkMainStopInJpfMain.setSelection(configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN, false));
@@ -700,19 +675,16 @@ public class JPFRunTab extends CommonJPFTab {
       MessageDialog.openError(getShell(), "Error during the initialization of the tab!", e.getMessage());
       return;
     }
-    
+
     try {
       lookupLocalInstallation(configuration, jdwpInstallations, JDWP_EXTENSION_STRING);
 
-      checkDebugBothTargets.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false));
+      radioDebugBothTargets.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false));
       radioDebugJpfItself.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false));
-      radioDebugTheProgram.setSelection(!radioDebugJpfItself.getSelection());
+      radioDebugTheProgram.setSelection(!radioDebugJpfItself.getSelection() && !radioDebugBothTargets.getSelection());
 
-      boolean readioChoicesEnabled = !checkDebugBothTargets.getSelection();
-      radioDebugJpfItself.setEnabled(readioChoicesEnabled && debug);
-      radioDebugTheProgram.setEnabled(readioChoicesEnabled && debug);
-
-      initializeExtensionInstallations(configuration, jdwpInstallations, comboJdwp, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, JDWP_EXTENSION_STRING);
+      initializeExtensionInstallations(configuration, jdwpInstallations, comboJdwp, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX,
+                                       JDWP_EXTENSION_STRING);
 
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
@@ -761,10 +733,10 @@ public class JPFRunTab extends CommonJPFTab {
 
     configuration.setAttribute(JPF_ATTR_TRACE_ENABLED, !radioTraceNoTrace.getSelection());
     configuration.setAttribute(JPF_ATTR_TRACE_STOREINSTEADOFREPLAY, radioTraceStore.getSelection());
-   
+
     String traceFileName = textTraceFile.getText();
     configuration.setAttribute(JPF_ATTR_TRACE_FILE, traceFileName);
-   
+
     if (!radioTraceNoTrace.getSelection()) {
       // let's substitute the generated random string into the unique
       // placeholder
@@ -790,12 +762,12 @@ public class JPFRunTab extends CommonJPFTab {
     }
 
     configuration.setAttribute(JPF_ATTR_MAIN_JPFFILESELECTED, radioMainAppFileSelected.getSelection());
-    
+
     configuration.setAttribute(JPF_ATTR_MAIN_STOPINMAIN, checkMainStopInAppMain.getSelection());
     configuration.setAttribute(JPF_ATTR_MAIN_STOPONPROPERTYVIOLATION, checkMainStopOnPropertyViolation.getSelection());
     configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_STOP_IN_MAIN, checkMainStopInJpfMain.getSelection());
 
-    configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, checkDebugBothTargets.getSelection());
+    configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, radioDebugBothTargets.getSelection());
     configuration.setAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, radioDebugJpfItself.getSelection());
     configuration.setAttribute(JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX, comboJdwp.getSelectionIndex());
 
@@ -850,8 +822,9 @@ public class JPFRunTab extends CommonJPFTab {
   /** The icon for this tab */
   private static final Image icon = createImage("icons/service_manager.png");
   private Label label;
-  private Label lblNewLabel;
-  private Label label_1;
+  private Group grpStopOptions;
+  private Group grpDebuggingOptions;
+  private Composite comp2;
 
   @Override
   public Image getImage() {
@@ -935,7 +908,7 @@ public class JPFRunTab extends CommonJPFTab {
       // we have other than embedded jdwps
       setWarningMessage("Multiple JDWP extensions found. It is likely, there will be some classpath issues.");
     }
-    
+
     return super.isValid(config);
   }
 
