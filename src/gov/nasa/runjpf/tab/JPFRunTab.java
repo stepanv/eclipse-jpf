@@ -729,14 +729,14 @@ public class JPFRunTab extends CommonJPFTab {
     boolean debugJpfOnly = radioDebugJpfItself.getSelection();
     boolean debugProgramOnly = radioDebugTheProgram.getSelection();
     
-    boolean debuggingApp = debugProgramOnly || !debugJpfOnly;
+    boolean debuggingProgram = debugProgramOnly || !debugJpfOnly;
     boolean debuggingJpf = !debugProgramOnly || debugJpfOnly;
-    checkMainStopOnPropertyViolation.setEnabled(debuggingApp && debug);
-    checkMainStopInAppMain.setEnabled(debuggingApp && debug);
+    checkMainStopOnPropertyViolation.setEnabled(debuggingProgram && debug);
+    checkMainStopInAppMain.setEnabled(debuggingProgram && debug);
     checkMainStopInJpfMain.setEnabled(debuggingJpf && debug);
     
-    comboJdwp.setEnabled(debuggingApp && debug);
-    buttonJdwpReset.setEnabled(debuggingApp && debug);
+    comboJdwp.setEnabled(debuggingProgram && debug);
+    buttonJdwpReset.setEnabled(debuggingProgram && debug);
     
   }
 
