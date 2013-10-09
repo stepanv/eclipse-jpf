@@ -148,7 +148,7 @@ public class JPFRunTab extends CommonJPFTab {
   @Override
   public void createControl(Composite parent) {
 
-    comp2 = new Composite(parent, SWT.NONE);
+    Composite comp2 = new Composite(parent, SWT.NONE);
     comp2.setFont(parent.getFont());
 
     GridData gd = new GridData(1);
@@ -164,6 +164,7 @@ public class JPFRunTab extends CommonJPFTab {
     comp2.setLayout(gl_comp2);
 
     Group grpJpfExecution = new Group(comp2, SWT.NONE);
+    grpJpfExecution.setToolTipText("The basic JPF execution options.");
     grpJpfExecution.setText("JPF Execution");
     grpJpfExecution.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
     grpJpfExecution.setLayout(new GridLayout(4, false));
@@ -341,7 +342,8 @@ public class JPFRunTab extends CommonJPFTab {
       }
     });
 
-    grpStopOptions = new Group(comp2, SWT.NONE);
+    Group grpStopOptions = new Group(comp2, SWT.NONE);
+    grpStopOptions.setToolTipText("Additional options how to stop the VM execution.");
     GridData gd_grpStopOptions = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
     gd_grpStopOptions.widthHint = 303;
     grpStopOptions.setLayoutData(gd_grpStopOptions);
@@ -350,7 +352,7 @@ public class JPFRunTab extends CommonJPFTab {
     grpStopOptions.setEnabled(debug);
 
     checkMainStopOnPropertyViolation = new Button(grpStopOptions, SWT.CHECK);
-    checkMainStopOnPropertyViolation.setToolTipText("Stop the verification on a property violation notification.\r\nThe JPF is stopped as if an exception is thrown and appropriate exception breakpoint is set.\r\nAll the threads will be suspended. The name of the thrown exception is \"gov.nasa.jpf.jdwp.exception.special.NoPropertyViolationException\" which is a synthetic exception loaded into the program in the moment of property violation notification.\r\nThis option is useful for an inspection of the program state right before the JPF verification reports a property violation such as deadlocks or uncheck exception throws.\r\nThe search class used in the JPF verification must notify the listeners about the property violation through \"SearchListener.propertyViolated(Search)\" method otherwise this option is ineffective.\r\nThis option is effective only if debugging the program being verified.");
+    checkMainStopOnPropertyViolation.setToolTipText("Stop the verification on a property violation notification.\r\n\r\nThis option is useful for an inspection of the program state right before the JPF verification reports a property violation such as deadlocks or uncheck exception throws.\r\n\r\nThe JPF is stopped as if an exception is thrown and appropriate exception breakpoint is set.\r\nAll the threads will be suspended. \r\nThe name of the thrown exception is \"gov.nasa.jpf.jdwp.exception.special.NoPropertyViolationException\" which is a synthetic exception loaded into the program in the moment of property violation notification.\r\n\r\nThe search class used in the JPF verification must notify the listeners about the property violation through \"SearchListener.propertyViolated(Search)\" method otherwise this option is ineffective.\r\n\r\nThis option is effective only if debugging the program being verified.");
     checkMainStopOnPropertyViolation.setText("Stop on property violation");
     checkMainStopOnPropertyViolation.setEnabled(debug);
     checkMainStopOnPropertyViolation.addSelectionListener(new SelectionAdapter() {
@@ -361,7 +363,7 @@ public class JPFRunTab extends CommonJPFTab {
     });
 
     checkMainStopInAppMain = new Button(grpStopOptions, SWT.CHECK);
-    checkMainStopInAppMain.setToolTipText("Stop on entry into the main method that is used as a target for the JPF verification.\r\nThis option is effective only if debugging the program being verified.");
+    checkMainStopInAppMain.setToolTipText("Stop on entry into the main method that is used as a target for the JPF verification.\r\n\r\nThis option is effective only if debugging the program being verified.");
     checkMainStopInAppMain.setText("Stop in application main");
     checkMainStopInAppMain.setEnabled(debug);
     checkMainStopInAppMain.addSelectionListener(new SelectionAdapter() {
@@ -372,7 +374,7 @@ public class JPFRunTab extends CommonJPFTab {
     });
 
     checkMainStopInJpfMain = new Button(grpStopOptions, SWT.CHECK);
-    checkMainStopInJpfMain.setToolTipText("Stop on entry of the main method of JPF.\r\nThis option is effective only if debugging JPF or both the program being verified and JPF itself.");
+    checkMainStopInJpfMain.setToolTipText("Stop on entry of the main method of JPF.\r\n\r\nThis option is effective only if debugging JPF or both the program being verified and JPF itself.");
     checkMainStopInJpfMain.setText("Stop in JPF main");
     checkMainStopInJpfMain.setEnabled(debug);
     checkMainStopInJpfMain.addSelectionListener(new SelectionAdapter() {
@@ -382,14 +384,15 @@ public class JPFRunTab extends CommonJPFTab {
       }
     });
 
-    grpDebuggingOptions = new Group(comp2, SWT.NONE);
+    Group grpDebuggingOptions = new Group(comp2, SWT.NONE);
+    grpDebuggingOptions.setToolTipText("The options how to the debugging.");
     grpDebuggingOptions.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     grpDebuggingOptions.setText("Debugging options");
     grpDebuggingOptions.setLayout(new GridLayout(1, false));
     grpDebuggingOptions.setEnabled(debug);
 
     radioDebugTheProgram = new Button(grpDebuggingOptions, SWT.RADIO);
-    radioDebugTheProgram.setToolTipText("Debug the program being verified by the JPF.\r\nThe debugging uses JDWP implementation from the jpf-jdwp JPF extension. This extension  should be declared in JPF site properties file but it's also possible to use an embedded version that comes bundled with this plugin.\r\n");
+    radioDebugTheProgram.setToolTipText("Debug the program being verified by the JPF.\r\n\r\nThe debugging uses JDWP implementation from the jpf-jdwp JPF extension. \r\nThis extension  should be declared in JPF site properties file but it's also possible to use an embedded version that comes bundled with this plugin.\r\n");
     radioDebugTheProgram.setSize(233, 16);
     radioDebugTheProgram.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -407,7 +410,7 @@ public class JPFRunTab extends CommonJPFTab {
     radioDebugJpfItself.setText("Debug JPF itself");
 
     radioDebugBothTargets = new Button(grpDebuggingOptions, SWT.RADIO);
-    radioDebugBothTargets.setToolTipText("An experimental feature!\r\nDebug both the JPF itself and the program being verified by JPF.\r\nThis option is good for a debugging of the JPF debugging.\r\nCan lead to serious issues in the debugger and consequently Eclipse termination.");
+    radioDebugBothTargets.setToolTipText("An experimental feature!\r\nSome of other options/features may stop working!\r\n\r\nDebug both the JPF itself and the program being verified by JPF.\r\nThis option is good for a debugging of the JPF debugging.\r\n\r\nCan lead to serious issues in the debugger and consequently Eclipse termination.");
     radioDebugBothTargets.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
@@ -435,6 +438,7 @@ public class JPFRunTab extends CommonJPFTab {
     composite.setLayout(new GridLayout(3, false));
 
     radioTraceNoTrace = new Button(composite, SWT.RADIO);
+    radioTraceNoTrace.setToolTipText("The default behavior.\r\nThe trace operations provided by this plugin are ineffective.");
     radioTraceNoTrace.setText("No Trace");
 
     radioTraceStore = new Button(composite, SWT.RADIO);
@@ -538,6 +542,7 @@ public class JPFRunTab extends CommonJPFTab {
   private void runtime(Composite parent) {
 
     Group groupRuntime = new Group(parent, SWT.NONE);
+    groupRuntime.setToolTipText("JPF Runtime options.");
     groupRuntime.setLayout(new GridLayout(3, false));
     groupRuntime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
     groupRuntime.setText("Runtime");
@@ -868,10 +873,6 @@ public class JPFRunTab extends CommonJPFTab {
 
   /** The icon for this tab */
   private static final Image icon = createImage("icons/service_manager.png");
-  private Label label;
-  private Group grpStopOptions;
-  private Group grpDebuggingOptions;
-  private Composite comp2;
 
   @Override
   public Image getImage() {

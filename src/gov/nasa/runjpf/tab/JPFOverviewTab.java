@@ -87,9 +87,6 @@ public class JPFOverviewTab extends CommonJPFTab {
     CONFIG_TO_NAME_MAP.put(ATTR_JPF_CMDARGSCONFIG, "Command line arguments properties");
   }
 
-  private Text jpfFileLocationText;
-
-  // private Table table;
   private TableViewer configTable;
   private Composite mainComposite;
 
