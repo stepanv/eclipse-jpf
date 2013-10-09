@@ -394,6 +394,7 @@ public class JPFRunTab extends CommonJPFTab {
     radioDebugTheProgram.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
+        debugOptionChanged();
         updateLaunchConfigurationDialog();
       }
     });
@@ -410,12 +411,15 @@ public class JPFRunTab extends CommonJPFTab {
     radioDebugBothTargets.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
+        debugOptionChanged();
+        updateLaunchConfigurationDialog();
       }
     });
     radioDebugBothTargets.setText("Debug both the JPF itself and the program being verified by JPF (experimental)");
     radioDebugBothTargets.setEnabled(debug);
     radioDebugJpfItself.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
+        debugOptionChanged();
         updateLaunchConfigurationDialog();
       }
     });
@@ -706,15 +710,34 @@ public class JPFRunTab extends CommonJPFTab {
       radioDebugBothTargets.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGBOTHVMS, false));
       radioDebugJpfItself.setSelection(configuration.getAttribute(JPF_ATTR_DEBUG_DEBUGJPFINSTEADOFPROGRAM, false));
       radioDebugTheProgram.setSelection(!radioDebugJpfItself.getSelection() && !radioDebugBothTargets.getSelection());
+      
+      debugOptionChanged();
 
       initializeExtensionInstallations(configuration, jdwpInstallations, comboJdwp, JPF_ATTR_DEBUG_JDWP_INSTALLATIONINDEX,
                                        JDWP_EXTENSION_STRING);
 
     } catch (CoreException e) {
       EclipseJPF.logError("Error during the JPF initialization form", e);
+      MessageDialog.openError(getShell(), "Error during the initialization of the tab!", e.getMessage());
+      return;
     }
 
     super.initializeFrom(configuration);
+  }
+
+  private void debugOptionChanged() {
+    boolean debugJpfOnly = radioDebugJpfItself.getSelection();
+    boolean debugProgramOnly = radioDebugTheProgram.getSelection();
+    
+    boolean debuggingApp = debugProgramOnly || !debugJpfOnly;
+    boolean debuggingJpf = !debugProgramOnly || debugJpfOnly;
+    checkMainStopOnPropertyViolation.setEnabled(debuggingApp && debug);
+    checkMainStopInAppMain.setEnabled(debuggingApp && debug);
+    checkMainStopInJpfMain.setEnabled(debuggingJpf && debug);
+    
+    comboJdwp.setEnabled(debuggingApp && debug);
+    buttonJdwpReset.setEnabled(debuggingApp && debug);
+    
   }
 
   String getJpfFileLocation() {
